@@ -180,10 +180,14 @@ export class Enemy {
         this.spawnCooldown = 0;
     }
 
-    update(dt, playerX, playerY) {
+    update(dt, playerX, playerY, playerAttackRange = 300) {
         const dx = playerX - this.x;
         const dy = playerY - this.y;
         const normalized = normalize(dx, dy);
+        
+        const distToPlayer = Math.sqrt(dx * dx + dy * dy);
+        const speedMultiplier = distToPlayer <= playerAttackRange ? 1.1 : 1.0;
+        const actualSpeed = this.speed * speedMultiplier;
         
         if (this.type.isBoss) {
             const hpPercentage = this.hp / this.maxHp;
@@ -208,8 +212,8 @@ export class Enemy {
             }
         }
         
-        this.x += normalized.x * this.speed * dt;
-        this.y += normalized.y * this.speed * dt;
+        this.x += normalized.x * actualSpeed * dt;
+        this.y += normalized.y * actualSpeed * dt;
         
         if (this.isStealth) {
             if (this.revealTime > 0) {

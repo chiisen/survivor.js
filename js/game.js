@@ -311,7 +311,7 @@ start() {
         this.autoFire();
         
         for (const enemy of this.enemies) {
-            const shootData = enemy.update(dt, this.player.x, this.player.y);
+            const shootData = enemy.update(dt, this.player.x, this.player.y, this.player.attackRange);
             
             if (shootData) {
                 if (shootData.type === 'spawn_minion') {
