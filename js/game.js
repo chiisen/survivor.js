@@ -110,7 +110,7 @@ export class Game {
                 enemySpawnMultiplier: 2,
                 enemyHpMultiplier: 2,
                 enemyDamageMultiplier: 1.5,
-                playerHpMultiplier: 0.6,
+                playerHpMultiplier: 3,
                 bossHpMultiplier: 3,
                 name: '地獄'
             }
