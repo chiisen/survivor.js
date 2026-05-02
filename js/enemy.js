@@ -246,6 +246,30 @@ export class Enemy {
         const dy = targetY - this.y;
         const normalized = normalize(dx, dy);
         
+        if (this.type.isBoss && this.phase >= 2) {
+            const projectiles = [];
+            const bulletCount = this.phase >= 3 ? 8 : 4;
+            
+            for (let i = 0; i < bulletCount; i++) {
+                const angle = (Math.PI * 2 / bulletCount) * i;
+                const speed = 150 + (this.phase * 20);
+                
+                projectiles.push({
+                    x: this.x,
+                    y: this.y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    damage: this.phase >= 3 ? 10 : 5,
+                    radius: 5,
+                    color: '#e74c3c',
+                    trail: [],
+                    maxTrailLength: 10
+                });
+            }
+            
+            return { type: 'multi_projectile', projectiles };
+        }
+        
         const projectileData = {
             x: this.x,
             y: this.y,

@@ -35,6 +35,9 @@ export class Player {
         this.expBonus = 0;
         this.armor = 0;
         
+        this.skillCooldown = 0;
+        this.skillCooldownDuration = 30;
+        
         this.upgradeStats = {
             maxHp: 0,
             speed: 0,
@@ -363,6 +366,20 @@ export class Player {
     
     heal(amount) {
         this.hp = Math.min(this.maxHp, this.hp + amount);
+    }
+    
+    canUseSkill() {
+        return this.skillCooldown <= 0;
+    }
+    
+    useSkill() {
+        this.skillCooldown = this.skillCooldownDuration;
+    }
+    
+    updateSkillCooldown(dt) {
+        if (this.skillCooldown > 0) {
+            this.skillCooldown -= dt;
+        }
     }
     
     takeDamage(rawDamage) {

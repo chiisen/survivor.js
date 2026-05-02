@@ -139,6 +139,10 @@ export class Game {
                     this.togglePause();
                 }
             }
+            
+            if ((e.key === 'q' || e.key === 'Q') && this.isRunning && !this.isPaused && this.player.canUseSkill()) {
+                this.useUltimateSkill();
+            }
         });
         
         window.addEventListener('keyup', (e) => {
@@ -259,29 +263,11 @@ start() {
         
         this.decorationManager.update(dt, this.gameTime);
         const normalEnemyCount = this.enemies.filter(e => !e.type.isBoss).length;
-        this.waveManager.update(dt, this.gameTime, normalEnemyCount);
+this.waveManager.update(dt, this.gameTime, normalEnemyCount);
         
-        if (!this.audioStarted && this.hasPlayerInput()) {
-            this.audioStarted = true;
-            this.audio.audioStarted = true;
-            this.audio.resumeContext();
-            this.audio.startBGM();
+        if (this.waveManager.isBreak && this.player.maxShield > 0) {
+            this.player.shield = this.player.maxShield;
         }
-        
-        this.enemyGrid.clear();
-        this.projectileGrid.clear();
-        
-        for (const enemy of this.enemies) {
-            this.enemyGrid.insert(enemy);
-        }
-        
-        for (const projectile of this.projectilePool.getActiveObjects()) {
-            if (projectile.active) {
-                this.projectileGrid.insert(projectile);
-            }
-        }
-        
-        this.player.update(dt, this.keys, this.canvas.width, this.canvas.height);
         
         this.spawnTimer += dt;
         const difficultySettings = this.difficultySettings[this.difficulty];
@@ -308,6 +294,9 @@ start() {
             }
         }
         
+        this.player.updateSkillCooldown(dt);
+        this.updateSkillCooldownUI();
+        
         this.autoFire();
         
         for (const enemy of this.enemies) {
@@ -315,7 +304,13 @@ start() {
             
             if (shootData) {
                 if (shootData.type === 'spawn_minion') {
-                    this.spawnMinionEnemies(shootData.x, shootData.y, 2);
+                    const spawnCount = enemy.phase >= 3 ? 3 : 2;
+                    const spawnElite = enemy.phase >= 3;
+                    this.spawnMinionEnemies(shootData.x, shootData.y, spawnCount, spawnElite);
+                } else if (shootData.type === 'multi_projectile') {
+                    for (const proj of shootData.projectiles) {
+                        this.enemyProjectiles.push(proj);
+                    }
                 } else {
                     this.enemyProjectiles.push(shootData);
                 }
@@ -449,7 +444,10 @@ start() {
                         if (!enemy.type.isBoss) {
                             this.explosionPool.get(enemy.x, enemy.y);
                         }
-                        this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, enemy.expValue));
+                        
+                        const chainKillExpBonus = this.getChainKillExpBonus(chainKills);
+                        const expValue = Math.floor(enemy.expValue * (1 + chainKillExpBonus));
+                        this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, expValue));
                         
                         if (enemy.canSplit) {
                             this.createSplitEnemies(enemy);
@@ -459,6 +457,8 @@ start() {
                         const chainRadius = 40;
                         const chainNearby = this.enemyGrid.getNearby(enemy.x, enemy.y, chainRadius);
                         
+                        const initialExpBonus = this.getChainKillExpBonus(1);
+                        
                         for (const nearbyEnemy of chainNearby) {
                             if (nearbyEnemy === enemy) continue;
                             if (!this.enemies.includes(nearbyEnemy)) continue;
@@ -466,7 +466,9 @@ start() {
                             const chainDistSq = distanceSquared(enemy.x, enemy.y, nearbyEnemy.x, nearbyEnemy.y);
                             if (chainDistSq <= chainRadius * chainRadius) {
                                 this.explosionPool.get(nearbyEnemy.x, nearbyEnemy.y);
-                                this.expOrbs.push(new ExperienceOrb(nearbyEnemy.x, nearbyEnemy.y, nearbyEnemy.expValue));
+                                const nearbyExpBonus = this.getChainKillExpBonus(chainKills + 1);
+                                const nearbyExpValue = Math.floor(nearbyEnemy.expValue * (1 + nearbyExpBonus));
+                                this.expOrbs.push(new ExperienceOrb(nearbyEnemy.x, nearbyEnemy.y, nearbyExpValue));
                                 this.damageNumbers.push(new DamageNumber(nearbyEnemy.x, nearbyEnemy.y - nearbyEnemy.radius, projectile.damage));
                                 const idx = this.enemies.indexOf(nearbyEnemy);
                                 if (idx !== -1) {
@@ -488,7 +490,9 @@ start() {
                             
                             if (!this.player.hasFireRateBuff) {
                                 this.player.activateFireRateBuff();
-                                this.ui.showBuffNotification('連殺！攻擊速度 +30%', 5);
+                                this.ui.showBuffNotification(`連殺！攻擊速度 +30% | 經驗 +${Math.floor(chainKillExpBonus * 100)}%`, 5);
+                            } else {
+                                this.ui.showBuffNotification(`連殺！經驗 +${Math.floor(chainKillExpBonus * 100)}%`, 5);
                             }
                         }
                     }
@@ -720,28 +724,108 @@ start() {
         ));
     }
 
-    spawnMinionEnemies(x, y, count) {
+    spawnMinionEnemies(x, y, count, spawnElite = false) {
         for (let i = 0; i < count; i++) {
             const angle = (Math.PI * 2 / count) * i;
             const offset = 30;
             const minionX = x + Math.cos(angle) * offset;
             const minionY = y + Math.sin(angle) * offset;
             
-            const minion = new Enemy(minionX, minionY, {
-                name: 'minion',
-                radius: 10,
-                speed: 70,
-                maxHp: 1,
-                damage: 5,
-                expValue: 5,
-                color: '#e74c3c',
-                strokeColor: '#c0392b',
-                eyeColor: '#fff',
-                mouthStyle: 'angry',
-                canShoot: false,
-                shootInterval: 0
-            });
-            this.enemies.push(minion);
+            if (spawnElite) {
+                const eliteMinion = new Enemy(minionX, minionY, {
+                    name: 'elite_minion',
+                    radius: 12,
+                    speed: 60,
+                    maxHp: 3,
+                    damage: 10,
+                    expValue: 15,
+                    color: '#e67e22',
+                    strokeColor: '#d35400',
+                    eyeColor: '#fff',
+                    mouthStyle: 'elite',
+                    canShoot: false,
+                    shootInterval: 0,
+                    isElite: true,
+                    shieldHp: 2,
+                    shieldMaxHp: 2
+                });
+                this.enemies.push(eliteMinion);
+            } else {
+                const minion = new Enemy(minionX, minionY, {
+                    name: 'minion',
+                    radius: 10,
+                    speed: 70,
+                    maxHp: 1,
+                    damage: 5,
+                    expValue: 5,
+                    color: '#e74c3c',
+                    strokeColor: '#c0392b',
+                    eyeColor: '#fff',
+                    mouthStyle: 'angry',
+                    canShoot: false,
+                    shootInterval: 0
+                });
+                this.enemies.push(minion);
+            }
+        }
+    }
+
+    getChainKillExpBonus(chainKills) {
+        if (chainKills >= 10) return 1.5;
+        if (chainKills >= 6) return 1.0;
+        if (chainKills >= 5) return 0.8;
+        if (chainKills >= 4) return 0.6;
+        if (chainKills >= 3) return 0.4;
+        if (chainKills >= 2) return 0.2;
+        return 0;
+    }
+
+    getChainKillDamageBonus(chainKills) {
+        if (chainKills >= 10) return 2.0;
+        if (chainKills >= 6) return 1.5;
+        if (chainKills >= 5) return 1.3;
+        if (chainKills >= 4) return 1.2;
+        if (chainKills >= 3) return 1.1;
+        if (chainKills >= 2) return 1.05;
+        return 1;
+    }
+
+    useUltimateSkill() {
+        this.player.useSkill();
+        this.audio.playChainKill();
+        
+        const skillDamage = this.player.damage * 10;
+        
+        for (const enemy of this.enemies) {
+            enemy.hp -= skillDamage;
+            this.explosionPool.get(enemy.x, enemy.y);
+            this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, skillDamage, '#f1c40f'));
+            
+            if (enemy.hp <= 0) {
+                const expValue = Math.floor(enemy.expValue * (1 + this.player.expBonus));
+                this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, expValue));
+            }
+        }
+        
+        this.enemies = this.enemies.filter(e => e.hp > 0);
+        this.kills += this.enemies.filter(e => e.hp <= 0).length;
+        
+        this.ui.showBuffNotification('終極技能！全屏攻擊', 2);
+    }
+
+    updateSkillCooldownUI() {
+        const skillDisplay = document.getElementById('skill-cooldown');
+        if (!skillDisplay) return;
+        
+        if (this.player.skillCooldown <= 0) {
+            skillDisplay.textContent = '技能: 就绪 (Q)';
+            skillDisplay.style.color = '#2ecc71';
+            skillDisplay.style.borderColor = 'rgba(46, 204, 113, 0.5)';
+        } else {
+            const remaining = Math.ceil(this.player.skillCooldown);
+            skillDisplay.textContent = `技能: ${remaining}秒`;
+            skillDisplay.style.color = '#e74c3c';
+            skillDisplay.style.borderColor = 'rgba(231, 76, 60, 0.5)';
         }
     }
 
@@ -1096,12 +1180,60 @@ start() {
         }
     }
 
-    togglePause() {
+togglePause() {
         this.isPaused = !this.isPaused;
+        
         if (this.isPaused) {
             this.pauseScreen.classList.remove('hidden');
+            this.setupPauseVolumeControls();
         } else {
             this.pauseScreen.classList.add('hidden');
         }
+    }
+    
+    setupPauseVolumeControls() {
+        const masterSlider = document.getElementById('pause-master-volume');
+        const sfxSlider = document.getElementById('pause-sfx-volume');
+        const bgmSlider = document.getElementById('pause-bgm-volume');
+        
+        if (masterSlider) {
+            masterSlider.value = Math.floor(this.audio.masterVolume * 100);
+            masterSlider.addEventListener('input', () => {
+                this.audio.setMasterVolume(masterSlider.value / 100);
+                this.updatePauseVolumeDisplays();
+            });
+        }
+        
+        if (sfxSlider) {
+            sfxSlider.value = Math.floor(this.audio.sfxVolume * 100);
+            sfxSlider.addEventListener('input', () => {
+                this.audio.setSfxVolume(sfxSlider.value / 100);
+                this.updatePauseVolumeDisplays();
+            });
+        }
+        
+        if (bgmSlider) {
+            bgmSlider.value = Math.floor(this.audio.bgmVolume * 100);
+            bgmSlider.addEventListener('input', () => {
+                this.audio.setBgmVolume(bgmSlider.value / 100);
+                this.updatePauseVolumeDisplays();
+            });
+        }
+        
+        this.updatePauseVolumeDisplays();
+    }
+    
+    updatePauseVolumeDisplays() {
+        const displays = document.querySelectorAll('.pause-volume-value');
+        const masterSlider = document.getElementById('pause-master-volume');
+        const sfxSlider = document.getElementById('pause-sfx-volume');
+        const bgmSlider = document.getElementById('pause-bgm-volume');
+        
+        if (displays.length >= 3 && masterSlider && sfxSlider && bgmSlider) {
+            displays[0].textContent = masterSlider.value + '%';
+            displays[1].textContent = sfxSlider.value + '%';
+            displays[2].textContent = bgmSlider.value + '%';
+        }
+    }
     }
 }
