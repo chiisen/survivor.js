@@ -877,7 +877,7 @@ start() {
         this.chainKillDisplay.draw(this.ctx, this.canvas.width / 2, this.canvas.height / 2);
         
         this.waveManager.drawAnnouncement(this.ctx, this.canvas.width / 2, this.canvas.height / 2);
-        this.waveManager.drawWaveInfo(this.ctx, 20, this.canvas.height * 0.67);
+        this.waveManager.drawWaveInfo(this.ctx, 20, this.canvas.height * 0.75);
         
         this.drawBossHealthBar();
         
