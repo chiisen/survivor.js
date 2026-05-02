@@ -222,7 +222,7 @@
 *   **渲染**：HTML5 Canvas API。
 *   **循環**：`requestAnimationFrame` 驅動遊戲主迴圈。
 *   **音效**：Web Audio API 實作音效與背景音樂。
-*   **模組化**：ES6 Modules（Player、Enemy、Projectile、ExperienceOrb、Explosion、DamageNumber、ChainKillDisplay、SpatialGrid、ObjectPool、AudioManager、DecorationManager、WaveManager、UI、Game）。
+*   **模組化**：ES6 Modules（Player、Enemy、Projectile、ExperienceOrb、Explosion、DamageNumber、ChainKillDisplay、SpatialGrid、ObjectPool、AudioManager、DecorationManager、WaveManager、StorageManager、UI、Game）。
 *   **碰撞檢測**：空間網格分割（SpatialGrid），格子大小 100px，僅檢測鄰近格子內物件。
 *   **效能優化**：使用距離平方比較避免 Math.sqrt 運算。
 *   **物件池化**：ObjectPool 重用 Projectile 和 Explosion 物件，減少 GC 壓力（池大小 30/20）。
@@ -246,7 +246,19 @@
 *   **動畫**：滑入（0.3秒）→ 滑出（0.3秒）。
 
 ### D. 遊戲結束畫面
-*   **顯示內容**：等級、擊殺數、存活時間。
+*   **本次成績**：
+    - 等級（新紀錄標記 🏆）
+    - 擊殺數
+    - Boss擊殺數
+    - 最高波次（新紀錄標記 🏆）
+    - 存活時間（新紀錄標記 🏆）
+*   **歷史紀錄**：
+    - 最高等級
+    - 最長存活時間
+    - 總擊殺數
+    - 最高波次
+    - Boss擊殺總數
+    - 總遊戲次數
 *   **重新開始按鈕**：綠色漸層，hover 放大 + 陰影。
 
 ### E. 暫停畫面
@@ -256,7 +268,31 @@
 *   **背景半透明**：rgba(0, 0, 0, 0.7) 覆蓋遊戲畫面。
 *   **限制**：升級彈窗開啟時無法暫停。
 
-## 10. 已開發功能清單 (Completed Features)
+## 10. 存檔系統 (Storage System)
+使用 localStorage 儲存玩家遊戲紀錄，持久化保存歷史最佳成績。
+
+### A. 儲存項目
+| 項目 | 描述 | 類型 |
+|------|------|------|
+| highestLevel | 最高達成等級 | 整數 |
+| longestTime | 最長存活時間（秒） | 整數 |
+| totalKills | 總擊殺數（累積所有遊戲） | 整數 |
+| highestWave | 最高波次 | 整數 |
+| totalGames | 總遊戲次數 | 整數 |
+| bossesKilled | Boss擊殺總數 | 整數 |
+
+### B. 更新時機
+*   **遊戲結束時**：自動更新並儲存統計資料。
+*   **新紀錄檢測**：比對歷史紀錄，破紀錄項目標記 🏆 符號。
+*   **累積統計**：總擊殺數、Boss擊殺數、遊戲次數持續累加。
+
+### C. 技術實作
+*   **StorageManager 類別**：管理 localStorage 存取邏輯。
+*   **JSON 序列化**：統計資料以 JSON 格式儲存（key: `survivor_js_stats`）。
+*   **錯誤處理**：localStorage 失效時靜默失敗，console.warn 提示，不影響遊戲運行。
+*   **格式化輸出**：`formatTime()` 轉換秒數為「N分M秒」格式。
+
+## 11. 已開發功能清單 (Completed Features)
 - [x] 基礎 Canvas 畫布與玩家移動控制（WASD / 方向鍵）。
 - [x] 盔甲戰士外觀渲染（頭盔、盔甲、劍）。
 - [x] 攻擊範圍限制與雙圈顯示（藍色基礎 + 綠色升級）。
@@ -275,6 +311,7 @@
 - [x] 連殺顯示系統（DOUBLE/TRIPLE/QUAD/MEGA/ULTRA/GODLIKE 大字動畫）。
 - [x] 波次系統（每60秒一波 + Boss戰機制）。
 - [x] Boss敵人（皇冠 + 光環 + 大血量條 + 射擊）。
+- [x] 存檔功能（localStorage 儲存最高紀錄）。
 - [x] 音效系統（揮劍/命中/擊殺/連殺/升級/受傷/拾取/結束）。
 - [x] 背景音樂（三角波 oscillator + LFO 調變）。
 - [x] 暫停功能（ESC/P 鍵暫停遊戲）。
@@ -302,6 +339,7 @@ survivor.js/
 │   ├── audio.js        # 音效管理（Web Audio API）
 │   ├── decoration.js   # 背景裝飾（地面裝飾物 + 環境粒子）
 │   ├── waveManager.js  # 波次管理（波次機制 + Boss戰）
+│   ├── storage.js      # 存檔管理（localStorage 紀錄）
 │   ├── talent.js       # 天賦系統
 │   ├── ui.js           # UI 管理（含 Buff 通知）
 │   └── utils.js        # 工具函數（含 distanceSquared）

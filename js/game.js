@@ -10,6 +10,7 @@ import { ObjectPool } from './objectPool.js';
 import { AudioManager } from './audio.js';
 import { DecorationManager } from './decoration.js';
 import { WaveManager } from './waveManager.js';
+import { StorageManager } from './storage.js';
 import { getRandomUpgrades } from './talent.js';
 import { UI } from './ui.js';
 import { distance, distanceSquared } from './utils.js';
@@ -41,6 +42,8 @@ export class Game {
         this.pauseScreen = document.getElementById('pause-screen');
         this.decorationManager = new DecorationManager(this.canvas.width, this.canvas.height);
         this.waveManager = new WaveManager();
+        this.storageManager = new StorageManager();
+        this.bossesKilled = 0;
         this.enemyGrid = new SpatialGrid(100);
         this.projectileGrid = new SpatialGrid(100);
         
@@ -108,7 +111,7 @@ export class Game {
         });
     }
 
-    start() {
+start() {
         this.player = new Player(this.canvas.width / 2, this.canvas.height / 2);
         this.enemies = [];
         this.projectilePool.releaseAll();
@@ -116,8 +119,9 @@ export class Game {
         this.enemyProjectiles = [];
         this.expOrbs = [];
         this.damageNumbers = [];
-this.chainKillDisplay.clear();
+        this.chainKillDisplay.clear();
         this.waveManager.reset();
+        this.bossesKilled = 0;
         this.isRunning = true;
         this.isPaused = false;
         this.pauseScreen.classList.add('hidden');
@@ -274,6 +278,10 @@ this.chainKillDisplay.clear();
                     
                     if (enemy.hp <= 0) {
                         this.audio.playKill();
+                        if (enemy.type.isBoss) {
+                            this.bossesKilled++;
+                            this.audio.playChainKill();
+                        }
                         this.explosionPool.get(enemy.x, enemy.y);
                         this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, enemy.expValue));
                         
@@ -449,7 +457,19 @@ this.chainKillDisplay.clear();
         this.isRunning = false;
         this.audio.stopBGM();
         this.audio.playGameOver();
-        this.ui.showGameOver(this.level, this.kills, this.gameTime);
+        
+        const gameStats = {
+            level: this.level,
+            kills: this.kills,
+            time: this.gameTime,
+            wave: this.waveManager.currentWave,
+            bossesKilled: this.bossesKilled
+        };
+        
+        const newRecords = this.storageManager.update(gameStats);
+        const historicalStats = this.storageManager.getFormattedStats();
+        
+        this.ui.showGameOver(gameStats, historicalStats, newRecords);
     }
 
     render() {

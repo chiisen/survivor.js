@@ -108,6 +108,11 @@ body {
     border: 3px solid #f39c12;
 }
 
+#game-over-content {
+    min-width: 450px;
+    max-width: 600px;
+}
+
 #upgrade-content h2, #game-over-content h1 {
     color: #f1c40f;
     margin-bottom: 30px;
@@ -152,8 +157,21 @@ body {
 
 #game-over-content p {
     color: #ecf0f1;
-    font-size: 18px;
+    font-size: 16px;
+    line-height: 1.6;
     margin-bottom: 30px;
+}
+
+#game-over-content h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+#final-stats {
+    text-align: left;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
 }
 
 #restart-btn {

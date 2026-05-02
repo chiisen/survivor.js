@@ -144,12 +144,32 @@ hideUpgradeModal() {
         }
     }
 
-    showGameOver(level, kills, time) {
+    showGameOver(gameStats, historicalStats, newRecords) {
         this.gameOverScreen.classList.remove('hidden');
+        
+        const recordMarkers = newRecords.map(r => {
+            if (r.isNew) return ' 🏆新紀錄！';
+            return '';
+        }).join('');
+        
         this.finalStats.innerHTML = `
-            等級: ${level}<br>
-            擊殺數: ${kills}<br>
-            存活時間: ${this.formatTime(time)}
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #f39c12; margin-bottom: 10px;">本次成績</h3>
+                等級: ${gameStats.level}${newRecords.find(r => r.type === 'level')?.isNew ? ' 🏆' : ''}<br>
+                擊殺數: ${gameStats.kills}<br>
+                Boss擊殺: ${gameStats.bossesKilled}<br>
+                最高波次: ${gameStats.wave}${newRecords.find(r => r.type === 'wave')?.isNew ? ' 🏆' : ''}<br>
+                存活時間: ${this.formatTime(gameStats.time)}${newRecords.find(r => r.type === 'time')?.isNew ? ' 🏆' : ''}
+            </div>
+            <div style="border-top: 1px solid #5d6d7e; padding-top: 15px;">
+                <h3 style="color: #3498db; margin-bottom: 10px;">歷史紀錄</h3>
+                最高等級: ${historicalStats.highestLevel}<br>
+                最長時間: ${historicalStats.longestTime}<br>
+                總擊殺數: ${historicalStats.totalKills}<br>
+                最高波次: ${historicalStats.highestWave}<br>
+                Boss擊殺: ${historicalStats.bossesKilled}<br>
+                總遊戲次: ${historicalStats.totalGames}
+            </div>
         `;
     }
 
