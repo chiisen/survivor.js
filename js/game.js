@@ -889,23 +889,23 @@ start() {
         if (!boss) return;
         
         const barWidth = this.canvas.width * 0.6;
-        const barHeight = 12;
+        const barHeight = 24;
         const barX = (this.canvas.width - barWidth) / 2;
         const barY = 80;
         
         this.ctx.save();
         
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(barX - 5, barY - 25, barWidth + 10, barHeight + 35);
+        this.ctx.fillRect(barX - 5, barY - 50, barWidth + 10, barHeight + 70);
         
         this.ctx.strokeStyle = '#f1c40f';
         this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(barX - 5, barY - 25, barWidth + 10, barHeight + 35);
+        this.ctx.strokeRect(barX - 5, barY - 50, barWidth + 10, barHeight + 70);
         
-        this.ctx.font = 'bold 18px "Segoe UI", sans-serif';
+        this.ctx.font = 'bold 36px "Segoe UI", sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.fillStyle = '#f1c40f';
-        this.ctx.fillText('⚠ BOSS ⚠', this.canvas.width / 2, barY - 8);
+        this.ctx.fillText('⚠ BOSS ⚠', this.canvas.width / 2, barY - 15);
         
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         this.ctx.fillRect(barX, barY, barWidth, barHeight);
@@ -919,10 +919,10 @@ start() {
         this.ctx.lineWidth = 1;
         this.ctx.strokeRect(barX, barY, barWidth, barHeight);
         
-        this.ctx.font = '14px "Segoe UI", sans-serif';
+        this.ctx.font = '28px "Segoe UI", sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.fillStyle = '#fff';
-        this.ctx.fillText(`${boss.hp} / ${boss.maxHp}`, this.canvas.width / 2, barY + barHeight + 15);
+        this.ctx.fillText(`${boss.hp} / ${boss.maxHp}`, this.canvas.width / 2, barY + barHeight + 30);
         
         this.ctx.restore();
     }

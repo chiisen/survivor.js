@@ -110,7 +110,7 @@ export class WaveManager {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
-        const fontSize = 36;
+        const fontSize = 72;
         ctx.font = `bold ${fontSize}px 'Segoe UI', sans-serif`;
         
         ctx.shadowColor = this.isBossWave ? '#e74c3c' : '#f39c12';
@@ -129,19 +129,19 @@ export class WaveManager {
         ctx.save();
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        ctx.font = 'bold 18px "Segoe UI", sans-serif';
+        ctx.font = 'bold 36px "Segoe UI", sans-serif';
         ctx.fillStyle = '#ecf0f1';
         
         ctx.fillText(`波次: ${this.currentWave}`, x, y);
         
         if (this.isBossWave) {
             ctx.fillStyle = '#e74c3c';
-            ctx.fillText('BOSS 波！', x, y + 25);
+            ctx.fillText('BOSS 波！', x, y + 50);
         }
         
         if (this.isBreak) {
             ctx.fillStyle = '#2ecc71';
-            ctx.fillText('休息時間', x, y + 25);
+            ctx.fillText('休息時間', x, y + 50);
         }
         
         ctx.restore();

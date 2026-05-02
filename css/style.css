@@ -38,8 +38,8 @@ body {
 
 #hp-bar, #exp-bar {
     position: relative;
-    width: 200px;
-    height: 24px;
+    width: 300px;
+    height: 48px;
     background: rgba(0, 0, 0, 0.5);
     border-radius: 12px;
     overflow: hidden;
@@ -64,14 +64,14 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     color: white;
-    font-size: 12px;
+    font-size: 24px;
     font-weight: bold;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 #level-display {
     color: #f1c40f;
-    font-size: 20px;
+    font-size: 40px;
     font-weight: bold;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
@@ -81,7 +81,7 @@ body {
     top: 20px;
     right: 20px;
     color: white;
-    font-size: 24px;
+    font-size: 48px;
     font-weight: bold;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
@@ -516,7 +516,7 @@ body {
     top: 20px;
     right: 80px;
     color: #f39c12;
-    font-size: 16px;
+    font-size: 32px;
     font-weight: bold;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     padding: 5px 15px;
@@ -549,19 +549,19 @@ body {
     left: 20px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     pointer-events: none;
 }
 
 .skill-item {
     background: rgba(0, 0, 0, 0.4);
-    padding: 8px 12px;
+    padding: 12px 16px;
     border-radius: 8px;
     border: 2px solid rgba(52, 152, 219, 0.3);
     display: flex;
     align-items: center;
-    gap: 8px;
-    min-width: 150px;
+    gap: 10px;
+    min-width: 200px;
     opacity: 0.7;
     transition: opacity 0.3s ease;
 }
@@ -573,18 +573,18 @@ body {
 }
 
 .skill-icon {
-    font-size: 16px;
+    font-size: 32px;
 }
 
 .skill-name {
     color: #ecf0f1;
-    font-size: 12px;
+    font-size: 24px;
     font-weight: bold;
 }
 
 .skill-value {
     color: #f1c40f;
-    font-size: 12px;
+    font-size: 24px;
     font-weight: bold;
     margin-left: auto;
 }
