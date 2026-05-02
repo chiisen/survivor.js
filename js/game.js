@@ -14,6 +14,9 @@ import { StorageManager } from './storage.js';
 import { getRandomUpgrades } from './talent.js';
 import { UI } from './ui.js';
 import { distance, distanceSquared } from './utils.js';
+import { BossSpawnEffect } from './bossSpawnEffect.js';
+import { ShieldBreakEffect } from './shieldBreakEffect.js';
+import { BossDeathEffect } from './bossDeathEffect.js';
 
 export class Game {
     constructor(canvas) {
@@ -46,6 +49,23 @@ export class Game {
         this.bossesKilled = 0;
         this.enemyGrid = new SpatialGrid(100);
         this.projectileGrid = new SpatialGrid(100);
+        
+        this.bossSpawnPool = new ObjectPool(
+            () => new BossSpawnEffect(),
+            (obj, x, y) => obj.init(x, y),
+            3
+        );
+        this.shieldBreakPool = new ObjectPool(
+            () => new ShieldBreakEffect(),
+            (obj, x, y) => obj.init(x, y),
+            5
+        );
+        this.bossDeathPool = new ObjectPool(
+            () => new BossDeathEffect(),
+            (obj, x, y) => obj.init(x, y),
+            2
+        );
+        this.screenShake = { x: 0, y: 0 };
         
         this.keys = {};
         this.isRunning = false;
@@ -116,6 +136,9 @@ start() {
         this.enemies = [];
         this.projectilePool.releaseAll();
         this.explosionPool.releaseAll();
+        this.bossSpawnPool.releaseAll();
+        this.shieldBreakPool.releaseAll();
+        this.bossDeathPool.releaseAll();
         this.enemyProjectiles = [];
         this.expOrbs = [];
         this.damageNumbers = [];
@@ -126,6 +149,7 @@ start() {
         this.isPaused = false;
         this.pauseScreen.classList.add('hidden');
         this.audioStarted = false;
+        this.screenShake = { x: 0, y: 0 };
         this.ui.updateHp(this.player.hp, this.player.maxHp);
         this.ui.updateExp(0, this.expToLevel);
         this.ui.updateLevel(this.level);
@@ -191,8 +215,11 @@ start() {
         }
         
         if (this.waveManager.shouldSpawnBoss()) {
-            this.spawnEnemy(true);
-            this.audio.playChainKill();
+            const boss = this.spawnEnemy(true);
+            if (boss) {
+                this.bossSpawnPool.get(boss.x, boss.y);
+                this.audio.playChainKill();
+            }
         }
         
         this.autoFire();
@@ -287,6 +314,7 @@ start() {
                             actualDamage -= enemy.shieldHp;
                             enemy.shieldHp = 0;
                             enemy.hasShield = false;
+                            this.shieldBreakPool.get(enemy.x, enemy.y);
                         }
                     }
                     
@@ -302,6 +330,7 @@ start() {
                         this.audio.playKill();
                         if (enemy.type.isBoss) {
                             this.bossesKilled++;
+                            this.bossDeathPool.get(enemy.x, enemy.y);
                             this.audio.playChainKill();
                         }
                         
@@ -309,7 +338,9 @@ start() {
                             this.createExplosiveDeath(enemy);
                         }
                         
-                        this.explosionPool.get(enemy.x, enemy.y);
+                        if (!enemy.type.isBoss) {
+                            this.explosionPool.get(enemy.x, enemy.y);
+                        }
                         this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, enemy.expValue));
                         
                         if (enemy.canSplit) {
@@ -395,6 +426,43 @@ start() {
         }
         
         this.ui.updateTimer(this.gameTime);
+        
+        this.updateEffects(dt);
+        
+        this.screenShake = { x: 0, y: 0 };
+        for (const spawnEffect of this.bossSpawnPool.getActiveObjects()) {
+            if (spawnEffect.active) {
+                const shake = spawnEffect.getShakeOffset();
+                this.screenShake.x += shake.x;
+                this.screenShake.y += shake.y;
+            }
+        }
+    }
+
+    updateEffects(dt) {
+        for (const effect of this.bossSpawnPool.getActiveObjects()) {
+            if (!effect.active) continue;
+            effect.update(dt);
+            if (effect.isFinished()) {
+                this.bossSpawnPool.release(effect);
+            }
+        }
+        
+        for (const effect of this.shieldBreakPool.getActiveObjects()) {
+            if (!effect.active) continue;
+            effect.update(dt);
+            if (effect.isFinished()) {
+                this.shieldBreakPool.release(effect);
+            }
+        }
+        
+        for (const effect of this.bossDeathPool.getActiveObjects()) {
+            if (!effect.active) continue;
+            effect.update(dt);
+            if (effect.isFinished()) {
+                this.bossDeathPool.release(effect);
+            }
+        }
     }
 
     spawnEnemy(isBoss = false) {
@@ -409,6 +477,7 @@ start() {
             hpMultiplier
         );
         this.enemies.push(enemy);
+        return enemy;
     }
 
     createSplitEnemies(parentEnemy) {
@@ -610,7 +679,10 @@ start() {
     }
 
     render() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.save();
+        this.ctx.translate(this.screenShake.x, this.screenShake.y);
+        
+        this.ctx.clearRect(-10, -10, this.canvas.width + 20, this.canvas.height + 20);
         
         const gradient = this.ctx.createRadialGradient(
             this.canvas.width / 2, this.canvas.height / 2, 0,
@@ -619,7 +691,7 @@ start() {
         gradient.addColorStop(0, '#1a1a2e');
         gradient.addColorStop(1, '#16213e');
         this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillRect(-10, -10, this.canvas.width + 20, this.canvas.height + 20);
         
         this.decorationManager.draw(this.ctx);
         
@@ -629,8 +701,26 @@ start() {
             orb.draw(this.ctx);
         }
         
+        for (const effect of this.bossSpawnPool.getActiveObjects()) {
+            if (effect.active) {
+                effect.draw(this.ctx);
+            }
+        }
+        
         for (const enemy of this.enemies) {
             enemy.draw(this.ctx);
+        }
+        
+        for (const effect of this.bossDeathPool.getActiveObjects()) {
+            if (effect.active) {
+                effect.draw(this.ctx);
+            }
+        }
+        
+        for (const effect of this.shieldBreakPool.getActiveObjects()) {
+            if (effect.active) {
+                effect.draw(this.ctx);
+            }
         }
         
         for (const explosion of this.explosionPool.getActiveObjects()) {
@@ -667,6 +757,8 @@ start() {
         
         this.waveManager.drawAnnouncement(this.ctx, this.canvas.width / 2, this.canvas.height / 2);
         this.waveManager.drawWaveInfo(this.ctx, 20, this.canvas.height - 60);
+        
+        this.ctx.restore();
     }
 
     drawGrid() {
