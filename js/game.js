@@ -3,6 +3,7 @@ import { Enemy } from './enemy.js';
 import { Projectile } from './projectile.js';
 import { ExperienceOrb } from './experience.js';
 import { Explosion } from './explosion.js';
+import { DamageNumber } from './damageNumber.js';
 import { getRandomUpgrades } from './talent.js';
 import { UI } from './ui.js';
 import { distance } from './utils.js';
@@ -18,6 +19,7 @@ export class Game {
         this.projectiles = [];
         this.expOrbs = [];
         this.explosions = [];
+        this.damageNumbers = [];
         this.ui = new UI();
         
         this.keys = {};
@@ -77,6 +79,7 @@ export class Game {
         this.projectiles = [];
         this.expOrbs = [];
         this.explosions = [];
+        this.damageNumbers = [];
         this.isRunning = true;
         this.isPaused = false;
         this.gameTime = 0;
@@ -165,6 +168,7 @@ export class Game {
                 
                 if (dist < projectile.radius + enemy.radius) {
                     enemy.hp -= projectile.damage;
+                    this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage));
                     this.projectiles.splice(i, 1);
                     
                     if (enemy.hp <= 0) {
@@ -182,6 +186,7 @@ export class Game {
                             if (chainDist <= chainRadius) {
                                 this.explosions.push(new Explosion(nearbyEnemy.x, nearbyEnemy.y));
                                 this.expOrbs.push(new ExperienceOrb(nearbyEnemy.x, nearbyEnemy.y, nearbyEnemy.expValue));
+                                this.damageNumbers.push(new DamageNumber(nearbyEnemy.x, nearbyEnemy.y - nearbyEnemy.radius, projectile.damage));
                                 this.enemies.splice(k, 1);
                                 chainKills++;
                                 if (k < j) j--;
@@ -207,6 +212,15 @@ export class Game {
             
             if (explosion.isFinished()) {
                 this.explosions.splice(i, 1);
+            }
+        }
+        
+        for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
+            const damageNumber = this.damageNumbers[i];
+            damageNumber.update(dt);
+            
+            if (damageNumber.isFinished()) {
+                this.damageNumbers.splice(i, 1);
             }
         }
         
@@ -335,6 +349,10 @@ export class Game {
         
         for (const explosion of this.explosions) {
             explosion.draw(this.ctx);
+        }
+        
+        for (const damageNumber of this.damageNumbers) {
+            damageNumber.draw(this.ctx);
         }
         
         for (const projectile of this.projectiles) {
