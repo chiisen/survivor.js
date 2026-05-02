@@ -8,7 +8,7 @@ const UPGRADES = [
     { type: 'fireRate', name: '急速射擊', description: '射擊間隔 -0.08秒', value: 0.08, icon: '⚡' },
     { type: 'damage', name: '魔力增幅', description: '傷害 +1', value: 1, icon: '✨' },
     { type: 'projectileSpeed', name: '子彈加速', description: '子彈速度 +100', value: 100, icon: '🚀' },
-    { type: 'projectileCount', name: '多重射擊', description: '同時發射 +1 顆子彈', value: 1, icon: '🎯' },
+    { type: 'projectileCount', name: '多重射擊', description: '同時發射 +2 顆子彈', value: 2, icon: '🎯' },
 ];
 
 export function getRandomUpgrades(count = 3) {
