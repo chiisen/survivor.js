@@ -213,6 +213,7 @@ start() {
         this.ui.updateHp(this.player.hp, this.player.maxHp);
         this.ui.updateExp(0, this.expToLevel);
         this.ui.updateLevel(this.level);
+        this.updateSkillStats();
         
         this.lastTime = performance.now();
         this.loop();
@@ -745,7 +746,31 @@ start() {
         this.ui.showUpgradeModal(upgrades, (selectedUpgrade) => {
             this.player.applyUpgrade(selectedUpgrade);
             this.ui.updateHp(this.player.hp, this.player.maxHp);
+            this.updateSkillStats();
             this.isPaused = false;
+        });
+    }
+    
+    updateSkillStats() {
+        if (!this.player) return;
+        
+        const stats = this.player.upgradeStats;
+        const skillItems = document.querySelectorAll('.skill-item');
+        
+        skillItems.forEach(item => {
+            const skillType = item.dataset.skill;
+            const valueSpan = item.querySelector('.skill-value');
+            
+            if (skillType === 'projectileCount') {
+                valueSpan.textContent = this.player.projectileCount;
+            } else {
+                const level = stats[skillType] || 0;
+                valueSpan.textContent = `Lv.${level}`;
+            }
+            
+            if (stats[skillType] > 0 || (skillType === 'projectileCount' && this.player.projectileCount > 3)) {
+                item.classList.add('active');
+            }
         });
     }
 

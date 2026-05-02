@@ -26,6 +26,17 @@ export class Player {
         this.hasFireRateBuff = false;
         this.fireRateBuffTime = 0;
         this.fireRateBuffDuration = 5;
+        
+        this.upgradeStats = {
+            maxHp: 0,
+            speed: 0,
+            pickupRange: 0,
+            attackRange: 0,
+            fireRate: 0,
+            damage: 0,
+            projectileSpeed: 0,
+            projectileCount: 0
+        };
     }
 
     update(dt, keys, canvasWidth, canvasHeight) {
@@ -285,6 +296,8 @@ export class Player {
     }
 
     applyUpgrade(upgrade) {
+        this.upgradeStats[upgrade.type]++;
+        
         switch (upgrade.type) {
             case 'maxHp':
                 this.maxHp += upgrade.value;
