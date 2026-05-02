@@ -127,7 +127,7 @@ export class WaveManager {
 
     drawWaveInfo(ctx, x, y) {
         ctx.save();
-        ctx.textAlign = 'left';
+        ctx.textAlign = 'right';
         ctx.textBaseline = 'top';
         ctx.font = 'bold 36px "Segoe UI", sans-serif';
         ctx.fillStyle = '#ecf0f1';

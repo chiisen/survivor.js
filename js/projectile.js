@@ -12,6 +12,7 @@ export class Projectile {
         this.trail = [];
         this.maxTrailLength = 10;
         this.active = false;
+        this.isCrit = false;
     }
 
     init(x, y, targetX, targetY, speed, damage) {
@@ -23,6 +24,7 @@ export class Projectile {
         this.damage = damage;
         this.trail = [];
         this.active = true;
+        this.isCrit = false;
     }
 
     reset() {
@@ -33,6 +35,7 @@ export class Projectile {
         this.damage = 1;
         this.trail = [];
         this.active = false;
+        this.isCrit = false;
     }
 
     update(dt) {
@@ -47,28 +50,39 @@ export class Projectile {
 
     draw(ctx) {
         ctx.save();
+        
+        const baseColor = this.isCrit ? '#e74c3c' : '#f39c12';
+        const trailColor = this.isCrit ? 'rgba(231, 76, 60,' : 'rgba(243, 156, 18,';
 
         for (let i = 0; i < this.trail.length; i++) {
             const alpha = (1 - i / this.trail.length) * 0.3;
             const radius = this.radius * (1 - i / this.trail.length * 0.5);
             ctx.beginPath();
             ctx.arc(this.trail[i].x, this.trail[i].y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(243, 156, 18, ${alpha})`;
+            ctx.fillStyle = `${trailColor} ${alpha})`;
             ctx.fill();
         }
 
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = baseColor;
         ctx.fill();
+
+        if (this.isCrit) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 4, 0, Math.PI * 2);
+            ctx.strokeStyle = '#f1c40f';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
 
         const gradient = ctx.createRadialGradient(
             this.x - 2, this.y - 2, 0,
             this.x, this.y, this.radius
         );
         gradient.addColorStop(0, '#fff');
-        gradient.addColorStop(0.3, this.color);
-        gradient.addColorStop(1, '#e67e22');
+        gradient.addColorStop(0.3, baseColor);
+        gradient.addColorStop(1, this.isCrit ? '#c0392b' : '#e67e22');
         ctx.fillStyle = gradient;
         ctx.fill();
 

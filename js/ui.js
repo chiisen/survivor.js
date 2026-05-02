@@ -144,13 +144,43 @@ hideUpgradeModal() {
         }
     }
 
-    showGameOver(gameStats, historicalStats, newRecords) {
+    showGameOver(gameStats, historicalStats, newRecords, newAchievements = [], leaderboard = []) {
         this.gameOverScreen.classList.remove('hidden');
         
-        const recordMarkers = newRecords.map(r => {
-            if (r.isNew) return ' 🏆新紀錄！';
-            return '';
-        }).join('');
+        const achievementHtml = newAchievements.length > 0 ? `
+            <div style="border-top: 1px solid #5d6d7e; padding-top: 15px; margin-top: 15px;">
+                <h3 style="color: #f1c40f; margin-bottom: 10px;">🏆 新成就解锁！</h3>
+                ${newAchievements.map(a => `
+                    <div style="color: #2ecc71; margin-bottom: 5px;">
+                        ${a.icon} ${a.name} - ${a.description}
+                    </div>
+                `).join('')}
+            </div>
+        ` : '';
+        
+        const leaderboardHtml = leaderboard.length > 0 ? `
+            <div style="border-top: 1px solid #5d6d7e; padding-top: 15px; margin-top: 15px;">
+                <h3 style="color: #9b59b6; margin-bottom: 10px;">📊 排行榜 TOP 10</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="color: #3498db; font-weight: bold; border-bottom: 1px solid #5d6d7e;">
+                        <td style="padding: 5px;">排名</td>
+                        <td style="padding: 5px;">等级</td>
+                        <td style="padding: 5px;">击杀</td>
+                        <td style="padding: 5px;">时间</td>
+                        <td style="padding: 5px;">波次</td>
+                    </tr>
+                    ${leaderboard.map((entry, index) => `
+                        <tr style="${index === 0 ? 'color: #f1c40f; font-weight: bold;' : 'color: #ecf0f1;'}">
+                            <td style="padding: 5px;">${index + 1}</td>
+                            <td style="padding: 5px;">Lv.${entry.level}</td>
+                            <td style="padding: 5px;">${entry.kills}</td>
+                            <td style="padding: 5px;">${entry.formattedTime}</td>
+                            <td style="padding: 5px;">${entry.wave}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+            </div>
+        ` : '';
         
         this.finalStats.innerHTML = `
             <div style="margin-bottom: 20px;">
@@ -170,6 +200,8 @@ hideUpgradeModal() {
                 Boss擊殺: ${historicalStats.bossesKilled}<br>
                 總遊戲次: ${historicalStats.totalGames}
             </div>
+            ${achievementHtml}
+            ${leaderboardHtml}
         `;
     }
 

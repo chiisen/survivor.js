@@ -27,6 +27,14 @@ export class Player {
         this.fireRateBuffTime = 0;
         this.fireRateBuffDuration = 5;
         
+        this.critChance = 0;
+        this.critDamage = 1.5;
+        this.lifesteal = 0;
+        this.shield = 0;
+        this.maxShield = 0;
+        this.expBonus = 0;
+        this.armor = 0;
+        
         this.upgradeStats = {
             maxHp: 0,
             speed: 0,
@@ -35,7 +43,13 @@ export class Player {
             fireRate: 0,
             damage: 0,
             projectileSpeed: 0,
-            projectileCount: 0
+            projectileCount: 0,
+            critChance: 0,
+            critDamage: 0,
+            lifesteal: 0,
+            shield: 0,
+            expBonus: 0,
+            armor: 0
         };
     }
 
@@ -78,15 +92,6 @@ export class Player {
                 this.fireRate = this.baseFireRate;
             }
         }
-    }
-
-    takeDamage(amount) {
-        if (this.invincibleTime > 0) return false;
-        
-        this.hp -= amount;
-        this.invincibleTime = 1.0;
-        this.flashTime = 0.2;
-        return true;
     }
 
     activateFireRateBuff() {
@@ -327,6 +332,70 @@ export class Player {
             case 'projectileCount':
                 this.projectileCount += upgrade.value;
                 break;
+            case 'critChance':
+                this.critChance += upgrade.value;
+                break;
+            case 'critDamage':
+                this.critDamage += upgrade.value;
+                break;
+            case 'lifesteal':
+                this.lifesteal += upgrade.value;
+                break;
+            case 'shield':
+                this.shield += upgrade.value;
+                this.maxShield += upgrade.value;
+                break;
+            case 'expBonus':
+                this.expBonus += upgrade.value;
+                break;
+            case 'armor':
+                this.armor += upgrade.value;
+                break;
         }
+    }
+    
+    rollCrit() {
+        if (this.critChance > 0 && Math.random() < this.critChance) {
+            return this.critDamage;
+        }
+        return 1;
+    }
+    
+    heal(amount) {
+        this.hp = Math.min(this.maxHp, this.hp + amount);
+    }
+    
+    takeDamage(rawDamage) {
+        const actualDamage = Math.max(1, rawDamage - this.armor);
+        
+        if (this.shield > 0) {
+            if (this.shield >= actualDamage) {
+                this.shield -= actualDamage;
+                return false;
+            } else {
+                const remainingDamage = actualDamage - this.shield;
+                this.shield = 0;
+                this.hp -= remainingDamage;
+                if (this.hp <= 0) {
+                    this.hp = 0;
+                    return true;
+                }
+                return false;
+            }
+        }
+        
+        if (this.invincibleTime > 0) {
+            return false;
+        }
+        
+        this.hp -= actualDamage;
+        if (this.hp <= 0) {
+            this.hp = 0;
+            return true;
+        }
+        
+        this.invincibleTime = 1;
+        this.flashTime = 1;
+        return false;
     }
 }

@@ -18,6 +18,7 @@ import { BossSpawnEffect } from './bossSpawnEffect.js';
 import { ShieldBreakEffect } from './shieldBreakEffect.js';
 import { BossDeathEffect } from './bossDeathEffect.js';
 import { SplitEffect } from './splitEffect.js';
+import { AchievementManager } from './achievement.js';
 
 export class Game {
     constructor(canvas) {
@@ -71,6 +72,7 @@ export class Game {
             (obj, x, y) => obj.init(x, y),
             10
         );
+        this.achievementManager = new AchievementManager();
         this.screenShake = { x: 0, y: 0 };
         
         this.keys = {};
@@ -312,7 +314,11 @@ start() {
             const shootData = enemy.update(dt, this.player.x, this.player.y);
             
             if (shootData) {
-                this.enemyProjectiles.push(shootData);
+                if (shootData.type === 'spawn_minion') {
+                    this.spawnMinionEnemies(shootData.x, shootData.y, 2);
+                } else {
+                    this.enemyProjectiles.push(shootData);
+                }
             }
         }
         
@@ -337,6 +343,14 @@ start() {
         
         for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
             const proj = this.enemyProjectiles[i];
+            
+            if (proj.trail) {
+                proj.trail.unshift({ x: proj.x, y: proj.y });
+                if (proj.trail.length > proj.maxTrailLength) {
+                    proj.trail.pop();
+                }
+            }
+            
             proj.x += proj.vx * dt;
             proj.y += proj.vy * dt;
             
@@ -406,12 +420,22 @@ start() {
                         enemy.hp -= actualDamage;
                     }
                     
+                    if (projectile.isCrit) {
+                        damageColor = '#e74c3c';
+                    }
+                    
                     this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage, damageColor));
                     this.audio.playHit();
                     this.projectilePool.release(projectile);
                     
                     if (enemy.hp <= 0) {
                         this.audio.playKill();
+                        
+                        if (this.player.lifesteal > 0) {
+                            this.player.heal(this.player.lifesteal);
+                            this.ui.updateHp(this.player.hp, this.player.maxHp);
+                        }
+                        
                         if (enemy.type.isBoss) {
                             this.bossesKilled++;
                             this.bossDeathPool.get(enemy.x, enemy.y);
@@ -502,7 +526,8 @@ start() {
             
             if (orb.isCollected(this.player.x, this.player.y, this.player.radius)) {
                 this.audio.playPickup();
-                this.exp += orb.value;
+                const expValue = Math.floor(orb.value * (1 + this.player.expBonus));
+                this.exp += expValue;
                 this.expOrbs.splice(i, 1);
                 
                 this.checkLevelUp();
@@ -691,6 +716,31 @@ start() {
         ));
     }
 
+    spawnMinionEnemies(x, y, count) {
+        for (let i = 0; i < count; i++) {
+            const angle = (Math.PI * 2 / count) * i;
+            const offset = 30;
+            const minionX = x + Math.cos(angle) * offset;
+            const minionY = y + Math.sin(angle) * offset;
+            
+            const minion = new Enemy(minionX, minionY, {
+                name: 'minion',
+                radius: 10,
+                speed: 70,
+                maxHp: 1,
+                damage: 5,
+                expValue: 5,
+                color: '#e74c3c',
+                strokeColor: '#c0392b',
+                eyeColor: '#fff',
+                mouthStyle: 'angry',
+                canShoot: false,
+                shootInterval: 0
+            });
+            this.enemies.push(minion);
+        }
+    }
+
     autoFire() {
         if (!this.player.canFire() || this.enemies.length === 0) return;
         
@@ -725,14 +775,21 @@ start() {
                 const targetX = this.player.x + Math.cos(finalAngle) * 100;
                 const targetY = this.player.y + Math.sin(finalAngle) * 100;
                 
-                this.projectilePool.get(
+                const critMultiplier = this.player.rollCrit();
+                const damage = Math.floor(this.player.damage * critMultiplier);
+                
+                const projectile = this.projectilePool.get(
                     this.player.x,
                     this.player.y,
                     targetX,
                     targetY,
                     this.player.projectileSpeed,
-                    this.player.damage
+                    damage
                 );
+                
+                if (critMultiplier > 1) {
+                    projectile.isCrit = true;
+                }
             }
         }
     }
@@ -777,13 +834,48 @@ start() {
             
             if (skillType === 'projectileCount') {
                 valueSpan.textContent = this.player.projectileCount;
+                if (this.player.projectileCount > 3) {
+                    item.classList.add('active');
+                }
+            } else if (skillType === 'critChance') {
+                const chance = Math.floor(this.player.critChance * 100);
+                valueSpan.textContent = `${chance}%`;
+                if (stats[skillType] > 0) {
+                    item.classList.add('active');
+                }
+            } else if (skillType === 'critDamage') {
+                const damage = Math.floor(this.player.critDamage * 100);
+                valueSpan.textContent = `${damage}%`;
+                if (stats[skillType] > 0) {
+                    item.classList.add('active');
+                }
+            } else if (skillType === 'shield') {
+                valueSpan.textContent = `${this.player.shield}/${this.player.maxShield}`;
+                if (stats[skillType] > 0) {
+                    item.classList.add('active');
+                }
+            } else if (skillType === 'expBonus') {
+                const bonus = Math.floor(this.player.expBonus * 100);
+                valueSpan.textContent = `+${bonus}%`;
+                if (stats[skillType] > 0) {
+                    item.classList.add('active');
+                }
+            } else if (skillType === 'lifesteal') {
+                valueSpan.textContent = `${this.player.lifesteal}HP`;
+                if (stats[skillType] > 0) {
+                    item.classList.add('active');
+                }
+            } else if (skillType === 'armor') {
+                valueSpan.textContent = `${this.player.armor}`;
+                if (stats[skillType] > 0) {
+                    item.classList.add('active');
+                }
             } else {
                 const level = stats[skillType] || 0;
                 valueSpan.textContent = `Lv.${level}`;
-            }
-            
-            if (stats[skillType] > 0 || (skillType === 'projectileCount' && this.player.projectileCount > 3)) {
-                item.classList.add('active');
+                if (stats[skillType] > 0) {
+                    item.classList.add('active');
+                }
             }
         });
     }
@@ -801,10 +893,25 @@ start() {
             bossesKilled: this.bossesKilled
         };
         
-        const newRecords = this.storageManager.update(gameStats);
-        const historicalStats = this.storageManager.getFormattedStats();
+        this.achievementManager.saveHellSurviveTime(this.gameTime, this.difficulty);
         
-        this.ui.showGameOver(gameStats, historicalStats, newRecords);
+        const historicalStats = this.storageManager.getFormattedStats();
+        const statsForAchievements = {
+            totalKills: historicalStats.totalKills + this.kills,
+            longestTime: Math.max(historicalStats.longestTimeSec || 0, this.gameTime),
+            bossesKilled: historicalStats.bossesKilled + this.bossesKilled,
+            highestWave: Math.max(historicalStats.highestWave, this.waveManager.currentWave),
+            highestLevel: Math.max(historicalStats.highestLevel, this.level),
+            totalGames: historicalStats.totalGames + 1
+        };
+        
+        const newAchievements = this.achievementManager.check(statsForAchievements, this.difficulty);
+        
+        const newRecords = this.storageManager.update(gameStats);
+        const updatedHistoricalStats = this.storageManager.getFormattedStats();
+        const leaderboard = this.storageManager.getLeaderboard();
+        
+        this.ui.showGameOver(gameStats, updatedHistoricalStats, newRecords, newAchievements, leaderboard);
     }
 
     render() {
@@ -876,6 +983,18 @@ start() {
         
         for (const proj of this.enemyProjectiles) {
             this.ctx.save();
+            
+            if (proj.trail && proj.trail.length > 0) {
+                for (let i = 0; i < proj.trail.length; i++) {
+                    const alpha = (1 - i / proj.trail.length) * 0.3;
+                    const radius = proj.radius * (1 - i / proj.trail.length * 0.5);
+                    this.ctx.beginPath();
+                    this.ctx.arc(proj.trail[i].x, proj.trail[i].y, radius, 0, Math.PI * 2);
+                    this.ctx.fillStyle = `rgba(155, 89, 182, ${alpha})`;
+                    this.ctx.fill();
+                }
+            }
+            
             this.ctx.beginPath();
             this.ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
             this.ctx.fillStyle = proj.color;
@@ -883,6 +1002,17 @@ start() {
             this.ctx.strokeStyle = '#8e44ad';
             this.ctx.lineWidth = 2;
             this.ctx.stroke();
+            
+            const gradient = this.ctx.createRadialGradient(
+                proj.x - 1, proj.y - 1, 0,
+                proj.x, proj.y, proj.radius
+            );
+            gradient.addColorStop(0, '#fff');
+            gradient.addColorStop(0.3, proj.color);
+            gradient.addColorStop(1, '#6c3483');
+            this.ctx.fillStyle = gradient;
+            this.ctx.fill();
+            
             this.ctx.restore();
         }
         
@@ -891,7 +1021,7 @@ start() {
         this.chainKillDisplay.draw(this.ctx, this.canvas.width / 2, this.canvas.height / 2);
         
         this.waveManager.drawAnnouncement(this.ctx, this.canvas.width / 2, this.canvas.height / 2);
-        this.waveManager.drawWaveInfo(this.ctx, 20, this.canvas.height * 0.75);
+        this.waveManager.drawWaveInfo(this.ctx, this.canvas.width - 180, this.canvas.height * 0.75);
         
         this.drawBossHealthBar();
         

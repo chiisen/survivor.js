@@ -9,6 +9,12 @@ const UPGRADES = [
     { type: 'damage', name: '魔力增幅', description: '傷害 +1', value: 1, icon: '✨' },
     { type: 'projectileSpeed', name: '子彈加速', description: '子彈速度 +100', value: 100, icon: '🚀' },
     { type: 'projectileCount', name: '多重射擊', description: '同時發射 +2 顆子彈', value: 2, icon: '🎯' },
+    { type: 'critChance', name: '暴击大师', description: '暴击率 +10%', value: 0.1, icon: '💥' },
+    { type: 'critDamage', name: '暴击增幅', description: '暴击伤害 +50%', value: 0.5, icon: '🔥' },
+    { type: 'lifesteal', name: '吸血鬼', description: '击杀回复 +5 HP', value: 5, icon: '🩸' },
+    { type: 'shield', name: '护盾大师', description: '获得 +15 护盾', value: 15, icon: '🛡️' },
+    { type: 'expBonus', name: '经验达人', description: '经验值获取 +20%', value: 0.2, icon: '📚' },
+    { type: 'armor', name: '铁壁', description: '受到伤害 -5', value: 5, icon: '🧱' },
 ];
 
 export function getRandomUpgrades(count = 3) {

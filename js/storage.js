@@ -1,8 +1,11 @@
 const STORAGE_KEY = 'survivor_js_stats';
+const LEADERBOARD_KEY = 'survivor_js_leaderboard';
+const MAX_LEADERBOARD_ENTRIES = 10;
 
 export class StorageManager {
     constructor() {
         this.stats = this.load();
+        this.leaderboard = this.loadLeaderboard();
     }
 
     load() {
@@ -25,11 +28,31 @@ export class StorageManager {
         };
     }
 
+    loadLeaderboard() {
+        try {
+            const data = localStorage.getItem(LEADERBOARD_KEY);
+            if (data) {
+                return JSON.parse(data);
+            }
+        } catch (e) {
+            console.warn('Failed to load leaderboard from localStorage:', e);
+        }
+        return [];
+    }
+
     save(stats) {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
         } catch (e) {
             console.warn('Failed to save stats to localStorage:', e);
+        }
+    }
+
+    saveLeaderboard(leaderboard) {
+        try {
+            localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(leaderboard));
+        } catch (e) {
+            console.warn('Failed to save leaderboard to localStorage:', e);
         }
     }
 
@@ -46,7 +69,39 @@ export class StorageManager {
         this.stats = newStats;
         this.save(newStats);
         
+        this.addToLeaderboard(gameStats);
+        
         return this.checkNewRecords(gameStats);
+    }
+
+    addToLeaderboard(gameStats) {
+        const entry = {
+            level: gameStats.level,
+            kills: gameStats.kills,
+            time: gameStats.time,
+            wave: gameStats.wave,
+            bossesKilled: gameStats.bossesKilled || 0,
+            date: new Date().toLocaleDateString('zh-TW')
+        };
+        
+        this.leaderboard.push(entry);
+        
+        this.leaderboard.sort((a, b) => {
+            if (b.level !== a.level) return b.level - a.level;
+            if (b.kills !== a.kills) return b.kills - a.kills;
+            return b.time - a.time;
+        });
+        
+        this.leaderboard = this.leaderboard.slice(0, MAX_LEADERBOARD_ENTRIES);
+        
+        this.saveLeaderboard(this.leaderboard);
+    }
+
+    getLeaderboard() {
+        return this.leaderboard.map(entry => ({
+            ...entry,
+            formattedTime: this.formatTime(entry.time)
+        }));
     }
 
     checkNewRecords(gameStats) {
@@ -81,6 +136,7 @@ export class StorageManager {
         return {
             highestLevel: this.stats.highestLevel,
             longestTime: this.formatTime(this.stats.longestTime),
+            longestTimeSec: this.stats.longestTime,
             totalKills: this.stats.totalKills,
             highestWave: this.stats.highestWave,
             totalGames: this.stats.totalGames,
@@ -97,6 +153,8 @@ export class StorageManager {
             totalGames: 0,
             bossesKilled: 0
         };
+        this.leaderboard = [];
         this.save(this.stats);
+        this.saveLeaderboard(this.leaderboard);
     }
 }

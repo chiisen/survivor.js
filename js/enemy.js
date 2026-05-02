@@ -174,12 +174,39 @@ export class Enemy {
         this.shieldHp = type.shieldHp || 0;
         this.shieldMaxHp = type.shieldHp || 0;
         this.hasShield = this.shieldHp > 0;
+        
+        this.phase = 1;
+        this.rageMode = false;
+        this.spawnCooldown = 0;
     }
 
     update(dt, playerX, playerY) {
         const dx = playerX - this.x;
         const dy = playerY - this.y;
         const normalized = normalize(dx, dy);
+        
+        if (this.type.isBoss) {
+            const hpPercentage = this.hp / this.maxHp;
+            
+            if (hpPercentage <= 0.3 && !this.rageMode) {
+                this.rageMode = true;
+                this.phase = 3;
+                this.speed *= 1.5;
+                this.shootInterval *= 0.5;
+            } else if (hpPercentage <= 0.6 && this.phase < 2) {
+                this.phase = 2;
+                this.shootInterval *= 0.7;
+            }
+            
+            if (this.phase >= 2 && this.spawnCooldown <= 0) {
+                this.spawnCooldown = 5;
+                return { type: 'spawn_minion', x: this.x, y: this.y };
+            }
+            
+            if (this.spawnCooldown > 0) {
+                this.spawnCooldown -= dt;
+            }
+        }
         
         this.x += normalized.x * this.speed * dt;
         this.y += normalized.y * this.speed * dt;
@@ -215,15 +242,19 @@ export class Enemy {
         const dy = targetY - this.y;
         const normalized = normalize(dx, dy);
         
-        return {
+        const projectileData = {
             x: this.x,
             y: this.y,
             vx: normalized.x * 150,
             vy: normalized.y * 150,
             damage: 5,
             radius: 5,
-            color: '#9b59b6'
+            color: '#9b59b6',
+            trail: [],
+            maxTrailLength: 10
         };
+        
+        return projectileData;
     }
 
     draw(ctx) {
@@ -256,8 +287,32 @@ export class Enemy {
         if (this.type === EnemyTypes.BOSS) {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius + 10, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(192, 57, 43, 0.2)';
+            ctx.fillStyle = this.rageMode ? 'rgba(231, 76, 60, 0.4)' : 'rgba(192, 57, 43, 0.2)';
             ctx.fill();
+            
+            if (this.rageMode) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius + 20, 0, Math.PI * 2);
+                ctx.strokeStyle = '#e74c3c';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius + 30, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(231, 76, 60, 0.3)';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                for (let i = 0; i < 8; i++) {
+                    const flameAngle = (Math.PI * 2 / 8) * i + Math.sin(Date.now() / 100) * 0.2;
+                    const flameX = this.x + Math.cos(flameAngle) * (this.radius + 15);
+                    const flameY = this.y + Math.sin(flameAngle) * (this.radius + 15);
+                    ctx.beginPath();
+                    ctx.arc(flameX, flameY, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#f39c12';
+                    ctx.fill();
+                }
+            }
             
             ctx.beginPath();
             ctx.moveTo(this.x - 15, this.y - this.radius - 25);
@@ -267,9 +322,9 @@ export class Enemy {
             ctx.lineTo(this.x, this.y - this.radius - 30);
             ctx.lineTo(this.x - 10, this.y - this.radius - 25);
             ctx.closePath();
-            ctx.fillStyle = '#f1c40f';
+            ctx.fillStyle = this.rageMode ? '#e74c3c' : '#f1c40f';
             ctx.fill();
-            ctx.strokeStyle = '#e67e22';
+            ctx.strokeStyle = this.rageMode ? '#c0392b' : '#e67e22';
             ctx.lineWidth = 2;
             ctx.stroke();
         }
