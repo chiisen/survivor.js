@@ -185,7 +185,17 @@ export class Game {
     }
 
 start() {
+        if (!this.difficulty) {
+            this.difficulty = 'normal';
+        }
         const difficultySettings = this.difficultySettings[this.difficulty];
+        
+        this.level = 1;
+        this.exp = 0;
+        this.expToLevel = 100;
+        this.kills = 0;
+        this.gameTime = 0;
+        this.spawnTimer = 0;
         
         this.player = new Player(this.canvas.width / 2, this.canvas.height / 2);
         
@@ -222,6 +232,8 @@ start() {
     }
 
     restart() {
+        this.ui.hideGameOver();
+        this.ui.clearBuffNotifications();
         this.start();
     }
 
