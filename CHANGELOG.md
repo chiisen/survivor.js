@@ -14,6 +14,9 @@
 - 坦克型敵人血量條顯示
 - 遠程型敵人射擊系統：紫色子彈追踪玩家
 - 連殺顯示系統：DOUBLE/TRIPLE/QUAD/MEGA/ULTRA/GODLIKE 大字動畫
+- 音效系統：Web Audio API 合成音效（揮劍/命中/擊殺/連殺/升級/受傷/拾取/結束）
+- 背景音樂：三角波 oscillator + LFO 調變（80Hz + 0.5Hz LFO）
+- 音量控制：masterVolume/sfxVolume/bgmVolume 可動態調整
 
 ### 效能優化
 - 空間網格分割（SpatialGrid）：格子大小 100px，優化碰撞檢測從 O(n×m) 降至 O(n×k)

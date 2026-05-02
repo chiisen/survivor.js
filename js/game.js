@@ -7,6 +7,7 @@ import { DamageNumber } from './damageNumber.js';
 import { ChainKillDisplay } from './chainKillDisplay.js';
 import { SpatialGrid } from './spatialGrid.js';
 import { ObjectPool } from './objectPool.js';
+import { AudioManager } from './audio.js';
 import { getRandomUpgrades } from './talent.js';
 import { UI } from './ui.js';
 import { distance, distanceSquared } from './utils.js';
@@ -34,6 +35,7 @@ export class Game {
         this.damageNumbers = [];
         this.chainKillDisplay = new ChainKillDisplay();
         this.ui = new UI();
+        this.audio = new AudioManager();
         this.enemyGrid = new SpatialGrid(100);
         this.projectileGrid = new SpatialGrid(100);
         
@@ -82,6 +84,13 @@ export class Game {
         });
     }
 
+    hasPlayerInput() {
+        return this.keys['w'] || this.keys['W'] || this.keys['ArrowUp'] ||
+               this.keys['s'] || this.keys['S'] || this.keys['ArrowDown'] ||
+               this.keys['a'] || this.keys['A'] || this.keys['ArrowLeft'] ||
+               this.keys['d'] || this.keys['D'] || this.keys['ArrowRight'];
+    }
+
     setupRestart() {
         this.ui.onRestart(() => {
             this.restart();
@@ -109,6 +118,7 @@ export class Game {
         
         this.ui.hideGameOver();
         this.ui.clearBuffNotifications();
+        this.audioStarted = false;
         this.ui.updateHp(this.player.hp, this.player.maxHp);
         this.ui.updateExp(0, this.expToLevel);
         this.ui.updateLevel(this.level);
@@ -138,6 +148,12 @@ export class Game {
 
     update(dt) {
         this.gameTime += dt;
+        
+        if (!this.audioStarted && this.hasPlayerInput()) {
+            this.audioStarted = true;
+            this.audio.resumeContext();
+            this.audio.startBGM();
+        }
         
         this.enemyGrid.clear();
         this.projectileGrid.clear();
@@ -182,6 +198,7 @@ export class Game {
             const radiusSum = enemy.radius + this.player.radius;
             if (distSq < radiusSum * radiusSum) {
                 if (this.player.takeDamage(enemy.damage)) {
+                    this.audio.playDamage();
                     this.ui.updateHp(this.player.hp, this.player.maxHp);
                     
                     if (this.player.hp <= 0) {
@@ -206,6 +223,7 @@ export class Game {
             const dist = distance(proj.x, proj.y, this.player.x, this.player.y);
             if (dist < proj.radius + this.player.radius) {
                 if (this.player.takeDamage(proj.damage)) {
+                    this.audio.playDamage();
                     this.ui.updateHp(this.player.hp, this.player.maxHp);
                     this.enemyProjectiles.splice(i, 1);
                     
@@ -240,9 +258,11 @@ export class Game {
                 if (distSq < radiusSum * radiusSum) {
                     enemy.hp -= projectile.damage;
                     this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage));
+                    this.audio.playHit();
                     this.projectilePool.release(projectile);
                     
                     if (enemy.hp <= 0) {
+                        this.audio.playKill();
                         this.explosionPool.get(enemy.x, enemy.y);
                         this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, enemy.expValue));
                         
@@ -274,6 +294,7 @@ export class Game {
                         this.kills += chainKills;
                         
                         if (chainKills >= 2) {
+                            this.audio.playChainKill();
                             this.chainKillDisplay.trigger(chainKills);
                             
                             if (!this.player.hasFireRateBuff) {
@@ -315,6 +336,7 @@ export class Game {
             orb.update(dt, this.player.x, this.player.y, this.player.pickupRange);
             
             if (orb.isCollected(this.player.x, this.player.y, this.player.radius)) {
+                this.audio.playPickup();
                 this.exp += orb.value;
                 this.expOrbs.splice(i, 1);
                 
@@ -352,6 +374,7 @@ export class Game {
         
         if (closestEnemy) {
             this.player.fire(closestEnemy.x, closestEnemy.y);
+            this.audio.playSwing();
             
             const count = this.player.projectileCount;
             const spreadAngle = Math.PI / 8;
@@ -387,6 +410,7 @@ export class Game {
             this.level++;
             this.expToLevel = Math.floor(this.expToLevel * this.expGrowthRate);
             
+            this.audio.playLevelUp();
             this.ui.updateLevel(this.level);
             this.ui.updateExp(this.exp, this.expToLevel);
             
@@ -409,6 +433,8 @@ export class Game {
 
     gameOver() {
         this.isRunning = false;
+        this.audio.stopBGM();
+        this.audio.playGameOver();
         this.ui.showGameOver(this.level, this.kills, this.gameTime);
     }
 

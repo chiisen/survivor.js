@@ -121,7 +121,34 @@
 *   **升級圈**：綠色 rgba(46, 204, 113, 0.3)，2px 線宽。
 *   **漸層圈**：綠色 rgba(46, 204, 113, 0.15)，1px 線宽（中間位置）。
 
-## 6. 天賦系統 (Talent System)
+## 6. 音效系統 (Audio System)
+使用 Web Audio API 實作合成音效與背景音樂。
+
+### A. 音效列表 (Sound Effects)
+| 音效名稱 | 觸發時機 | 音色 | 特性 |
+|---------|---------|------|------|
+| swing | 玩家揮劍攻擊 | square wave | 200Hz, 0.15s |
+| hit | 子彈命中敵人 | sine wave | 400Hz, 0.1s |
+| kill | 敵人死亡 | square wave | 800→400Hz, 0.3s (下降) |
+| chainKill | 連殺觸發 | sine wave | 1000→1500Hz, 0.5s (上升) |
+| levelUp | 玩家升級 | sine wave | 600→1800Hz, 0.8s (漸升) |
+| damage | 玩家受傷 | square wave | 150Hz, 0.2s |
+| pickup | 拾取經驗球 | sine wave | 500Hz, 0.1s |
+| gameOver | 遊戲結束 | sine wave | 100Hz, 1.0s |
+
+### B. 背景音樂 (BGM)
+*   **類型**：三角波 oscillator + LFO 調變。
+*   **頻率**：基頻 80Hz，LFO 0.5Hz 調變幅度 20Hz。
+*   **音量**：0.1 × bgmVolume × masterVolume。
+*   **控制**：遊戲開始時啟動，結束時停止。
+
+### C. 音量控制
+*   **主音量**：0.5（預設）。
+*   **音效音量**：0.7（預設）。
+*   **背景音量**：0.3（預設）。
+*   **可動態調整**：透過 setMasterVolume/setSfxVolume/setBgmVolume。
+
+## 7. 天賦系統 (Talent System)
 升級時隨機提供 3 項強化選項（8 種天賦池）：
 
 | 天賦名稱 | 效果 | 圖示 |
@@ -135,16 +162,17 @@
 | 子彈加速 | 子彈速度 +100 | 🚀 |
 | 多重射擊 | 同時發射 +1 顆子彈 | 🎯 |
 
-## 7. 技術架構
+## 8. 技術架構
 *   **語言**：純 JavaScript (ES6+)。
 *   **渲染**：HTML5 Canvas API。
 *   **循環**：`requestAnimationFrame` 驅動遊戲主迴圈。
-*   **模組化**：ES6 Modules（Player、Enemy、Projectile、Experience、Explosion、DamageNumber、SpatialGrid、UI、Game）。
+*   **音效**：Web Audio API 實作音效與背景音樂。
+*   **模組化**：ES6 Modules（Player、Enemy、Projectile、Experience、Explosion、DamageNumber、ChainKillDisplay、SpatialGrid、ObjectPool、AudioManager、UI、Game）。
 *   **碰撞檢測**：空間網格分割（SpatialGrid），格子大小 100px，僅檢測鄰近格子內物件。
 *   **效能優化**：使用距離平方比較避免 Math.sqrt 運算。
 *   **物件池化**：ObjectPool 重用 Projectile 和 Explosion 物件，減少 GC 壓力（池大小 30/20）。
 
-## 8. UI 系統規格
+## 9. UI 系統規格
 ### A. 狀態列 (Stats Bar)
 *   **血量條**：200px 寬，紅色漸層 fill，顯示 "當前/最大"。
 *   **經驗條**：200px 寬，橙色漸層 fill，顯示 "當前/升級需求"。
@@ -166,7 +194,7 @@
 *   **顯示內容**：等級、擊殺數、存活時間。
 *   **重新開始按鈕**：綠色漸層，hover 放大 + 陰影。
 
-## 9. 已開發功能清單 (Completed Features)
+## 10. 已開發功能清單 (Completed Features)
 - [x] 基礎 Canvas 畫布與玩家移動控制（WASD / 方向鍵）。
 - [x] 盔甲戰士外觀渲染（頭盔、盔甲、劍）。
 - [x] 攻擊範圍限制與雙圈顯示（藍色基礎 + 綠色升級）。
@@ -182,10 +210,12 @@
 - [x] 三選一隨機天賦系統（8種強化選項）。
 - [x] 連殺系統與攻擊速度 buff。
 - [x] 連殺顯示系統（DOUBLE/TRIPLE/QUAD/MEGA/ULTRA/GODLIKE 大字動畫）。
+- [x] 音效系統（揮劍/命中/擊殺/連殺/升級/受傷/拾取/結束）。
+- [x] 背景音樂（三角波 oscillator + LFO 調變）。
 - [x] Buff 通知 UI（倒計時 + 滑入滑出動畫）。
 - [x] 遊戲結束畫面與重新開始功能。
 
-## 10. 檔案結構
+## 11. 檔案結構
 ```
 survivor.js/
 ├── index.html          # 遊戲主頁面
@@ -203,6 +233,7 @@ survivor.js/
 │   ├── chainKillDisplay.js # 連殺顯示類別
 │   ├── spatialGrid.js  # 空間網格分割（碰撞優化）
 │   ├── objectPool.js   # 物件池化（GC 優化）
+│   ├── audio.js        # 音效管理（Web Audio API）
 │   ├── talent.js       # 天賦系統
 │   ├── ui.js           # UI 管理（含 Buff 通知）
 │   └── utils.js        # 工具函數（含 distanceSquared）
