@@ -108,10 +108,10 @@ export class Game {
             },
             hell: {
                 enemySpawnMultiplier: 2,
-                enemyHpMultiplier: 2,
+                enemyHpMultiplier: 3,
                 enemyDamageMultiplier: 1.5,
-                playerHpMultiplier: 3,
-                bossHpMultiplier: 3,
+                playerHpMultiplier: 0.8,
+                bossHpMultiplier: 4,
                 name: '地獄'
             }
         };
