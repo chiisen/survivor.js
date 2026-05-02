@@ -85,7 +85,9 @@ const EnemyTypes = {
         mouthStyle: 'elite',
         canShoot: false,
         shootInterval: 0,
-        isElite: true
+        isElite: true,
+        shieldHp: 5,
+        shieldMaxHp: 5
     },
     SPLITTER: {
         name: 'splitter',
@@ -160,6 +162,7 @@ export class Enemy {
         
         this.isElite = type.isElite || false;
         this.canSplit = type.canSplit || false;
+        this.splitTriggered = false;
         this.explosive = type.explosive || false;
         this.explosionRadius = type.explosionRadius || 0;
         this.explosionDamage = type.explosionDamage || 0;
@@ -263,6 +266,27 @@ export class Enemy {
             ctx.strokeStyle = 'rgba(241, 196, 15, 0.3)';
             ctx.lineWidth = 2;
             ctx.stroke();
+            
+            if (this.hasShield && this.shieldHp > 0) {
+                const shieldAlpha = 0.4 + (this.shieldHp / this.shieldMaxHp) * 0.3;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius + 18, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(52, 152, 219, ${shieldAlpha})`;
+                ctx.fill();
+                ctx.strokeStyle = '#3498db';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                const shieldBarWidth = this.radius * 1.5;
+                const shieldBarHeight = 4;
+                const shieldBarY = this.y - this.radius - 18;
+                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(this.x - shieldBarWidth / 2, shieldBarY, shieldBarWidth, shieldBarHeight);
+                
+                ctx.fillStyle = '#3498db';
+                ctx.fillRect(this.x - shieldBarWidth / 2, shieldBarY, shieldBarWidth * (this.shieldHp / this.shieldMaxHp), shieldBarHeight);
+            }
         }
         
         if (this.type === EnemyTypes.SPLITTER) {

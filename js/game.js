@@ -274,8 +274,27 @@ start() {
                     if (enemy.isStealth) {
                         enemy.reveal();
                     }
-                    enemy.hp -= projectile.damage;
-                    this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage));
+                    
+                    let actualDamage = projectile.damage;
+                    let damageColor = null;
+                    
+                    if (enemy.hasShield && enemy.shieldHp > 0) {
+                        if (enemy.shieldHp >= actualDamage) {
+                            enemy.shieldHp -= actualDamage;
+                            actualDamage = 0;
+                            damageColor = '#3498db';
+                        } else {
+                            actualDamage -= enemy.shieldHp;
+                            enemy.shieldHp = 0;
+                            enemy.hasShield = false;
+                        }
+                    }
+                    
+                    if (actualDamage > 0) {
+                        enemy.hp -= actualDamage;
+                    }
+                    
+                    this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage, damageColor));
                     this.audio.playHit();
                     this.projectilePool.release(projectile);
                     
@@ -419,6 +438,54 @@ start() {
             });
             this.enemies.push(splitEnemy);
         }
+        
+        const chainSplitRadius = 80;
+        const nearbySplitters = this.enemyGrid.getNearby(parentEnemy.x, parentEnemy.y, chainSplitRadius);
+        
+        for (const nearbyEnemy of nearbySplitters) {
+            if (nearbyEnemy === parentEnemy) continue;
+            if (!this.enemies.includes(nearbyEnemy)) continue;
+            if (!nearbyEnemy.canSplit) continue;
+            if (nearbyEnemy.splitTriggered) continue;
+            
+            const chainDistSq = distanceSquared(parentEnemy.x, parentEnemy.y, nearbyEnemy.x, nearbyEnemy.y);
+            if (chainDistSq <= chainSplitRadius * chainSplitRadius) {
+                nearbyEnemy.splitTriggered = true;
+                this.triggerChainSplit(nearbyEnemy);
+            }
+        }
+    }
+
+    triggerChainSplit(enemy) {
+        const splitCount = 2;
+        const splitRadius = enemy.radius * 0.5;
+        const splitSpeed = enemy.speed * 1.3;
+        
+        for (let i = 0; i < splitCount; i++) {
+            const angle = (Math.PI * 2 / splitCount) * i + Math.random() * 0.5;
+            const offset = 15;
+            const x = enemy.x + Math.cos(angle) * offset;
+            const y = enemy.y + Math.sin(angle) * offset;
+            
+            const splitEnemy = new Enemy(x, y, {
+                name: 'split',
+                radius: splitRadius,
+                speed: splitSpeed,
+                maxHp: 1,
+                damage: Math.floor(enemy.damage * 0.4),
+                expValue: Math.floor(enemy.expValue * 0.3),
+                color: '#1abc9c',
+                strokeColor: '#16a085',
+                eyeColor: '#fff',
+                mouthStyle: 'angry',
+                canShoot: false,
+                shootInterval: 0
+            });
+            this.enemies.push(splitEnemy);
+        }
+        
+        this.explosionPool.get(enemy.x, enemy.y);
+        this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, 0, '#1abc9c'));
     }
 
     createExplosiveDeath(enemy) {
