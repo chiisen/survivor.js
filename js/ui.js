@@ -130,8 +130,18 @@ export class UI {
         });
     }
 
-    hideUpgradeModal() {
+hideUpgradeModal() {
         this.upgradeModal.classList.add('hidden');
+    }
+
+    isUpgradeModalOpen() {
+        return !this.upgradeModal.classList.contains('hidden');
+    }
+
+    clearBuffNotifications() {
+        if (this.buffContainer) {
+            this.buffContainer.innerHTML = '';
+        }
     }
 
     showGameOver(level, kills, time) {

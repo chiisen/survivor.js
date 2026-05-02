@@ -36,6 +36,7 @@ export class Game {
         this.chainKillDisplay = new ChainKillDisplay();
         this.ui = new UI();
         this.audio = new AudioManager();
+        this.pauseScreen = document.getElementById('pause-screen');
         this.enemyGrid = new SpatialGrid(100);
         this.projectileGrid = new SpatialGrid(100);
         
@@ -69,6 +70,12 @@ export class Game {
     setupInput() {
         window.addEventListener('keydown', (e) => {
             this.keys[e.key] = true;
+            
+            if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+                if (this.isRunning && !this.ui.isUpgradeModalOpen()) {
+                    this.togglePause();
+                }
+            }
         });
         
         window.addEventListener('keyup', (e) => {
@@ -108,6 +115,7 @@ export class Game {
         this.chainKillDisplay.clear();
         this.isRunning = true;
         this.isPaused = false;
+        this.pauseScreen.classList.add('hidden');
         this.gameTime = 0;
         this.level = 1;
         this.exp = 0;
@@ -151,6 +159,7 @@ export class Game {
         
         if (!this.audioStarted && this.hasPlayerInput()) {
             this.audioStarted = true;
+            this.audio.audioStarted = true;
             this.audio.resumeContext();
             this.audio.startBGM();
         }
@@ -511,6 +520,15 @@ export class Game {
             this.ctx.moveTo(0, y);
             this.ctx.lineTo(this.canvas.width, y);
             this.ctx.stroke();
+        }
+    }
+
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        if (this.isPaused) {
+            this.pauseScreen.classList.remove('hidden');
+        } else {
+            this.pauseScreen.classList.add('hidden');
         }
     }
 }

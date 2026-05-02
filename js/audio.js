@@ -6,6 +6,7 @@ export class AudioManager {
         this.bgmVolume = 0.3;
         this.enabled = true;
         this.bgmEnabled = true;
+        this.audioStarted = false;
         
         this.sounds = {};
         this.bgm = null;
@@ -38,13 +39,13 @@ export class AudioManager {
     }
 
     resumeContext() {
-        if (this.audioContext && this.audioContext.state === 'suspended') {
+        if (this.audioContext && this.audioContext.state === 'suspended' && this.audioStarted) {
             this.audioContext.resume();
         }
     }
 
     play(soundName) {
-        if (!this.enabled || !this.audioContext) return;
+        if (!this.enabled || !this.audioContext || !this.audioStarted) return;
         
         this.resumeContext();
         
@@ -125,7 +126,7 @@ export class AudioManager {
     }
 
     startBGM() {
-        if (!this.enabled || !this.bgmEnabled || !this.audioContext) return;
+        if (!this.enabled || !this.bgmEnabled || !this.audioContext || !this.audioStarted) return;
         
         this.resumeContext();
         
