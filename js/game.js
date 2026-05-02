@@ -17,6 +17,7 @@ export class Game {
         this.player = null;
         this.enemies = [];
         this.projectiles = [];
+        this.enemyProjectiles = [];
         this.expOrbs = [];
         this.explosions = [];
         this.damageNumbers = [];
@@ -77,6 +78,7 @@ export class Game {
         this.player = new Player(this.canvas.width / 2, this.canvas.height / 2);
         this.enemies = [];
         this.projectiles = [];
+        this.enemyProjectiles = [];
         this.expOrbs = [];
         this.explosions = [];
         this.damageNumbers = [];
@@ -138,12 +140,41 @@ export class Game {
         
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
-            enemy.update(dt, this.player.x, this.player.y);
+            const shootData = enemy.update(dt, this.player.x, this.player.y);
+            
+            if (shootData) {
+                this.enemyProjectiles.push(shootData);
+            }
             
             const dist = distance(enemy.x, enemy.y, this.player.x, this.player.y);
             if (dist < enemy.radius + this.player.radius) {
                 if (this.player.takeDamage(enemy.damage)) {
                     this.ui.updateHp(this.player.hp, this.player.maxHp);
+                    
+                    if (this.player.hp <= 0) {
+                        this.gameOver();
+                        return;
+                    }
+                }
+            }
+        }
+        
+        for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
+            const proj = this.enemyProjectiles[i];
+            proj.x += proj.vx * dt;
+            proj.y += proj.vy * dt;
+            
+            if (proj.x < -100 || proj.x > this.canvas.width + 100 ||
+                proj.y < -100 || proj.y > this.canvas.height + 100) {
+                this.enemyProjectiles.splice(i, 1);
+                continue;
+            }
+            
+            const dist = distance(proj.x, proj.y, this.player.x, this.player.y);
+            if (dist < proj.radius + this.player.radius) {
+                if (this.player.takeDamage(proj.damage)) {
+                    this.ui.updateHp(this.player.hp, this.player.maxHp);
+                    this.enemyProjectiles.splice(i, 1);
                     
                     if (this.player.hp <= 0) {
                         this.gameOver();
@@ -244,7 +275,8 @@ export class Game {
             this.canvas.width,
             this.canvas.height,
             this.player.x,
-            this.player.y
+            this.player.y,
+            this.gameTime
         );
         this.enemies.push(enemy);
     }
@@ -357,6 +389,18 @@ export class Game {
         
         for (const projectile of this.projectiles) {
             projectile.draw(this.ctx);
+        }
+        
+        for (const proj of this.enemyProjectiles) {
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
+            this.ctx.fillStyle = proj.color;
+            this.ctx.fill();
+            this.ctx.strokeStyle = '#8e44ad';
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+            this.ctx.restore();
         }
         
         this.player.draw(this.ctx);
