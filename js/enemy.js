@@ -56,6 +56,21 @@ const EnemyTypes = {
         mouthStyle: 'shooter',
         canShoot: true,
         shootInterval: 2.0
+    },
+    BOSS: {
+        name: 'boss',
+        radius: 35,
+        speed: 25,
+        maxHp: 50,
+        damage: 30,
+        expValue: 100,
+        color: '#c0392b',
+        strokeColor: '#922b21',
+        eyeColor: '#f1c40f',
+        mouthStyle: 'boss',
+        canShoot: true,
+        shootInterval: 1.5,
+        isBoss: true
     }
 };
 
@@ -119,6 +134,27 @@ export class Enemy {
     draw(ctx) {
         ctx.save();
         
+        if (this.type === EnemyTypes.BOSS) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 10, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(192, 57, 43, 0.2)';
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(this.x - 15, this.y - this.radius - 25);
+            ctx.lineTo(this.x, this.y - this.radius - 35);
+            ctx.lineTo(this.x + 15, this.y - this.radius - 25);
+            ctx.lineTo(this.x + 10, this.y - this.radius - 25);
+            ctx.lineTo(this.x, this.y - this.radius - 30);
+            ctx.lineTo(this.x - 10, this.y - this.radius - 25);
+            ctx.closePath();
+            ctx.fillStyle = '#f1c40f';
+            ctx.fill();
+            ctx.strokeStyle = '#e67e22';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
         if (this.type === EnemyTypes.TANK) {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius + 4, 0, Math.PI * 2);
@@ -131,7 +167,7 @@ export class Enemy {
         ctx.fillStyle = this.color;
         ctx.fill();
         ctx.strokeStyle = this.strokeColor;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = this.type === EnemyTypes.BOSS ? 4 : 2;
         ctx.stroke();
 
         if (this.type === EnemyTypes.FAST) {
@@ -175,28 +211,39 @@ export class Enemy {
             case 'shooter':
                 ctx.arc(this.x, this.y + this.radius * 0.35, this.radius * 0.25, Math.PI * 0.2, Math.PI * 0.8);
                 break;
+            case 'boss':
+                ctx.arc(this.x, this.y + this.radius * 0.35, this.radius * 0.5, Math.PI, 0, true);
+                break;
         }
         ctx.strokeStyle = this.strokeColor;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = this.type === EnemyTypes.BOSS ? 4 : 2;
         ctx.stroke();
 
         if (this.maxHp > 1) {
             const hpPercentage = this.hp / this.maxHp;
-            const barWidth = this.radius * 1.5;
-            const barHeight = 4;
-            const barY = this.y - this.radius - 8;
+            const barWidth = this.type === EnemyTypes.BOSS ? this.radius * 2.5 : this.radius * 1.5;
+            const barHeight = this.type === EnemyTypes.BOSS ? 6 : 4;
+            const barY = this.y - this.radius - (this.type === EnemyTypes.BOSS ? 12 : 8);
             
             ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             ctx.fillRect(this.x - barWidth / 2, barY, barWidth, barHeight);
             
-            ctx.fillStyle = hpPercentage > 0.5 ? '#2ecc71' : '#e74c3c';
+            ctx.fillStyle = this.type === EnemyTypes.BOSS 
+                ? (hpPercentage > 0.5 ? '#e74c3c' : '#922b21')
+                : (hpPercentage > 0.5 ? '#2ecc71' : '#e74c3c');
             ctx.fillRect(this.x - barWidth / 2, barY, barWidth * hpPercentage, barHeight);
+            
+            if (this.type === EnemyTypes.BOSS) {
+                ctx.strokeStyle = '#922b21';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(this.x - barWidth / 2, barY, barWidth, barHeight);
+            }
         }
 
         ctx.restore();
     }
 
-    static spawn(canvasWidth, canvasHeight, playerX, playerY, gameTime) {
+    static spawn(canvasWidth, canvasHeight, playerX, playerY, gameTime, isBoss = false, hpMultiplier = 1) {
         const side = Math.floor(Math.random() * 4);
         let x, y;
         const margin = 50;
@@ -221,27 +268,39 @@ export class Enemy {
         }
 
         let type;
-        const typeWeights = [
-            { type: EnemyTypes.NORMAL, weight: 50 },
-            { type: EnemyTypes.FAST, weight: gameTime > 30 ? 25 : 10 },
-            { type: EnemyTypes.TANK, weight: gameTime > 60 ? 20 : 5 },
-            { type: EnemyTypes.RANGED, weight: gameTime > 45 ? 15 : 0 }
-        ];
         
-        const totalWeight = typeWeights.reduce((sum, t) => sum + t.weight, 0);
-        let random = Math.random() * totalWeight;
-        
-        for (const tw of typeWeights) {
-            random -= tw.weight;
-            if (random <= 0) {
-                type = tw.type;
-                break;
+        if (isBoss) {
+            type = EnemyTypes.BOSS;
+        } else {
+            const typeWeights = [
+                { type: EnemyTypes.NORMAL, weight: 50 },
+                { type: EnemyTypes.FAST, weight: gameTime > 30 ? 25 : 10 },
+                { type: EnemyTypes.TANK, weight: gameTime > 60 ? 20 : 5 },
+                { type: EnemyTypes.RANGED, weight: gameTime > 45 ? 15 : 0 }
+            ];
+            
+            const totalWeight = typeWeights.reduce((sum, t) => sum + t.weight, 0);
+            let random = Math.random() * totalWeight;
+            
+            for (const tw of typeWeights) {
+                random -= tw.weight;
+                if (random <= 0) {
+                    type = tw.type;
+                    break;
+                }
             }
         }
         
         if (!type) type = EnemyTypes.NORMAL;
 
-        return new Enemy(x, y, type);
+        const enemy = new Enemy(x, y, type);
+        
+        if (!isBoss && hpMultiplier > 1) {
+            enemy.maxHp = Math.ceil(enemy.maxHp * hpMultiplier);
+            enemy.hp = enemy.maxHp;
+        }
+        
+        return enemy;
     }
 }
 

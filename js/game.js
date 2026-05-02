@@ -9,6 +9,7 @@ import { SpatialGrid } from './spatialGrid.js';
 import { ObjectPool } from './objectPool.js';
 import { AudioManager } from './audio.js';
 import { DecorationManager } from './decoration.js';
+import { WaveManager } from './waveManager.js';
 import { getRandomUpgrades } from './talent.js';
 import { UI } from './ui.js';
 import { distance, distanceSquared } from './utils.js';
@@ -39,6 +40,7 @@ export class Game {
         this.audio = new AudioManager();
         this.pauseScreen = document.getElementById('pause-screen');
         this.decorationManager = new DecorationManager(this.canvas.width, this.canvas.height);
+        this.waveManager = new WaveManager();
         this.enemyGrid = new SpatialGrid(100);
         this.projectileGrid = new SpatialGrid(100);
         
@@ -49,9 +51,6 @@ export class Game {
         this.gameTime = 0;
         
         this.spawnTimer = 0;
-        this.spawnInterval = 1.5;
-        this.minSpawnInterval = 0.3;
-        this.spawnIntervalDecrease = 0.02;
         
         this.level = 1;
         this.exp = 0;
@@ -117,20 +116,11 @@ export class Game {
         this.enemyProjectiles = [];
         this.expOrbs = [];
         this.damageNumbers = [];
-        this.chainKillDisplay.clear();
+this.chainKillDisplay.clear();
+        this.waveManager.reset();
         this.isRunning = true;
         this.isPaused = false;
         this.pauseScreen.classList.add('hidden');
-        this.gameTime = 0;
-        this.level = 1;
-        this.exp = 0;
-        this.expToLevel = 100;
-        this.kills = 0;
-        this.spawnTimer = 0;
-        this.spawnInterval = 1.5;
-        
-        this.ui.hideGameOver();
-        this.ui.clearBuffNotifications();
         this.audioStarted = false;
         this.ui.updateHp(this.player.hp, this.player.maxHp);
         this.ui.updateExp(0, this.expToLevel);
@@ -163,6 +153,7 @@ export class Game {
         this.gameTime += dt;
         
         this.decorationManager.update(dt, this.gameTime);
+        this.waveManager.update(dt, this.gameTime);
         
         if (!this.audioStarted && this.hasPlayerInput()) {
             this.audioStarted = true;
@@ -187,13 +178,17 @@ export class Game {
         this.player.update(dt, this.keys, this.canvas.width, this.canvas.height);
         
         this.spawnTimer += dt;
-        if (this.spawnTimer >= this.spawnInterval) {
+        const spawnInterval = this.waveManager.getSpawnInterval();
+        if (this.spawnTimer >= spawnInterval) {
             this.spawnTimer = 0;
-            this.spawnEnemy();
-            this.spawnInterval = Math.max(
-                this.minSpawnInterval,
-                this.spawnInterval - this.spawnIntervalDecrease
-            );
+            if (this.waveManager.shouldSpawnEnemy(this.enemies.length)) {
+                this.spawnEnemy(false);
+            }
+        }
+        
+        if (this.waveManager.shouldSpawnBoss()) {
+            this.spawnEnemy(true);
+            this.audio.playChainKill();
         }
         
         this.autoFire();
@@ -363,13 +358,16 @@ export class Game {
         this.ui.updateTimer(this.gameTime);
     }
 
-    spawnEnemy() {
+    spawnEnemy(isBoss = false) {
+        const hpMultiplier = this.waveManager.getEnemyHpMultiplier();
         const enemy = Enemy.spawn(
             this.canvas.width,
             this.canvas.height,
             this.player.x,
             this.player.y,
-            this.gameTime
+            this.gameTime,
+            isBoss,
+            hpMultiplier
         );
         this.enemies.push(enemy);
     }
@@ -509,6 +507,9 @@ export class Game {
         this.player.draw(this.ctx);
         
         this.chainKillDisplay.draw(this.ctx, this.canvas.width / 2, this.canvas.height / 2);
+        
+        this.waveManager.drawAnnouncement(this.ctx, this.canvas.width / 2, this.canvas.height / 2);
+        this.waveManager.drawWaveInfo(this.ctx, 20, this.canvas.height - 60);
     }
 
     drawGrid() {

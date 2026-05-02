@@ -180,12 +180,49 @@
 | 子彈加速 | 子彈速度 +100 | 🚀 |
 | 多重射擊 | 同時發射 +1 顆子彈 | 🎯 |
 
-## 8. 技術架構
+## 8. 波次系統 (Wave System)
+每 60 秒一波，波次間有 5 秒休息時間，每 5 波出現 Boss。
+
+### A. 波次機制
+*   **波次周期**：60秒戰鬥 + 5秒休息。
+*   **敵人數量**：每波基礎 10隻，隨波次增加（×1.3）。
+*   **生成間隔**：基礎 1.5秒，隨波次減少（每波 -0.05秒，最小 0.3秒）。
+*   **敵人血量**：每 3波增加 50%（hpMultiplier）。
+
+### B. Boss戰機制
+*   **觸發條件**：第 5、10、15...波（每 5波）。
+*   **Boss屬性**：
+    - 體型：半徑 35px（最大）
+    - 血量：50HP
+    - 移速：25 px/秒
+    - 傷害：30
+    - 經驗值：100
+    - 射擊：每 1.5秒發射紫色子彈
+*   **Boss外觀**：
+    - 深紅色主體 + 金色皇冠
+    - 紅色光環效果
+    - 大型血量條（紅色顯示）
+    - 不悅嘴型（倒弧線）
+*   **生成時間**：波次進行 50%（30秒）時生成。
+*   **Boss波敵人數**：減少 50%（集中戰鬥）。
+
+### C. 波次UI
+*   **波次公告**：
+    - 新波次：「第 N 波開始！」（橙色）
+    - Boss波：「BOSS 波！第 N 波」（紅色）
+    - 波次結束：「波次結束！休息時間」（綠色）
+    - 漸隱動畫：2秒後消失
+*   **波次信息**：
+    - 左下角顯示「波次: N」
+    - Boss波標記「BOSS 波！」
+    - 休息時間標記「休息時間」
+
+## 9. 技術架構
 *   **語言**：純 JavaScript (ES6+)。
 *   **渲染**：HTML5 Canvas API。
 *   **循環**：`requestAnimationFrame` 驅動遊戲主迴圈。
 *   **音效**：Web Audio API 實作音效與背景音樂。
-*   **模組化**：ES6 Modules（Player、Enemy、Projectile、Experience、Explosion、DamageNumber、ChainKillDisplay、SpatialGrid、ObjectPool、AudioManager、DecorationManager、UI、Game）。
+*   **模組化**：ES6 Modules（Player、Enemy、Projectile、ExperienceOrb、Explosion、DamageNumber、ChainKillDisplay、SpatialGrid、ObjectPool、AudioManager、DecorationManager、WaveManager、UI、Game）。
 *   **碰撞檢測**：空間網格分割（SpatialGrid），格子大小 100px，僅檢測鄰近格子內物件。
 *   **效能優化**：使用距離平方比較避免 Math.sqrt 運算。
 *   **物件池化**：ObjectPool 重用 Projectile 和 Explosion 物件，減少 GC 壓力（池大小 30/20）。
@@ -236,6 +273,8 @@
 - [x] 三選一隨機天賦系統（8種強化選項）。
 - [x] 連殺系統與攻擊速度 buff。
 - [x] 連殺顯示系統（DOUBLE/TRIPLE/QUAD/MEGA/ULTRA/GODLIKE 大字動畫）。
+- [x] 波次系統（每60秒一波 + Boss戰機制）。
+- [x] Boss敵人（皇冠 + 光環 + 大血量條 + 射擊）。
 - [x] 音效系統（揮劍/命中/擊殺/連殺/升級/受傷/拾取/結束）。
 - [x] 背景音樂（三角波 oscillator + LFO 調變）。
 - [x] 暫停功能（ESC/P 鍵暫停遊戲）。
@@ -262,6 +301,7 @@ survivor.js/
 │   ├── objectPool.js   # 物件池化（GC 優化）
 │   ├── audio.js        # 音效管理（Web Audio API）
 │   ├── decoration.js   # 背景裝飾（地面裝飾物 + 環境粒子）
+│   ├── waveManager.js  # 波次管理（波次機制 + Boss戰）
 │   ├── talent.js       # 天賦系統
 │   ├── ui.js           # UI 管理（含 Buff 通知）
 │   └── utils.js        # 工具函數（含 distanceSquared）
