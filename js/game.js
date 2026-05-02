@@ -17,6 +17,7 @@ import { distance, distanceSquared } from './utils.js';
 import { BossSpawnEffect } from './bossSpawnEffect.js';
 import { ShieldBreakEffect } from './shieldBreakEffect.js';
 import { BossDeathEffect } from './bossDeathEffect.js';
+import { SplitEffect } from './splitEffect.js';
 
 export class Game {
     constructor(canvas) {
@@ -64,6 +65,11 @@ export class Game {
             () => new BossDeathEffect(),
             (obj, x, y) => obj.init(x, y),
             2
+        );
+        this.splitEffectPool = new ObjectPool(
+            () => new SplitEffect(),
+            (obj, x, y) => obj.init(x, y),
+            10
         );
         this.screenShake = { x: 0, y: 0 };
         
@@ -139,6 +145,7 @@ start() {
         this.bossSpawnPool.releaseAll();
         this.shieldBreakPool.releaseAll();
         this.bossDeathPool.releaseAll();
+        this.splitEffectPool.releaseAll();
         this.enemyProjectiles = [];
         this.expOrbs = [];
         this.damageNumbers = [];
@@ -463,6 +470,14 @@ start() {
                 this.bossDeathPool.release(effect);
             }
         }
+        
+        for (const effect of this.splitEffectPool.getActiveObjects()) {
+            if (!effect.active) continue;
+            effect.update(dt);
+            if (effect.isFinished()) {
+                this.splitEffectPool.release(effect);
+            }
+        }
     }
 
     spawnEnemy(isBoss = false) {
@@ -484,6 +499,8 @@ start() {
         const splitCount = 2;
         const splitRadius = parentEnemy.radius * 0.6;
         const splitSpeed = parentEnemy.speed * 1.2;
+        
+        this.splitEffectPool.get(parentEnemy.x, parentEnemy.y);
         
         for (let i = 0; i < splitCount; i++) {
             const angle = (Math.PI * 2 / splitCount) * i + Math.random() * 0.5;
@@ -723,6 +740,12 @@ start() {
             }
         }
         
+        for (const effect of this.splitEffectPool.getActiveObjects()) {
+            if (effect.active) {
+                effect.draw(this.ctx);
+            }
+        }
+        
         for (const explosion of this.explosionPool.getActiveObjects()) {
             if (explosion.active) {
                 explosion.draw(this.ctx);
@@ -757,6 +780,51 @@ start() {
         
         this.waveManager.drawAnnouncement(this.ctx, this.canvas.width / 2, this.canvas.height / 2);
         this.waveManager.drawWaveInfo(this.ctx, 20, this.canvas.height - 60);
+        
+        this.drawBossHealthBar();
+        
+        this.ctx.restore();
+    }
+
+    drawBossHealthBar() {
+        const boss = this.enemies.find(e => e.type && e.type.isBoss);
+        if (!boss) return;
+        
+        const barWidth = this.canvas.width * 0.6;
+        const barHeight = 12;
+        const barX = (this.canvas.width - barWidth) / 2;
+        const barY = 80;
+        
+        this.ctx.save();
+        
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(barX - 5, barY - 25, barWidth + 10, barHeight + 35);
+        
+        this.ctx.strokeStyle = '#f1c40f';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(barX - 5, barY - 25, barWidth + 10, barHeight + 35);
+        
+        this.ctx.font = 'bold 18px "Segoe UI", sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = '#f1c40f';
+        this.ctx.fillText('⚠ BOSS ⚠', this.canvas.width / 2, barY - 8);
+        
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        this.ctx.fillRect(barX, barY, barWidth, barHeight);
+        
+        const hpPercentage = boss.hp / boss.maxHp;
+        const hpColor = hpPercentage > 0.5 ? '#e74c3c' : (hpPercentage > 0.25 ? '#c0392b' : '#922b21');
+        this.ctx.fillStyle = hpColor;
+        this.ctx.fillRect(barX, barY, barWidth * hpPercentage, barHeight);
+        
+        this.ctx.strokeStyle = '#922b21';
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(barX, barY, barWidth, barHeight);
+        
+        this.ctx.font = '14px "Segoe UI", sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = '#fff';
+        this.ctx.fillText(`${boss.hp} / ${boss.maxHp}`, this.canvas.width / 2, barY + barHeight + 15);
         
         this.ctx.restore();
     }

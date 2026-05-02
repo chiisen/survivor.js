@@ -59,17 +59,17 @@ const EnemyTypes = {
     },
     BOSS: {
         name: 'boss',
-        radius: 35,
-        speed: 25,
-        maxHp: 50,
-        damage: 30,
-        expValue: 100,
+        radius: 80,
+        speed: 20,
+        maxHp: 100,
+        damage: 40,
+        expValue: 200,
         color: '#c0392b',
         strokeColor: '#922b21',
         eyeColor: '#f1c40f',
         mouthStyle: 'boss',
         canShoot: true,
-        shootInterval: 1.5,
+        shootInterval: 1.2,
         isBoss: true
     },
     ELITE: {
@@ -230,7 +230,27 @@ export class Enemy {
         ctx.save();
         
         if (this.isStealth) {
-            ctx.globalAlpha = this.currentAlpha;
+            if (this.revealTime > 0) {
+                const flashRate = Math.sin(this.revealTime * 10) * 0.3 + 0.7;
+                ctx.globalAlpha = flashRate;
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius + 8, 0, Math.PI * 2);
+                ctx.strokeStyle = '#3498db';
+                ctx.lineWidth = 3;
+                ctx.globalAlpha = flashRate * 0.6;
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius + 12, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(52, 152, 219, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.globalAlpha = flashRate;
+            } else {
+                ctx.globalAlpha = this.baseAlpha;
+            }
         }
         
         if (this.type === EnemyTypes.BOSS) {
