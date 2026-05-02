@@ -4,6 +4,7 @@ import { Projectile } from './projectile.js';
 import { ExperienceOrb } from './experience.js';
 import { Explosion } from './explosion.js';
 import { DamageNumber } from './damageNumber.js';
+import { ChainKillDisplay } from './chainKillDisplay.js';
 import { SpatialGrid } from './spatialGrid.js';
 import { getRandomUpgrades } from './talent.js';
 import { UI } from './ui.js';
@@ -22,6 +23,7 @@ export class Game {
         this.expOrbs = [];
         this.explosions = [];
         this.damageNumbers = [];
+        this.chainKillDisplay = new ChainKillDisplay();
         this.ui = new UI();
         this.enemyGrid = new SpatialGrid(100);
         this.projectileGrid = new SpatialGrid(100);
@@ -85,6 +87,7 @@ export class Game {
         this.expOrbs = [];
         this.explosions = [];
         this.damageNumbers = [];
+        this.chainKillDisplay.clear();
         this.isRunning = true;
         this.isPaused = false;
         this.gameTime = 0;
@@ -256,9 +259,13 @@ export class Game {
                         }
                         this.kills += chainKills;
                         
-                        if (chainKills >= 2 && !this.player.hasFireRateBuff) {
-                            this.player.activateFireRateBuff();
-                            this.ui.showBuffNotification('連殺！攻擊速度 +30%', 5);
+                        if (chainKills >= 2) {
+                            this.chainKillDisplay.trigger(chainKills);
+                            
+                            if (!this.player.hasFireRateBuff) {
+                                this.player.activateFireRateBuff();
+                                this.ui.showBuffNotification('連殺！攻擊速度 +30%', 5);
+                            }
                         }
                     }
                     break;
@@ -283,6 +290,8 @@ export class Game {
                 this.damageNumbers.splice(i, 1);
             }
         }
+        
+        this.chainKillDisplay.update(dt);
         
         for (let i = this.expOrbs.length - 1; i >= 0; i--) {
             const orb = this.expOrbs[i];
@@ -433,6 +442,8 @@ export class Game {
         }
         
         this.player.draw(this.ctx);
+        
+        this.chainKillDisplay.draw(this.ctx, this.canvas.width / 2, this.canvas.height / 2);
     }
 
     drawGrid() {

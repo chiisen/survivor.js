@@ -78,6 +78,21 @@
 *   **動畫**：放大 → 向上漂浮 → 漸隱消失（0.8秒）。
 *   **字體大小**：16px + 傷害值 × 2（上限 36px）。
 
+### F. 連殺顯示 (Chain Kill Display)
+*   **觸發條件**：一次擊殺 2隻以上怪物（含連鎖）。
+*   **顯示文字**：
+    - 2 kills: "DOUBLE KILL!"（金色）
+    - 3 kills: "TRIPLE KILL!"（橙色）
+    - 4 kills: "QUAD KILL!"（紅色）
+    - 5 kills: "MEGA KILL!"（深紅）
+    - 6-9 kills: "ULTRA KILL!"（紫色）
+    - 10+ kills: "GODLIKE!"（深紫）
+*   **動畫效果**：
+    - 放大縮放（scale 1.2 ~ 2.5）
+    - 向上漂浮 30px
+    - 光暈效果（shadowBlur 20）
+    - 漸隱消失（1.5秒）
+
 ## 4. 連殺系統 (Chain Kill System)
 *   **觸發條件**：一次擊殺 2隻以上怪物（含連鎖）。
 *   **獎勵效果**：
@@ -165,6 +180,7 @@
 - [x] 經驗值拾取與升級 UI 彈窗。
 - [x] 三選一隨機天賦系統（8種強化選項）。
 - [x] 連殺系統與攻擊速度 buff。
+- [x] 連殺顯示系統（DOUBLE/TRIPLE/QUAD/MEGA/ULTRA/GODLIKE 大字動畫）。
 - [x] Buff 通知 UI（倒計時 + 滑入滑出動畫）。
 - [x] 遊戲結束畫面與重新開始功能。
 
@@ -183,6 +199,7 @@ survivor.js/
 │   ├── experience.js   # 經驗值類別
 │   ├── explosion.js    # 爆炸特效類別
 │   ├── damageNumber.js # 傷害數字類別
+│   ├── chainKillDisplay.js # 連殺顯示類別
 │   ├── spatialGrid.js  # 空間網格分割（碰撞優化）
 │   ├── talent.js       # 天賦系統
 │   ├── ui.js           # UI 管理（含 Buff 通知）
