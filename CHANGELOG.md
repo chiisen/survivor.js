@@ -18,6 +18,7 @@
 - 背景音樂：三角波 oscillator + LFO 調變（80Hz + 0.5Hz LFO）
 - 音量控制：masterVolume/sfxVolume/bgmVolume 可動態調整
 - 暫停功能：ESC/P 鍵暫停遊戲，顯示暫停畫面
+- 背景裝飾：地面裝飾物（石頭/草叢/灌木/裂痕）+ 環境漂浮粒子
 
 ### 效能優化
 - 空間網格分割（SpatialGrid）：格子大小 100px，優化碰撞檢測從 O(n×m) 降至 O(n×k)

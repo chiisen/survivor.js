@@ -8,6 +8,7 @@ import { ChainKillDisplay } from './chainKillDisplay.js';
 import { SpatialGrid } from './spatialGrid.js';
 import { ObjectPool } from './objectPool.js';
 import { AudioManager } from './audio.js';
+import { DecorationManager } from './decoration.js';
 import { getRandomUpgrades } from './talent.js';
 import { UI } from './ui.js';
 import { distance, distanceSquared } from './utils.js';
@@ -37,6 +38,7 @@ export class Game {
         this.ui = new UI();
         this.audio = new AudioManager();
         this.pauseScreen = document.getElementById('pause-screen');
+        this.decorationManager = new DecorationManager(this.canvas.width, this.canvas.height);
         this.enemyGrid = new SpatialGrid(100);
         this.projectileGrid = new SpatialGrid(100);
         
@@ -65,6 +67,9 @@ export class Game {
     resize() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
+        if (this.decorationManager) {
+            this.decorationManager.resize(this.canvas.width, this.canvas.height);
+        }
     }
 
     setupInput() {
@@ -156,6 +161,8 @@ export class Game {
 
     update(dt) {
         this.gameTime += dt;
+        
+        this.decorationManager.update(dt, this.gameTime);
         
         if (!this.audioStarted && this.hasPlayerInput()) {
             this.audioStarted = true;
@@ -458,6 +465,8 @@ export class Game {
         gradient.addColorStop(1, '#16213e');
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.decorationManager.draw(this.ctx);
         
         this.drawGrid();
         

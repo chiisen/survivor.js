@@ -121,6 +121,24 @@
 *   **升級圈**：綠色 rgba(46, 204, 113, 0.3)，2px 線宽。
 *   **漸層圈**：綠色 rgba(46, 204, 113, 0.15)，1px 線宽（中間位置）。
 
+### D. 背景裝飾 (Ground Decoration)
+隨機生成地面裝飾物與環境粒子，豐富視覺效果。
+
+#### 裝飾物類型
+| 類型 | 數量 | 特性 |
+|------|------|------|
+| 石頭 | 25% | 灰色不規則形狀，靜止 |
+| 草叢 | 35% | 綠色草葉，左右微幅搖擺 |
+|灌木 | 20% | 深綠圓形組合，靜止 |
+|裂痕 | 20% | 細線條裂縫，靜止 |
+
+#### 環境粒子
+*   **數量**：20顆漂浮粒子。
+*   **顏色**：白色半透明（alpha 0.1~0.25）。
+*   **大小**：1~3px。
+*   **運動**：向右下漂移（vx 10~30, vy 5~15），循環重生。
+*   **透明度**：裝飾物 alpha 0.3~0.5，粒子 alpha 0.1~0.25。
+
 ## 6. 音效系統 (Audio System)
 使用 Web Audio API 實作合成音效與背景音樂。
 
@@ -167,7 +185,7 @@
 *   **渲染**：HTML5 Canvas API。
 *   **循環**：`requestAnimationFrame` 驅動遊戲主迴圈。
 *   **音效**：Web Audio API 實作音效與背景音樂。
-*   **模組化**：ES6 Modules（Player、Enemy、Projectile、Experience、Explosion、DamageNumber、ChainKillDisplay、SpatialGrid、ObjectPool、AudioManager、UI、Game）。
+*   **模組化**：ES6 Modules（Player、Enemy、Projectile、Experience、Explosion、DamageNumber、ChainKillDisplay、SpatialGrid、ObjectPool、AudioManager、DecorationManager、UI、Game）。
 *   **碰撞檢測**：空間網格分割（SpatialGrid），格子大小 100px，僅檢測鄰近格子內物件。
 *   **效能優化**：使用距離平方比較避免 Math.sqrt 運算。
 *   **物件池化**：ObjectPool 重用 Projectile 和 Explosion 物件，減少 GC 壓力（池大小 30/20）。
@@ -212,6 +230,7 @@
 - [x] 遠程型敵人射擊系統（紫色追蹤子彈）。
 - [x] 坦克型敵人血量條顯示。
 - [x] 爆炸特效（粒子爆散 + 中心閃光）。
+- [x] 背景裝飾（石頭/草叢/灌木/裂痕 + 環境粒子）。
 - [x] 傷害數字顯示（浮動數字 + 放大漸隱動畫）。
 - [x] 經驗值拾取與升級 UI 彈窗。
 - [x] 三選一隨機天賦系統（8種強化選項）。
@@ -242,6 +261,7 @@ survivor.js/
 │   ├── spatialGrid.js  # 空間網格分割（碰撞優化）
 │   ├── objectPool.js   # 物件池化（GC 優化）
 │   ├── audio.js        # 音效管理（Web Audio API）
+│   ├── decoration.js   # 背景裝飾（地面裝飾物 + 環境粒子）
 │   ├── talent.js       # 天賦系統
 │   ├── ui.js           # UI 管理（含 Buff 通知）
 │   └── utils.js        # 工具函數（含 distanceSquared）
