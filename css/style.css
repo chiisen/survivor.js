@@ -79,8 +79,7 @@ body {
 #timer {
     position: absolute;
     top: 20px;
-    left: 50%;
-    transform: translateX(-30%);
+    left: 33.33%;
     color: white;
     font-size: 48px;
     font-weight: bold;
