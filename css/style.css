@@ -80,7 +80,7 @@ body {
     position: absolute;
     top: 20px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-30%);
     color: white;
     font-size: 48px;
     font-weight: bold;
