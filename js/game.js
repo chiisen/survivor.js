@@ -88,6 +88,34 @@ export class Game {
         
         this.expGrowthRate = 1.5;
         
+        this.difficulty = 'normal';
+        this.difficultySettings = {
+            normal: {
+                enemySpawnMultiplier: 1,
+                enemyHpMultiplier: 1,
+                enemyDamageMultiplier: 1,
+                playerHpMultiplier: 1,
+                bossHpMultiplier: 1,
+                name: '普通'
+            },
+            hard: {
+                enemySpawnMultiplier: 1.5,
+                enemyHpMultiplier: 1.5,
+                enemyDamageMultiplier: 1.3,
+                playerHpMultiplier: 0.8,
+                bossHpMultiplier: 2,
+                name: '困難'
+            },
+            hell: {
+                enemySpawnMultiplier: 2,
+                enemyHpMultiplier: 2,
+                enemyDamageMultiplier: 1.5,
+                playerHpMultiplier: 0.6,
+                bossHpMultiplier: 3,
+                name: '地獄'
+            }
+        };
+        
         this.setupInput();
         this.setupRestart();
     }
@@ -131,6 +159,25 @@ export class Game {
                this.keys['d'] || this.keys['D'] || this.keys['ArrowRight'];
     }
 
+    setDifficulty(difficulty) {
+        this.difficulty = difficulty;
+        const settings = this.difficultySettings[difficulty];
+        const display = document.getElementById('difficulty-display');
+        if (display) {
+            display.textContent = settings.name;
+            if (difficulty === 'hard') {
+                display.style.color = '#e67e22';
+                display.style.borderColor = 'rgba(230, 126, 22, 0.5)';
+            } else if (difficulty === 'hell') {
+                display.style.color = '#c0392b';
+                display.style.borderColor = 'rgba(192, 57, 43, 0.5)';
+            } else {
+                display.style.color = '#f39c12';
+                display.style.borderColor = 'rgba(243, 156, 18, 0.5)';
+            }
+        }
+    }
+
     setupRestart() {
         this.ui.onRestart(() => {
             this.restart();
@@ -138,7 +185,13 @@ export class Game {
     }
 
 start() {
+        const difficultySettings = this.difficultySettings[this.difficulty];
+        
         this.player = new Player(this.canvas.width / 2, this.canvas.height / 2);
+        
+        this.player.maxHp = Math.floor(100 * difficultySettings.playerHpMultiplier);
+        this.player.hp = this.player.maxHp;
+        
         this.enemies = [];
         this.projectilePool.releaseAll();
         this.explosionPool.releaseAll();
@@ -188,7 +241,8 @@ start() {
         this.gameTime += dt;
         
         this.decorationManager.update(dt, this.gameTime);
-        this.waveManager.update(dt, this.gameTime);
+        const normalEnemyCount = this.enemies.filter(e => !e.type.isBoss).length;
+        this.waveManager.update(dt, this.gameTime, normalEnemyCount);
         
         if (!this.audioStarted && this.hasPlayerInput()) {
             this.audioStarted = true;
@@ -213,11 +267,19 @@ start() {
         this.player.update(dt, this.keys, this.canvas.width, this.canvas.height);
         
         this.spawnTimer += dt;
-        const spawnInterval = this.waveManager.getSpawnInterval();
+        const difficultySettings = this.difficultySettings[this.difficulty];
+        const spawnInterval = this.waveManager.getSpawnInterval() / difficultySettings.enemySpawnMultiplier;
+        
+        const spawnCount = difficultySettings.enemySpawnMultiplier > 1.5 ? 2 : 1;
+        
         if (this.spawnTimer >= spawnInterval) {
             this.spawnTimer = 0;
             if (this.waveManager.shouldSpawnEnemy(this.enemies.length)) {
-                this.spawnEnemy(false);
+                for (let i = 0; i < spawnCount; i++) {
+                    if (this.waveManager.shouldSpawnEnemy(this.enemies.length)) {
+                        this.spawnEnemy(false);
+                    }
+                }
             }
         }
         
@@ -481,7 +543,11 @@ start() {
     }
 
     spawnEnemy(isBoss = false) {
-        const hpMultiplier = this.waveManager.getEnemyHpMultiplier();
+        const difficultySettings = this.difficultySettings[this.difficulty];
+        const waveHpMultiplier = this.waveManager.getEnemyHpMultiplier();
+        const hpMultiplier = waveHpMultiplier * difficultySettings.enemyHpMultiplier;
+        const bossHpMultiplier = waveHpMultiplier * difficultySettings.bossHpMultiplier;
+        
         const enemy = Enemy.spawn(
             this.canvas.width,
             this.canvas.height,
@@ -489,8 +555,15 @@ start() {
             this.player.y,
             this.gameTime,
             isBoss,
-            hpMultiplier
+            isBoss ? bossHpMultiplier : hpMultiplier
         );
+        
+        if (!isBoss) {
+            enemy.damage = Math.floor(enemy.damage * difficultySettings.enemyDamageMultiplier);
+        } else {
+            enemy.damage = Math.floor(enemy.damage * difficultySettings.enemyDamageMultiplier * 1.5);
+        }
+        
         this.enemies.push(enemy);
         return enemy;
     }

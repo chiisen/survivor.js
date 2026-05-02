@@ -59,17 +59,17 @@ const EnemyTypes = {
     },
     BOSS: {
         name: 'boss',
-        radius: 80,
-        speed: 20,
-        maxHp: 100,
-        damage: 40,
-        expValue: 200,
+        radius: 160,
+        speed: 18,
+        maxHp: 200,
+        damage: 50,
+        expValue: 300,
         color: '#c0392b',
         strokeColor: '#922b21',
         eyeColor: '#f1c40f',
         mouthStyle: 'boss',
         canShoot: true,
-        shootInterval: 1.2,
+        shootInterval: 1.0,
         isBoss: true
     },
     ELITE: {

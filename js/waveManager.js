@@ -14,7 +14,7 @@ export class WaveManager {
         this.announcementText = '';
     }
 
-    update(dt, gameTime) {
+    update(dt, gameTime, enemyCount = 0) {
         this.waveTimer += dt;
         
         if (this.currentWave === 0) {
@@ -22,6 +22,14 @@ export class WaveManager {
             this.waveTimer = 0;
             this.showAnnouncement = true;
             this.announcementText = `第 ${this.currentWave} 波開始！`;
+            this.waveAnnouncementTime = 2;
+        }
+
+        if (!this.isBreak && !this.isBossWave && enemyCount === 0 && this.enemiesSpawned > 0) {
+            this.isBreak = true;
+            this.waveTimer = 0;
+            this.showAnnouncement = true;
+            this.announcementText = '波次結束！休息時間';
             this.waveAnnouncementTime = 2;
         }
 
