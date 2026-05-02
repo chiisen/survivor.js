@@ -208,6 +208,8 @@ start() {
         this.isRunning = true;
         this.isPaused = false;
         this.pauseScreen.classList.add('hidden');
+        this.ui.hideGameOver();
+        this.ui.clearBuffNotifications();
         this.audioStarted = false;
         this.screenShake = { x: 0, y: 0 };
         this.ui.updateHp(this.player.hp, this.player.maxHp);

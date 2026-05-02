@@ -177,12 +177,6 @@ hideUpgradeModal() {
         this.gameOverScreen.classList.add('hidden');
     }
 
-    clearBuffNotifications() {
-        if (this.buffContainer) {
-            this.buffContainer.innerHTML = '';
-        }
-    }
-
     formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);

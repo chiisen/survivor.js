@@ -130,7 +130,7 @@ body {
 #upgrade-content h2, #game-over-content h1 {
     color: #f1c40f;
     margin-bottom: 30px;
-    font-size: 39px;
+    font-size: 55px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
@@ -171,13 +171,13 @@ body {
 
 #game-over-content p {
     color: #ecf0f1;
-    font-size: 22px;
+    font-size: 31px;
     line-height: 1.6;
     margin-bottom: 30px;
 }
 
 #game-over-content h3 {
-    font-size: 25px;
+    font-size: 35px;
     margin-bottom: 10px;
 }
 
@@ -186,15 +186,15 @@ body {
     padding: 20px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 10px;
-    font-size: 22px;
+    font-size: 31px;
 }
 
 #restart-btn {
     background: linear-gradient(135deg, #27ae60, #229954);
     color: white;
     border: none;
-    padding: 21px 56px;
-    font-size: 25px;
+    padding: 30px 78px;
+    font-size: 35px;
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -210,8 +210,8 @@ body {
     background: linear-gradient(135deg, #95a5a6, #7f8c8d);
     color: white;
     border: none;
-    padding: 21px 56px;
-    font-size: 25px;
+    padding: 30px 78px;
+    font-size: 35px;
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
