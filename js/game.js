@@ -271,6 +271,9 @@ start() {
                 const radiusSum = projectile.radius + enemy.radius;
                 
                 if (distSq < radiusSum * radiusSum) {
+                    if (enemy.isStealth) {
+                        enemy.reveal();
+                    }
                     enemy.hp -= projectile.damage;
                     this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage));
                     this.audio.playHit();
@@ -282,8 +285,17 @@ start() {
                             this.bossesKilled++;
                             this.audio.playChainKill();
                         }
+                        
+                        if (enemy.explosive) {
+                            this.createExplosiveDeath(enemy);
+                        }
+                        
                         this.explosionPool.get(enemy.x, enemy.y);
                         this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, enemy.expValue));
+                        
+                        if (enemy.canSplit) {
+                            this.createSplitEnemies(enemy);
+                        }
                         
                         let chainKills = 1;
                         const chainRadius = 40;
@@ -378,6 +390,64 @@ start() {
             hpMultiplier
         );
         this.enemies.push(enemy);
+    }
+
+    createSplitEnemies(parentEnemy) {
+        const splitCount = 2;
+        const splitRadius = parentEnemy.radius * 0.6;
+        const splitSpeed = parentEnemy.speed * 1.2;
+        
+        for (let i = 0; i < splitCount; i++) {
+            const angle = (Math.PI * 2 / splitCount) * i + Math.random() * 0.5;
+            const offset = 20;
+            const x = parentEnemy.x + Math.cos(angle) * offset;
+            const y = parentEnemy.y + Math.sin(angle) * offset;
+            
+            const splitEnemy = new Enemy(x, y, {
+                name: 'split',
+                radius: splitRadius,
+                speed: splitSpeed,
+                maxHp: 1,
+                damage: parentEnemy.damage * 0.5,
+                expValue: Math.floor(parentEnemy.expValue * 0.4),
+                color: '#1abc9c',
+                strokeColor: '#16a085',
+                eyeColor: '#fff',
+                mouthStyle: 'angry',
+                canShoot: false,
+                shootInterval: 0
+            });
+            this.enemies.push(splitEnemy);
+        }
+    }
+
+    createExplosiveDeath(enemy) {
+        const dist = distance(enemy.x, enemy.y, this.player.x, this.player.y);
+        if (dist < enemy.explosionRadius + this.player.radius) {
+            if (this.player.takeDamage(enemy.explosionDamage)) {
+                this.audio.playDamage();
+                this.ui.updateHp(this.player.hp, this.player.maxHp);
+                
+                if (this.player.hp <= 0) {
+                    this.gameOver();
+                    return;
+                }
+            }
+        }
+        
+        for (let i = 0; i < 8; i++) {
+            const angle = (Math.PI * 2 / 8) * i;
+            const expX = enemy.x + Math.cos(angle) * 15;
+            const expY = enemy.y + Math.sin(angle) * 15;
+            this.explosionPool.get(expX, expY);
+        }
+        
+        this.damageNumbers.push(new DamageNumber(
+            enemy.x, 
+            enemy.y - enemy.radius - 20, 
+            enemy.explosionDamage,
+            '#f39c12'
+        ));
     }
 
     autoFire() {

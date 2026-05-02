@@ -71,6 +71,69 @@ const EnemyTypes = {
         canShoot: true,
         shootInterval: 1.5,
         isBoss: true
+    },
+    ELITE: {
+        name: 'elite',
+        radius: 25,
+        speed: 45,
+        maxHp: 8,
+        damage: 25,
+        expValue: 50,
+        color: '#e67e22',
+        strokeColor: '#d35400',
+        eyeColor: '#fff',
+        mouthStyle: 'elite',
+        canShoot: false,
+        shootInterval: 0,
+        isElite: true
+    },
+    SPLITTER: {
+        name: 'splitter',
+        radius: 18,
+        speed: 50,
+        maxHp: 2,
+        damage: 10,
+        expValue: 15,
+        color: '#16a085',
+        strokeColor: '#138d75',
+        eyeColor: '#fff',
+        mouthStyle: 'split',
+        canShoot: false,
+        shootInterval: 0,
+        canSplit: true
+    },
+    EXPLOSIVE: {
+        name: 'explosive',
+        radius: 16,
+        speed: 55,
+        maxHp: 2,
+        damage: 15,
+        expValue: 20,
+        color: '#d35400',
+        strokeColor: '#bf4a1a',
+        eyeColor: '#f39c12',
+        mouthStyle: 'explosive',
+        canShoot: false,
+        shootInterval: 0,
+        explosive: true,
+        explosionRadius: 60,
+        explosionDamage: 20
+    },
+    STEALTH: {
+        name: 'stealth',
+        radius: 13,
+        speed: 80,
+        maxHp: 1,
+        damage: 15,
+        expValue: 18,
+        color: '#5d6d7e',
+        strokeColor: '#4a5a6a',
+        eyeColor: '#3498db',
+        mouthStyle: 'stealth',
+        canShoot: false,
+        shootInterval: 0,
+        isStealth: true,
+        baseAlpha: 0.3
     }
 };
 
@@ -94,6 +157,20 @@ export class Enemy {
         this.shootInterval = type.shootInterval;
         this.shootCooldown = 0;
         this.projectiles = [];
+        
+        this.isElite = type.isElite || false;
+        this.canSplit = type.canSplit || false;
+        this.explosive = type.explosive || false;
+        this.explosionRadius = type.explosionRadius || 0;
+        this.explosionDamage = type.explosionDamage || 0;
+        this.isStealth = type.isStealth || false;
+        this.baseAlpha = type.baseAlpha || 1;
+        this.currentAlpha = this.baseAlpha;
+        this.revealTime = 0;
+        
+        this.shieldHp = type.shieldHp || 0;
+        this.shieldMaxHp = type.shieldHp || 0;
+        this.hasShield = this.shieldHp > 0;
     }
 
     update(dt, playerX, playerY) {
@@ -104,6 +181,15 @@ export class Enemy {
         this.x += normalized.x * this.speed * dt;
         this.y += normalized.y * this.speed * dt;
         
+        if (this.isStealth) {
+            if (this.revealTime > 0) {
+                this.revealTime -= dt;
+                this.currentAlpha = 1;
+            } else {
+                this.currentAlpha = this.baseAlpha;
+            }
+        }
+        
         if (this.canShoot) {
             this.shootCooldown -= dt;
             if (this.shootCooldown <= 0) {
@@ -113,6 +199,12 @@ export class Enemy {
         }
         
         return null;
+    }
+
+    reveal() {
+        if (this.isStealth) {
+            this.revealTime = 2;
+        }
     }
 
     shoot(targetX, targetY) {
@@ -134,6 +226,10 @@ export class Enemy {
     draw(ctx) {
         ctx.save();
         
+        if (this.isStealth) {
+            ctx.globalAlpha = this.currentAlpha;
+        }
+        
         if (this.type === EnemyTypes.BOSS) {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius + 10, 0, Math.PI * 2);
@@ -153,6 +249,45 @@ export class Enemy {
             ctx.strokeStyle = '#e67e22';
             ctx.lineWidth = 2;
             ctx.stroke();
+        }
+        
+        if (this.type === EnemyTypes.ELITE) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 8, 0, Math.PI * 2);
+            ctx.strokeStyle = '#f1c40f';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 12, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(241, 196, 15, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        if (this.type === EnemyTypes.SPLITTER) {
+            ctx.beginPath();
+            ctx.moveTo(this.x - this.radius * 0.3, this.y - this.radius * 1.2);
+            ctx.lineTo(this.x + this.radius * 0.3, this.y - this.radius * 1.2);
+            ctx.lineTo(this.x, this.y - this.radius * 0.8);
+            ctx.closePath();
+            ctx.fillStyle = '#1abc9c';
+            ctx.fill();
+        }
+        
+        if (this.type === EnemyTypes.EXPLOSIVE) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 6, 0, Math.PI * 2);
+            ctx.strokeStyle = '#f39c12';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(this.x - this.radius * 0.4, this.y - this.radius);
+            ctx.lineTo(this.x, this.y - this.radius * 1.3);
+            ctx.lineTo(this.x + this.radius * 0.4, this.y - this.radius);
+            ctx.fillStyle = '#f39c12';
+            ctx.fill();
         }
         
         if (this.type === EnemyTypes.TANK) {
@@ -214,6 +349,27 @@ export class Enemy {
             case 'boss':
                 ctx.arc(this.x, this.y + this.radius * 0.35, this.radius * 0.5, Math.PI, 0, true);
                 break;
+            case 'elite':
+                ctx.moveTo(this.x - this.radius * 0.4, this.y + this.radius * 0.3);
+                ctx.lineTo(this.x - this.radius * 0.2, this.y + this.radius * 0.5);
+                ctx.lineTo(this.x + this.radius * 0.2, this.y + this.radius * 0.5);
+                ctx.lineTo(this.x + this.radius * 0.4, this.y + this.radius * 0.3);
+                break;
+            case 'split':
+                ctx.moveTo(this.x - this.radius * 0.3, this.y + this.radius * 0.25);
+                ctx.lineTo(this.x, this.y + this.radius * 0.5);
+                ctx.lineTo(this.x + this.radius * 0.3, this.y + this.radius * 0.25);
+                break;
+            case 'explosive':
+                ctx.arc(this.x, this.y + this.radius * 0.35, this.radius * 0.35, 0, Math.PI);
+                ctx.closePath();
+                ctx.fillStyle = '#f39c12';
+                ctx.fill();
+                break;
+            case 'stealth':
+                ctx.moveTo(this.x - this.radius * 0.25, this.y + this.radius * 0.3);
+                ctx.lineTo(this.x + this.radius * 0.25, this.y + this.radius * 0.3);
+                break;
         }
         ctx.strokeStyle = this.strokeColor;
         ctx.lineWidth = this.type === EnemyTypes.BOSS ? 4 : 2;
@@ -273,10 +429,14 @@ export class Enemy {
             type = EnemyTypes.BOSS;
         } else {
             const typeWeights = [
-                { type: EnemyTypes.NORMAL, weight: 50 },
-                { type: EnemyTypes.FAST, weight: gameTime > 30 ? 25 : 10 },
-                { type: EnemyTypes.TANK, weight: gameTime > 60 ? 20 : 5 },
-                { type: EnemyTypes.RANGED, weight: gameTime > 45 ? 15 : 0 }
+                { type: EnemyTypes.NORMAL, weight: 40 },
+                { type: EnemyTypes.FAST, weight: gameTime > 30 ? 20 : 10 },
+                { type: EnemyTypes.TANK, weight: gameTime > 60 ? 15 : 5 },
+                { type: EnemyTypes.RANGED, weight: gameTime > 45 ? 12 : 0 },
+                { type: EnemyTypes.ELITE, weight: gameTime > 90 ? 10 : 0 },
+                { type: EnemyTypes.SPLITTER, weight: gameTime > 60 ? 12 : 0 },
+                { type: EnemyTypes.EXPLOSIVE, weight: gameTime > 45 ? 10 : 0 },
+                { type: EnemyTypes.STEALTH, weight: gameTime > 75 ? 8 : 0 }
             ];
             
             const totalWeight = typeWeights.reduce((sum, t) => sum + t.weight, 0);

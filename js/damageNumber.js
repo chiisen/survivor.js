@@ -1,5 +1,5 @@
 export class DamageNumber {
-    constructor(x, y, value) {
+    constructor(x, y, value, color = null) {
         this.x = x;
         this.y = y;
         this.value = value;
@@ -10,7 +10,7 @@ export class DamageNumber {
         this.scale = 1;
         this.vy = -60;
         this.baseY = y;
-        this.color = value >= 5 ? '#f39c12' : '#fff';
+        this.color = color || (value >= 5 ? '#f39c12' : '#fff');
         this.fontSize = 16 + Math.min(value * 2, 20);
     }
 
