@@ -4,9 +4,10 @@ import { Projectile } from './projectile.js';
 import { ExperienceOrb } from './experience.js';
 import { Explosion } from './explosion.js';
 import { DamageNumber } from './damageNumber.js';
+import { SpatialGrid } from './spatialGrid.js';
 import { getRandomUpgrades } from './talent.js';
 import { UI } from './ui.js';
-import { distance } from './utils.js';
+import { distance, distanceSquared } from './utils.js';
 
 export class Game {
     constructor(canvas) {
@@ -22,6 +23,8 @@ export class Game {
         this.explosions = [];
         this.damageNumbers = [];
         this.ui = new UI();
+        this.enemyGrid = new SpatialGrid(100);
+        this.projectileGrid = new SpatialGrid(100);
         
         this.keys = {};
         this.isRunning = false;
@@ -124,6 +127,17 @@ export class Game {
     update(dt) {
         this.gameTime += dt;
         
+        this.enemyGrid.clear();
+        this.projectileGrid.clear();
+        
+        for (const enemy of this.enemies) {
+            this.enemyGrid.insert(enemy);
+        }
+        
+        for (const projectile of this.projectiles) {
+            this.projectileGrid.insert(projectile);
+        }
+        
         this.player.update(dt, this.keys, this.canvas.width, this.canvas.height);
         
         this.spawnTimer += dt;
@@ -138,16 +152,21 @@ export class Game {
         
         this.autoFire();
         
-        for (let i = this.enemies.length - 1; i >= 0; i--) {
-            const enemy = this.enemies[i];
+        for (const enemy of this.enemies) {
             const shootData = enemy.update(dt, this.player.x, this.player.y);
             
             if (shootData) {
                 this.enemyProjectiles.push(shootData);
             }
+        }
+        
+        const nearbyEnemies = this.enemyGrid.getNearby(this.player.x, this.player.y, this.player.radius + 50);
+        for (const enemy of nearbyEnemies) {
+            if (!this.enemies.includes(enemy)) continue;
             
-            const dist = distance(enemy.x, enemy.y, this.player.x, this.player.y);
-            if (dist < enemy.radius + this.player.radius) {
+            const distSq = distanceSquared(enemy.x, enemy.y, this.player.x, this.player.y);
+            const radiusSum = enemy.radius + this.player.radius;
+            if (distSq < radiusSum * radiusSum) {
                 if (this.player.takeDamage(enemy.damage)) {
                     this.ui.updateHp(this.player.hp, this.player.maxHp);
                     
@@ -193,11 +212,15 @@ export class Game {
                 continue;
             }
             
-            for (let j = this.enemies.length - 1; j >= 0; j--) {
-                const enemy = this.enemies[j];
-                const dist = distance(projectile.x, projectile.y, enemy.x, enemy.y);
+            const nearbyEnemies = this.enemyGrid.getNearby(projectile.x, projectile.y, projectile.radius + 30);
+            
+            for (const enemy of nearbyEnemies) {
+                if (!this.enemies.includes(enemy)) continue;
                 
-                if (dist < projectile.radius + enemy.radius) {
+                const distSq = distanceSquared(projectile.x, projectile.y, enemy.x, enemy.y);
+                const radiusSum = projectile.radius + enemy.radius;
+                
+                if (distSq < radiusSum * radiusSum) {
                     enemy.hp -= projectile.damage;
                     this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage));
                     this.projectiles.splice(i, 1);
@@ -208,23 +231,29 @@ export class Game {
                         
                         let chainKills = 1;
                         const chainRadius = 40;
+                        const chainNearby = this.enemyGrid.getNearby(enemy.x, enemy.y, chainRadius);
                         
-                        for (let k = this.enemies.length - 1; k >= 0; k--) {
-                            if (k === j) continue;
-                            const nearbyEnemy = this.enemies[k];
-                            const chainDist = distance(enemy.x, enemy.y, nearbyEnemy.x, nearbyEnemy.y);
+                        for (const nearbyEnemy of chainNearby) {
+                            if (nearbyEnemy === enemy) continue;
+                            if (!this.enemies.includes(nearbyEnemy)) continue;
                             
-                            if (chainDist <= chainRadius) {
+                            const chainDistSq = distanceSquared(enemy.x, enemy.y, nearbyEnemy.x, nearbyEnemy.y);
+                            if (chainDistSq <= chainRadius * chainRadius) {
                                 this.explosions.push(new Explosion(nearbyEnemy.x, nearbyEnemy.y));
                                 this.expOrbs.push(new ExperienceOrb(nearbyEnemy.x, nearbyEnemy.y, nearbyEnemy.expValue));
                                 this.damageNumbers.push(new DamageNumber(nearbyEnemy.x, nearbyEnemy.y - nearbyEnemy.radius, projectile.damage));
-                                this.enemies.splice(k, 1);
+                                const idx = this.enemies.indexOf(nearbyEnemy);
+                                if (idx !== -1) {
+                                    this.enemies.splice(idx, 1);
+                                }
                                 chainKills++;
-                                if (k < j) j--;
                             }
                         }
                         
-                        this.enemies.splice(j, 1);
+                        const enemyIdx = this.enemies.indexOf(enemy);
+                        if (enemyIdx !== -1) {
+                            this.enemies.splice(enemyIdx, 1);
+                        }
                         this.kills += chainKills;
                         
                         if (chainKills >= 2 && !this.player.hasFireRateBuff) {

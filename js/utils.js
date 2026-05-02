@@ -2,6 +2,12 @@ export function distance(x1, y1, x2, y2) {
     return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
 
+export function distanceSquared(x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    return dx * dx + dy * dy;
+}
+
 export function normalize(x, y) {
     const len = Math.sqrt(x * x + y * y);
     if (len === 0) return { x: 0, y: 0 };

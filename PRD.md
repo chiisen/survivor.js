@@ -124,7 +124,9 @@
 *   **語言**：純 JavaScript (ES6+)。
 *   **渲染**：HTML5 Canvas API。
 *   **循環**：`requestAnimationFrame` 驅動遊戲主迴圈。
-*   **模組化**：ES6 Modules（Player、Enemy、Projectile、Experience、Explosion、UI、Game）。
+*   **模組化**：ES6 Modules（Player、Enemy、Projectile、Experience、Explosion、DamageNumber、SpatialGrid、UI、Game）。
+*   **碰撞檢測**：空間網格分割（SpatialGrid），格子大小 100px，僅檢測鄰近格子內物件。
+*   **效能優化**：使用距離平方比較避免 Math.sqrt 運算。
 
 ## 8. UI 系統規格
 ### A. 狀態列 (Stats Bar)
@@ -181,9 +183,10 @@ survivor.js/
 │   ├── experience.js   # 經驗值類別
 │   ├── explosion.js    # 爆炸特效類別
 │   ├── damageNumber.js # 傷害數字類別
+│   ├── spatialGrid.js  # 空間網格分割（碰撞優化）
 │   ├── talent.js       # 天賦系統
 │   ├── ui.js           # UI 管理（含 Buff 通知）
-│   └── utils.js        # 工具函數
+│   └── utils.js        # 工具函數（含 distanceSquared）
 ├── PRD.md              # 產品需求文件
 ├── CHANGELOG.md        # 更新日誌
 └── README.md           # 專案說明
