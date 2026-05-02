@@ -522,7 +522,11 @@ start() {
         
         for (let i = this.expOrbs.length - 1; i >= 0; i--) {
             const orb = this.expOrbs[i];
-            orb.update(dt, this.player.x, this.player.y, this.player.pickupRange);
+            
+            const forceAttract = this.enemies.length === 0 && this.expOrbs.length > 0;
+            const effectivePickupRange = forceAttract ? 1000 : this.player.pickupRange;
+            
+            orb.update(dt, this.player.x, this.player.y, effectivePickupRange);
             
             if (orb.isCollected(this.player.x, this.player.y, this.player.radius)) {
                 this.audio.playPickup();
