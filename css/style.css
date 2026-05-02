@@ -177,7 +177,7 @@ body {
 }
 
 #game-over-content h3 {
-    font-size: 35px;
+    font-size: 70px;
     margin-bottom: 10px;
 }
 
@@ -186,7 +186,7 @@ body {
     padding: 20px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 10px;
-    font-size: 31px;
+    font-size: 62px;
 }
 
 #restart-btn {
