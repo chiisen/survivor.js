@@ -158,30 +158,6 @@ hideUpgradeModal() {
             </div>
         ` : '';
         
-        const leaderboardHtml = leaderboard.length > 0 ? `
-            <div style="border-top: 1px solid #5d6d7e; padding-top: 15px; margin-top: 15px;">
-                <h3 style="color: #9b59b6; margin-bottom: 10px;">📊 排行榜 TOP 10</h3>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr style="color: #3498db; font-weight: bold; border-bottom: 1px solid #5d6d7e;">
-                        <td style="padding: 5px;">排名</td>
-                        <td style="padding: 5px;">等级</td>
-                        <td style="padding: 5px;">击杀</td>
-                        <td style="padding: 5px;">时间</td>
-                        <td style="padding: 5px;">波次</td>
-                    </tr>
-                    ${leaderboard.map((entry, index) => `
-                        <tr style="${index === 0 ? 'color: #f1c40f; font-weight: bold;' : 'color: #ecf0f1;'}">
-                            <td style="padding: 5px;">${index + 1}</td>
-                            <td style="padding: 5px;">Lv.${entry.level}</td>
-                            <td style="padding: 5px;">${entry.kills}</td>
-                            <td style="padding: 5px;">${entry.formattedTime}</td>
-                            <td style="padding: 5px;">${entry.wave}</td>
-                        </tr>
-                    `).join('')}
-                </table>
-            </div>
-        ` : '';
-        
         this.finalStats.innerHTML = `
             <div style="margin-bottom: 20px;">
                 <h3 style="color: #f39c12; margin-bottom: 10px;">本次成績</h3>
@@ -191,18 +167,72 @@ hideUpgradeModal() {
                 最高波次: ${gameStats.wave}${newRecords.find(r => r.type === 'wave')?.isNew ? ' 🏆' : ''}<br>
                 存活時間: ${this.formatTime(gameStats.time)}${newRecords.find(r => r.type === 'time')?.isNew ? ' 🏆' : ''}
             </div>
-            <div style="border-top: 1px solid #5d6d7e; padding-top: 15px;">
-                <h3 style="color: #3498db; margin-bottom: 10px;">歷史紀錄</h3>
-                最高等級: ${historicalStats.highestLevel}<br>
-                最長時間: ${historicalStats.longestTime}<br>
-                總擊殺數: ${historicalStats.totalKills}<br>
-                最高波次: ${historicalStats.highestWave}<br>
-                Boss擊殺: ${historicalStats.bossesKilled}<br>
-                總遊戲次: ${historicalStats.totalGames}
-            </div>
             ${achievementHtml}
-            ${leaderboardHtml}
+            <div style="border-top: 1px solid #5d6d7e; padding-top: 15px; margin-top: 15px;">
+                <button id="show-history-btn" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; padding: 15px 30px; font-size: 24px; border-radius: 8px; cursor: pointer; width: 100%; margin-bottom: 10px;">查看歷史紀錄</button>
+                <div id="history-content" style="display: none; color: #ecf0f1;">
+                    最高等級: ${historicalStats.highestLevel}<br>
+                    最長時間: ${historicalStats.longestTime}<br>
+                    總擊殺數: ${historicalStats.totalKills}<br>
+                    最高波次: ${historicalStats.highestWave}<br>
+                    Boss擊殺: ${historicalStats.bossesKilled}<br>
+                    總遊戲次: ${historicalStats.totalGames}
+                </div>
+            </div>
+            ${leaderboard.length > 0 ? `
+            <div style="border-top: 1px solid #5d6d7e; padding-top: 15px; margin-top: 15px;">
+                <button id="show-leaderboard-btn" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; border: none; padding: 15px 30px; font-size: 24px; border-radius: 8px; cursor: pointer; width: 100%; margin-bottom: 10px;">查看排行榜 TOP 10</button>
+                <div id="leaderboard-content" style="display: none;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="color: #3498db; font-weight: bold; border-bottom: 1px solid #5d6d7e;">
+                            <td style="padding: 5px;">排名</td>
+                            <td style="padding: 5px;">等级</td>
+                            <td style="padding: 5px;">击杀</td>
+                            <td style="padding: 5px;">时间</td>
+                            <td style="padding: 5px;">波次</td>
+                        </tr>
+                        ${leaderboard.map((entry, index) => `
+                            <tr style="${index === 0 ? 'color: #f1c40f; font-weight: bold;' : 'color: #ecf0f1;'}">
+                                <td style="padding: 5px;">${index + 1}</td>
+                                <td style="padding: 5px;">Lv.${entry.level}</td>
+                                <td style="padding: 5px;">${entry.kills}</td>
+                                <td style="padding: 5px;">${entry.formattedTime}</td>
+                                <td style="padding: 5px;">${entry.wave}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                </div>
+            </div>
+            ` : ''}
         `;
+        
+        const showHistoryBtn = document.getElementById('show-history-btn');
+        const historyContent = document.getElementById('history-content');
+        if (showHistoryBtn && historyContent) {
+            showHistoryBtn.addEventListener('click', () => {
+                if (historyContent.style.display === 'none') {
+                    historyContent.style.display = 'block';
+                    showHistoryBtn.textContent = '隱藏歷史紀錄';
+                } else {
+                    historyContent.style.display = 'none';
+                    showHistoryBtn.textContent = '查看歷史紀錄';
+                }
+            });
+        }
+        
+        const showLeaderboardBtn = document.getElementById('show-leaderboard-btn');
+        const leaderboardContent = document.getElementById('leaderboard-content');
+        if (showLeaderboardBtn && leaderboardContent) {
+            showLeaderboardBtn.addEventListener('click', () => {
+                if (leaderboardContent.style.display === 'none') {
+                    leaderboardContent.style.display = 'block';
+                    showLeaderboardBtn.textContent = '隱藏排行榜';
+                } else {
+                    leaderboardContent.style.display = 'none';
+                    showLeaderboardBtn.textContent = '查看排行榜 TOP 10';
+                }
+            });
+        }
     }
 
     hideGameOver() {
