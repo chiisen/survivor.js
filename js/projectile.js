@@ -1,17 +1,38 @@
 import { normalize, distance } from './utils.js';
 
 export class Projectile {
-    constructor(x, y, targetX, targetY, speed, damage) {
+    constructor() {
+        this.x = 0;
+        this.y = 0;
+        this.radius = 8;
+        this.vx = 0;
+        this.vy = 0;
+        this.damage = 1;
+        this.color = '#f39c12';
+        this.trail = [];
+        this.maxTrailLength = 10;
+        this.active = false;
+    }
+
+    init(x, y, targetX, targetY, speed, damage) {
         this.x = x;
         this.y = y;
-        this.radius = 8;
         const dir = normalize(targetX - x, targetY - y);
         this.vx = dir.x * speed;
         this.vy = dir.y * speed;
         this.damage = damage;
-        this.color = '#f39c12';
         this.trail = [];
-        this.maxTrailLength = 10;
+        this.active = true;
+    }
+
+    reset() {
+        this.x = 0;
+        this.y = 0;
+        this.vx = 0;
+        this.vy = 0;
+        this.damage = 1;
+        this.trail = [];
+        this.active = false;
     }
 
     update(dt) {

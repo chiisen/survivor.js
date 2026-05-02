@@ -142,6 +142,7 @@
 *   **模組化**：ES6 Modules（Player、Enemy、Projectile、Experience、Explosion、DamageNumber、SpatialGrid、UI、Game）。
 *   **碰撞檢測**：空間網格分割（SpatialGrid），格子大小 100px，僅檢測鄰近格子內物件。
 *   **效能優化**：使用距離平方比較避免 Math.sqrt 運算。
+*   **物件池化**：ObjectPool 重用 Projectile 和 Explosion 物件，減少 GC 壓力（池大小 30/20）。
 
 ## 8. UI 系統規格
 ### A. 狀態列 (Stats Bar)
@@ -201,6 +202,7 @@ survivor.js/
 │   ├── damageNumber.js # 傷害數字類別
 │   ├── chainKillDisplay.js # 連殺顯示類別
 │   ├── spatialGrid.js  # 空間網格分割（碰撞優化）
+│   ├── objectPool.js   # 物件池化（GC 優化）
 │   ├── talent.js       # 天賦系統
 │   ├── ui.js           # UI 管理（含 Buff 通知）
 │   └── utils.js        # 工具函數（含 distanceSquared）

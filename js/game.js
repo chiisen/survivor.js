@@ -6,6 +6,7 @@ import { Explosion } from './explosion.js';
 import { DamageNumber } from './damageNumber.js';
 import { ChainKillDisplay } from './chainKillDisplay.js';
 import { SpatialGrid } from './spatialGrid.js';
+import { ObjectPool } from './objectPool.js';
 import { getRandomUpgrades } from './talent.js';
 import { UI } from './ui.js';
 import { distance, distanceSquared } from './utils.js';
@@ -18,10 +19,18 @@ export class Game {
         
         this.player = null;
         this.enemies = [];
-        this.projectiles = [];
+        this.projectilePool = new ObjectPool(
+            () => new Projectile(),
+            (obj, x, y, targetX, targetY, speed, damage) => obj.init(x, y, targetX, targetY, speed, damage),
+            30
+        );
+        this.explosionPool = new ObjectPool(
+            () => new Explosion(),
+            (obj, x, y) => obj.init(x, y),
+            20
+        );
         this.enemyProjectiles = [];
         this.expOrbs = [];
-        this.explosions = [];
         this.damageNumbers = [];
         this.chainKillDisplay = new ChainKillDisplay();
         this.ui = new UI();
@@ -82,10 +91,10 @@ export class Game {
     start() {
         this.player = new Player(this.canvas.width / 2, this.canvas.height / 2);
         this.enemies = [];
-        this.projectiles = [];
+        this.projectilePool.releaseAll();
+        this.explosionPool.releaseAll();
         this.enemyProjectiles = [];
         this.expOrbs = [];
-        this.explosions = [];
         this.damageNumbers = [];
         this.chainKillDisplay.clear();
         this.isRunning = true;
@@ -137,8 +146,10 @@ export class Game {
             this.enemyGrid.insert(enemy);
         }
         
-        for (const projectile of this.projectiles) {
-            this.projectileGrid.insert(projectile);
+        for (const projectile of this.projectilePool.getActiveObjects()) {
+            if (projectile.active) {
+                this.projectileGrid.insert(projectile);
+            }
         }
         
         this.player.update(dt, this.keys, this.canvas.width, this.canvas.height);
@@ -206,12 +217,15 @@ export class Game {
             }
         }
         
-        for (let i = this.projectiles.length - 1; i >= 0; i--) {
-            const projectile = this.projectiles[i];
+        const projectiles = this.projectilePool.getActiveObjects();
+        for (let i = projectiles.length - 1; i >= 0; i--) {
+            const projectile = projectiles[i];
+            if (!projectile.active) continue;
+            
             projectile.update(dt);
             
             if (projectile.isOutOfBounds(this.canvas.width, this.canvas.height)) {
-                this.projectiles.splice(i, 1);
+                this.projectilePool.release(projectile);
                 continue;
             }
             
@@ -226,10 +240,10 @@ export class Game {
                 if (distSq < radiusSum * radiusSum) {
                     enemy.hp -= projectile.damage;
                     this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage));
-                    this.projectiles.splice(i, 1);
+                    this.projectilePool.release(projectile);
                     
                     if (enemy.hp <= 0) {
-                        this.explosions.push(new Explosion(enemy.x, enemy.y));
+                        this.explosionPool.get(enemy.x, enemy.y);
                         this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, enemy.expValue));
                         
                         let chainKills = 1;
@@ -242,7 +256,7 @@ export class Game {
                             
                             const chainDistSq = distanceSquared(enemy.x, enemy.y, nearbyEnemy.x, nearbyEnemy.y);
                             if (chainDistSq <= chainRadius * chainRadius) {
-                                this.explosions.push(new Explosion(nearbyEnemy.x, nearbyEnemy.y));
+                                this.explosionPool.get(nearbyEnemy.x, nearbyEnemy.y);
                                 this.expOrbs.push(new ExperienceOrb(nearbyEnemy.x, nearbyEnemy.y, nearbyEnemy.expValue));
                                 this.damageNumbers.push(new DamageNumber(nearbyEnemy.x, nearbyEnemy.y - nearbyEnemy.radius, projectile.damage));
                                 const idx = this.enemies.indexOf(nearbyEnemy);
@@ -273,12 +287,15 @@ export class Game {
             }
         }
         
-        for (let i = this.explosions.length - 1; i >= 0; i--) {
-            const explosion = this.explosions[i];
+        const explosions = this.explosionPool.getActiveObjects();
+        for (let i = explosions.length - 1; i >= 0; i--) {
+            const explosion = explosions[i];
+            if (!explosion.active) continue;
+            
             explosion.update(dt);
             
             if (explosion.isFinished()) {
-                this.explosions.splice(i, 1);
+                this.explosionPool.release(explosion);
             }
         }
         
@@ -352,14 +369,14 @@ export class Game {
                 const targetX = this.player.x + Math.cos(finalAngle) * 100;
                 const targetY = this.player.y + Math.sin(finalAngle) * 100;
                 
-                this.projectiles.push(new Projectile(
+                this.projectilePool.get(
                     this.player.x,
                     this.player.y,
                     targetX,
                     targetY,
                     this.player.projectileSpeed,
                     this.player.damage
-                ));
+                );
             }
         }
     }
@@ -417,16 +434,20 @@ export class Game {
             enemy.draw(this.ctx);
         }
         
-        for (const explosion of this.explosions) {
-            explosion.draw(this.ctx);
+        for (const explosion of this.explosionPool.getActiveObjects()) {
+            if (explosion.active) {
+                explosion.draw(this.ctx);
+            }
         }
         
         for (const damageNumber of this.damageNumbers) {
             damageNumber.draw(this.ctx);
         }
         
-        for (const projectile of this.projectiles) {
-            projectile.draw(this.ctx);
+        for (const projectile of this.projectilePool.getActiveObjects()) {
+            if (projectile.active) {
+                projectile.draw(this.ctx);
+            }
         }
         
         for (const proj of this.enemyProjectiles) {

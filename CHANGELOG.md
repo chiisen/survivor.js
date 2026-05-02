@@ -19,6 +19,8 @@
 - 空間網格分割（SpatialGrid）：格子大小 100px，優化碰撞檢測從 O(n×m) 降至 O(n×k)
 - 距離平方比較：新增 distanceSquared() 函數避免 Math.sqrt 運算
 - 網格緩存：每幀清空重建，僅檢測鄰近格子內物件
+- 物件池化（ObjectPool）：重用 Projectile 和 Explosion 物件，減少 GC 壓力（池大小 30/20）
+- Projectile/Explosion 類別支援 init/reset 方法，預先建立粒子結構
 
 ## [0.1.0] - 2026-05-02
 
