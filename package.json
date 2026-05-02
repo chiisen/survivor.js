@@ -1,0 +1,9 @@
+{
+  "name": "survivor.js",
+  "version": "0.1.0",
+  "description": "網頁版生存遊戲",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  }
+}

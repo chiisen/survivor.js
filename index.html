@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survivor.js - 小女巫倖存者</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="ui-layer">
+            <div id="stats-bar">
+                <div id="hp-bar">
+                    <div id="hp-fill"></div>
+                    <span id="hp-text">100 / 100</span>
+                </div>
+                <div id="exp-bar">
+                    <div id="exp-fill"></div>
+                    <span id="exp-text">0 / 100</span>
+                </div>
+                <div id="level-display">Lv. 1</div>
+            </div>
+            <div id="timer">00:00</div>
+        </div>
+        <div id="upgrade-modal" class="hidden">
+            <div id="upgrade-content">
+                <h2>升級！選擇一項強化</h2>
+                <div id="upgrade-options"></div>
+            </div>
+        </div>
+        <div id="game-over" class="hidden">
+            <div id="game-over-content">
+                <h1>遊戲結束</h1>
+                <p id="final-stats"></p>
+                <button id="restart-btn">重新開始</button>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

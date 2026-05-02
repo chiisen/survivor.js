@@ -1,0 +1,367 @@
+import { Player } from './player.js';
+import { Enemy } from './enemy.js';
+import { Projectile } from './projectile.js';
+import { ExperienceOrb } from './experience.js';
+import { Explosion } from './explosion.js';
+import { getRandomUpgrades } from './talent.js';
+import { UI } from './ui.js';
+import { distance } from './utils.js';
+
+export class Game {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.resize();
+        
+        this.player = null;
+        this.enemies = [];
+        this.projectiles = [];
+        this.expOrbs = [];
+        this.explosions = [];
+        this.ui = new UI();
+        
+        this.keys = {};
+        this.isRunning = false;
+        this.isPaused = false;
+        this.lastTime = 0;
+        this.gameTime = 0;
+        
+        this.spawnTimer = 0;
+        this.spawnInterval = 1.5;
+        this.minSpawnInterval = 0.3;
+        this.spawnIntervalDecrease = 0.02;
+        
+        this.level = 1;
+        this.exp = 0;
+        this.expToLevel = 100;
+        this.kills = 0;
+        
+        this.expGrowthRate = 1.5;
+        
+        this.setupInput();
+        this.setupRestart();
+    }
+
+    resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+    }
+
+    setupInput() {
+        window.addEventListener('keydown', (e) => {
+            this.keys[e.key] = true;
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            this.keys[e.key] = false;
+        });
+        
+        window.addEventListener('resize', () => {
+            this.resize();
+            if (this.player) {
+                this.player.x = Math.min(this.player.x, this.canvas.width - this.player.radius);
+                this.player.y = Math.min(this.player.y, this.canvas.height - this.player.radius);
+            }
+        });
+    }
+
+    setupRestart() {
+        this.ui.onRestart(() => {
+            this.restart();
+        });
+    }
+
+    start() {
+        this.player = new Player(this.canvas.width / 2, this.canvas.height / 2);
+        this.enemies = [];
+        this.projectiles = [];
+        this.expOrbs = [];
+        this.explosions = [];
+        this.isRunning = true;
+        this.isPaused = false;
+        this.gameTime = 0;
+        this.level = 1;
+        this.exp = 0;
+        this.expToLevel = 100;
+        this.kills = 0;
+        this.spawnTimer = 0;
+        this.spawnInterval = 1.5;
+        
+        this.ui.hideGameOver();
+        this.ui.clearBuffNotifications();
+        this.ui.updateHp(this.player.hp, this.player.maxHp);
+        this.ui.updateExp(0, this.expToLevel);
+        this.ui.updateLevel(this.level);
+        
+        this.lastTime = performance.now();
+        this.loop();
+    }
+
+    restart() {
+        this.start();
+    }
+
+    loop() {
+        if (!this.isRunning) return;
+        
+        const currentTime = performance.now();
+        const dt = Math.min((currentTime - this.lastTime) / 1000, 0.1);
+        this.lastTime = currentTime;
+        
+        if (!this.isPaused) {
+            this.update(dt);
+        }
+        
+        this.render();
+        requestAnimationFrame(() => this.loop());
+    }
+
+    update(dt) {
+        this.gameTime += dt;
+        
+        this.player.update(dt, this.keys, this.canvas.width, this.canvas.height);
+        
+        this.spawnTimer += dt;
+        if (this.spawnTimer >= this.spawnInterval) {
+            this.spawnTimer = 0;
+            this.spawnEnemy();
+            this.spawnInterval = Math.max(
+                this.minSpawnInterval,
+                this.spawnInterval - this.spawnIntervalDecrease
+            );
+        }
+        
+        this.autoFire();
+        
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.enemies[i];
+            enemy.update(dt, this.player.x, this.player.y);
+            
+            const dist = distance(enemy.x, enemy.y, this.player.x, this.player.y);
+            if (dist < enemy.radius + this.player.radius) {
+                if (this.player.takeDamage(enemy.damage)) {
+                    this.ui.updateHp(this.player.hp, this.player.maxHp);
+                    
+                    if (this.player.hp <= 0) {
+                        this.gameOver();
+                        return;
+                    }
+                }
+            }
+        }
+        
+        for (let i = this.projectiles.length - 1; i >= 0; i--) {
+            const projectile = this.projectiles[i];
+            projectile.update(dt);
+            
+            if (projectile.isOutOfBounds(this.canvas.width, this.canvas.height)) {
+                this.projectiles.splice(i, 1);
+                continue;
+            }
+            
+            for (let j = this.enemies.length - 1; j >= 0; j--) {
+                const enemy = this.enemies[j];
+                const dist = distance(projectile.x, projectile.y, enemy.x, enemy.y);
+                
+                if (dist < projectile.radius + enemy.radius) {
+                    enemy.hp -= projectile.damage;
+                    this.projectiles.splice(i, 1);
+                    
+                    if (enemy.hp <= 0) {
+                        this.explosions.push(new Explosion(enemy.x, enemy.y));
+                        this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, enemy.expValue));
+                        
+                        let chainKills = 1;
+                        const chainRadius = 40;
+                        
+                        for (let k = this.enemies.length - 1; k >= 0; k--) {
+                            if (k === j) continue;
+                            const nearbyEnemy = this.enemies[k];
+                            const chainDist = distance(enemy.x, enemy.y, nearbyEnemy.x, nearbyEnemy.y);
+                            
+                            if (chainDist <= chainRadius) {
+                                this.explosions.push(new Explosion(nearbyEnemy.x, nearbyEnemy.y));
+                                this.expOrbs.push(new ExperienceOrb(nearbyEnemy.x, nearbyEnemy.y, nearbyEnemy.expValue));
+                                this.enemies.splice(k, 1);
+                                chainKills++;
+                                if (k < j) j--;
+                            }
+                        }
+                        
+                        this.enemies.splice(j, 1);
+                        this.kills += chainKills;
+                        
+                        if (chainKills >= 2 && !this.player.hasFireRateBuff) {
+                            this.player.activateFireRateBuff();
+                            this.ui.showBuffNotification('連殺！攻擊速度 +30%', 5);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        
+        for (let i = this.explosions.length - 1; i >= 0; i--) {
+            const explosion = this.explosions[i];
+            explosion.update(dt);
+            
+            if (explosion.isFinished()) {
+                this.explosions.splice(i, 1);
+            }
+        }
+        
+        for (let i = this.expOrbs.length - 1; i >= 0; i--) {
+            const orb = this.expOrbs[i];
+            orb.update(dt, this.player.x, this.player.y, this.player.pickupRange);
+            
+            if (orb.isCollected(this.player.x, this.player.y, this.player.radius)) {
+                this.exp += orb.value;
+                this.expOrbs.splice(i, 1);
+                
+                this.checkLevelUp();
+            }
+        }
+        
+        this.ui.updateTimer(this.gameTime);
+    }
+
+    spawnEnemy() {
+        const enemy = Enemy.spawn(
+            this.canvas.width,
+            this.canvas.height,
+            this.player.x,
+            this.player.y
+        );
+        this.enemies.push(enemy);
+    }
+
+    autoFire() {
+        if (!this.player.canFire() || this.enemies.length === 0) return;
+        
+        let closestEnemy = null;
+        let closestDist = Infinity;
+        
+        for (const enemy of this.enemies) {
+            const dist = distance(this.player.x, this.player.y, enemy.x, enemy.y);
+            if (dist <= this.player.attackRange && dist < closestDist) {
+                closestDist = dist;
+                closestEnemy = enemy;
+            }
+        }
+        
+        if (closestEnemy) {
+            this.player.fire(closestEnemy.x, closestEnemy.y);
+            
+            const count = this.player.projectileCount;
+            const spreadAngle = Math.PI / 8;
+            
+            for (let i = 0; i < count; i++) {
+                const angle = Math.atan2(
+                    closestEnemy.y - this.player.y,
+                    closestEnemy.x - this.player.x
+                );
+                
+                const offsetAngle = count === 1 ? 0 : 
+                    (i - (count - 1) / 2) * spreadAngle;
+                
+                const finalAngle = angle + offsetAngle;
+                const targetX = this.player.x + Math.cos(finalAngle) * 100;
+                const targetY = this.player.y + Math.sin(finalAngle) * 100;
+                
+                this.projectiles.push(new Projectile(
+                    this.player.x,
+                    this.player.y,
+                    targetX,
+                    targetY,
+                    this.player.projectileSpeed,
+                    this.player.damage
+                ));
+            }
+        }
+    }
+
+    checkLevelUp() {
+        while (this.exp >= this.expToLevel) {
+            this.exp -= this.expToLevel;
+            this.level++;
+            this.expToLevel = Math.floor(this.expToLevel * this.expGrowthRate);
+            
+            this.ui.updateLevel(this.level);
+            this.ui.updateExp(this.exp, this.expToLevel);
+            
+            this.showUpgradeModal();
+        }
+        
+        this.ui.updateExp(this.exp, this.expToLevel);
+    }
+
+    showUpgradeModal() {
+        this.isPaused = true;
+        const upgrades = getRandomUpgrades(3);
+        
+        this.ui.showUpgradeModal(upgrades, (selectedUpgrade) => {
+            this.player.applyUpgrade(selectedUpgrade);
+            this.ui.updateHp(this.player.hp, this.player.maxHp);
+            this.isPaused = false;
+        });
+    }
+
+    gameOver() {
+        this.isRunning = false;
+        this.ui.showGameOver(this.level, this.kills, this.gameTime);
+    }
+
+    render() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        const gradient = this.ctx.createRadialGradient(
+            this.canvas.width / 2, this.canvas.height / 2, 0,
+            this.canvas.width / 2, this.canvas.height / 2, this.canvas.width / 2
+        );
+        gradient.addColorStop(0, '#1a1a2e');
+        gradient.addColorStop(1, '#16213e');
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.drawGrid();
+        
+        for (const orb of this.expOrbs) {
+            orb.draw(this.ctx);
+        }
+        
+        for (const enemy of this.enemies) {
+            enemy.draw(this.ctx);
+        }
+        
+        for (const explosion of this.explosions) {
+            explosion.draw(this.ctx);
+        }
+        
+        for (const projectile of this.projectiles) {
+            projectile.draw(this.ctx);
+        }
+        
+        this.player.draw(this.ctx);
+    }
+
+    drawGrid() {
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+        this.ctx.lineWidth = 1;
+        
+        const gridSize = 50;
+        
+        for (let x = 0; x < this.canvas.width; x += gridSize) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, this.canvas.height);
+            this.ctx.stroke();
+        }
+        
+        for (let y = 0; y < this.canvas.height; y += gridSize) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(this.canvas.width, y);
+            this.ctx.stroke();
+        }
+    }
+}
