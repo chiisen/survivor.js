@@ -14,6 +14,9 @@ export class GroundDecoration {
         this.grassProcessedCanvas = null;
         this.grassImageLoaded = false;
         
+        this.rockProcessedCanvas = null;
+        this.rockImageLoaded = false;
+        
         switch (type) {
             case 'rock':
                 this.width = 20 + Math.random() * 30;
@@ -109,18 +112,24 @@ export class GroundDecoration {
     }
 
     drawRock(ctx) {
-        ctx.beginPath();
-        ctx.moveTo(this.x - this.width / 2, this.y);
-        ctx.lineTo(this.x - this.width / 3, this.y - this.height * 0.8);
-        ctx.lineTo(this.x + this.width / 4, this.y - this.height);
-        ctx.lineTo(this.x + this.width / 2, this.y - this.height * 0.5);
-        ctx.lineTo(this.x + this.width / 3, this.y);
-        ctx.closePath();
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.strokeStyle = '#34495e';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        if (this.rockImageLoaded && this.rockProcessedCanvas) {
+            const width = this.rockProcessedCanvas.width * 1.5;
+            const height = this.rockProcessedCanvas.height * 1.5;
+            ctx.drawImage(this.rockProcessedCanvas, this.x - width / 2, this.y - height, width, height);
+        } else {
+            ctx.beginPath();
+            ctx.moveTo(this.x - this.width / 2, this.y);
+            ctx.lineTo(this.x - this.width / 3, this.y - this.height * 0.8);
+            ctx.lineTo(this.x + this.width / 4, this.y - this.height);
+            ctx.lineTo(this.x + this.width / 2, this.y - this.height * 0.5);
+            ctx.lineTo(this.x + this.width / 3, this.y);
+            ctx.closePath();
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.strokeStyle = '#34495e';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
     }
 
     drawGrass(ctx) {
@@ -128,12 +137,6 @@ export class GroundDecoration {
             const width = this.grassProcessedCanvas.width * 1.5;
             const height = this.grassProcessedCanvas.height * 1.5;
             ctx.drawImage(this.grassProcessedCanvas, this.x - width / 2, this.y - height, width, height);
-            
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
-            ctx.strokeStyle = '#2ecc71';
-            ctx.lineWidth = 2;
-            ctx.stroke();
         } else {
             const sway = Math.sin(this.swayOffset) * this.swayAmount;
             const blades = 3 + Math.floor(Math.random() * 2);
@@ -507,6 +510,23 @@ export class DecorationManager {
             }
         };
         
+        this.rockProcessedCanvas = null;
+        this.rockImageLoaded = false;
+        
+        const rockImage = new Image();
+        rockImage.src = 'images/rock.png';
+        rockImage.onload = () => {
+            this.rockProcessedCanvas = this.removeBlackBackground(rockImage);
+            this.rockImageLoaded = true;
+            
+            for (const deco of this.decorations) {
+                if (deco.type === 'rock') {
+                    deco.rockProcessedCanvas = this.rockProcessedCanvas;
+                    deco.rockImageLoaded = true;
+                }
+            }
+        };
+        
         this.generateDecorations();
         this.generateParticles();
     }
@@ -546,8 +566,8 @@ export class DecorationManager {
 
     generateDecorations() {
         const decorationCount = 50;
-        const types = ['grass', 'flower', 'mushroom'];
-        const weights = [0.6, 0.3, 0.1];
+        const types = ['grass', 'flower', 'mushroom', 'rock'];
+        const weights = [0.5, 0.25, 0.15, 0.1];
         
         for (let i = 0; i < decorationCount; i++) {
             const x = Math.random() * this.canvasWidth;
@@ -579,6 +599,11 @@ export class DecorationManager {
             if (type === 'grass' && this.grassImageLoaded) {
                 deco.grassProcessedCanvas = this.grassProcessedCanvas;
                 deco.grassImageLoaded = true;
+            }
+            
+            if (type === 'rock' && this.rockImageLoaded) {
+                deco.rockProcessedCanvas = this.rockProcessedCanvas;
+                deco.rockImageLoaded = true;
             }
             
             this.decorations.push(deco);
