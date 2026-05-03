@@ -85,6 +85,13 @@ export class Game {
         this.achievementManager = new AchievementManager();
         this.screenShake = { x: 0, y: 0 };
         
+        this.floorImage = new Image();
+        this.floorImage.src = 'images/clean_tileset.png';
+        this.floorImageLoaded = false;
+        this.floorImage.onload = () => {
+            this.floorImageLoaded = true;
+        };
+        
         this.logger = new GameLogger();
         this.debugOverlay = new DebugOverlay(this);
         this.gameValidator = new GameValidator(this);
@@ -633,7 +640,7 @@ this.autoFire();
         let chainKills = 1;
         const chainKillExpBonus = this.getChainKillExpBonus(chainKills);
         const expValue = Math.floor(enemy.expValue * (1 + chainKillExpBonus));
-        this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, expValue));
+        this.spawnExpOrbs(enemy.x, enemy.y, expValue);
         
         if (enemy.canSplit) {
             this.createSplitEnemies(enemy);
@@ -897,6 +904,32 @@ this.autoFire();
         }
     }
 
+    spawnExpOrbs(x, y, value) {
+        const rand = Math.random();
+        let count = 1;
+        
+        if (rand < 0.1) {
+            count = 3;
+        } else if (rand < 0.3) {
+            count = 2;
+        }
+        
+        const spreadDistance = 15;
+        
+        for (let i = 0; i < count; i++) {
+            let orbX = x;
+            let orbY = y;
+            
+            if (count > 1) {
+                const angle = (Math.PI * 2 / count) * i + Math.random() * 0.5;
+                orbX = x + Math.cos(angle) * spreadDistance;
+                orbY = y + Math.sin(angle) * spreadDistance;
+            }
+            
+            this.expOrbs.push(new ExperienceOrb(orbX, orbY, value));
+        }
+    }
+
     getChainKillExpBonus(chainKills) {
         if (chainKills >= 10) return 1.5;
         if (chainKills >= 6) return 1.0;
@@ -1141,14 +1174,28 @@ this.autoFire();
         
         this.ctx.clearRect(-10, -10, this.canvas.width + 20, this.canvas.height + 20);
         
-        const gradient = this.ctx.createRadialGradient(
-            this.canvas.width / 2, this.canvas.height / 2, 0,
-            this.canvas.width / 2, this.canvas.height / 2, this.canvas.width / 2
-        );
-        gradient.addColorStop(0, '#1a1a2e');
-        gradient.addColorStop(1, '#16213e');
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(-10, -10, this.canvas.width + 20, this.canvas.height + 20);
+        if (this.floorImageLoaded) {
+            const tileSize = 64;
+            const cols = Math.ceil(this.canvas.width / tileSize) + 1;
+            const rows = Math.ceil(this.canvas.height / tileSize) + 1;
+            
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const x = col * tileSize - 10;
+                    const y = row * tileSize - 10;
+                    this.ctx.drawImage(this.floorImage, x, y, tileSize, tileSize);
+                }
+            }
+        } else {
+            const gradient = this.ctx.createRadialGradient(
+                this.canvas.width / 2, this.canvas.height / 2, 0,
+                this.canvas.width / 2, this.canvas.height / 2, this.canvas.width / 2
+            );
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(1, '#16213e');
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(-10, -10, this.canvas.width + 20, this.canvas.height + 20);
+        }
         
         this.decorationManager.draw(this.ctx);
         
