@@ -24,7 +24,7 @@ export class DebugOverlay {
         const boxWidth = 400;
         const boxHeight = 200;
         const x = (this.game.canvas.width - boxWidth) / 2;
-        const y = (this.game.canvas.height - boxHeight) / 2;
+        const y = this.game.canvas.height - boxHeight - 50;
         
         ctx.save();
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
