@@ -195,8 +195,9 @@ export class GroundDecoration {
     
     drawMushroom(ctx) {
         if (this.mushroomImageLoaded && this.mushroomProcessedCanvas) {
-            const size = 32;
-            ctx.drawImage(this.mushroomProcessedCanvas, this.x - size / 2, this.y - size, size, size);
+            const width = this.mushroomProcessedCanvas.width;
+            const height = this.mushroomProcessedCanvas.height;
+            ctx.drawImage(this.mushroomProcessedCanvas, this.x - width / 2, this.y - height, width, height);
         } else {
             ctx.beginPath();
             ctx.moveTo(this.x - this.width * 0.15, this.y);
