@@ -450,25 +450,28 @@ class GameValidator {
 
 ### Update Loop 檢核
 
-- [ ] Phase 1：Grid 已清空並填充所有實體
-- [ ] Phase 2：所有實體狀態已更新（player.update、enemy.update）
-- [ ] Phase 3：系統邏輯已執行（autoFire、checkCollisions）
-- [ ] Phase 4：UI 已更新
+- [x] Phase 1：Grid 已清空並填充所有實體
+- [x] Phase 2：所有實體狀態已更新（player.update、enemy.update）
+- [x] Phase 3：系統邏輯已執行（autoFire、checkCollisions）
+- [x] Phase 4：UI 已更新
 
 ### 調試工具檢核
 
-- [ ] DebugOverlay 按 D 鍵開啟
-- [ ] Grid 狀態可視化（格子數、實體數）
-- [ ] Player 狀態可視化（fireCooldown、canFire）
-- [ ] 錯誤警告自動顯示
+- [x] DebugOverlay 按 Ctrl+Shift+D 鍵開啟
+- [x] Grid 狀態可視化（格子數、實體數）
+- [x] Player 狀態可視化（fireCooldown、canFire）
+- [x] FPS/内存監控
+- [x] 錯誤警告自動顯示
 
 ### 物件職責檢核
 
-- [ ] PlayerCore 只處理移動與碰撞
-- [ ] PlayerCombat 只處理射擊與技能
-- [ ] PlayerRenderer 只處理繪製
-- [ ] EnemyCore 只處理移動與碰撞
-- [ ] EnemyBehaviors 只處理行為（射擊、分裂）
+- [x] PlayerCore 只處理移動與碰撞
+- [x] PlayerCombat 只處理射擊與技能
+- [x] PlayerRenderer 只處理繪製
+- [x] EnemyCore 只處理移動與碰撞
+- [x] EnemyBehaviors 只處理行為（射擊、分裂）
+- [x] BossPhaseManager 只處理 Boss 階段
+- [x] EnemyRenderer 只處理繪製
 
 ---
 
