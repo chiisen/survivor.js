@@ -3,13 +3,16 @@ export class GroundDecoration {
         this.x = x;
         this.y = y;
         this.type = type;
-        this.alpha = (type === 'mushroom' || type === 'flower') ? 1.0 : 0.3 + Math.random() * 0.2;
+        this.alpha = 1.0;
         
         this.mushroomProcessedCanvas = null;
         this.mushroomImageLoaded = false;
         
         this.flowerProcessedCanvas = null;
         this.flowerImageLoaded = false;
+        
+        this.grassProcessedCanvas = null;
+        this.grassImageLoaded = false;
         
         switch (type) {
             case 'rock':
@@ -72,6 +75,8 @@ export class GroundDecoration {
     draw(ctx) {
         ctx.save();
         ctx.globalAlpha = this.alpha;
+        ctx.imageSmoothingEnabled = false;
+        ctx.imageSmoothingQuality = 'high';
         
         switch (this.type) {
             case 'rock':
@@ -119,22 +124,28 @@ export class GroundDecoration {
     }
 
     drawGrass(ctx) {
-        const sway = Math.sin(this.swayOffset) * this.swayAmount;
-        const blades = 3 + Math.floor(Math.random() * 2);
-        
-        for (let i = 0; i < blades; i++) {
-            const offsetX = (i - blades / 2) * 5 + sway;
-            ctx.beginPath();
-            ctx.moveTo(this.x + i * 5, this.y);
-            ctx.quadraticCurveTo(
-                this.x + offsetX + i * 5,
-                this.y - this.height * 0.6,
-                this.x + offsetX + i * 5,
-                this.y - this.height
-            );
-            ctx.strokeStyle = this.color;
-            ctx.lineWidth = 2;
-            ctx.stroke();
+        if (this.grassImageLoaded && this.grassProcessedCanvas) {
+            const width = this.grassProcessedCanvas.width * 1.5;
+            const height = this.grassProcessedCanvas.height * 1.5;
+            ctx.drawImage(this.grassProcessedCanvas, this.x - width / 2, this.y - height, width, height);
+        } else {
+            const sway = Math.sin(this.swayOffset) * this.swayAmount;
+            const blades = 3 + Math.floor(Math.random() * 2);
+            
+            for (let i = 0; i < blades; i++) {
+                const offsetX = (i - blades / 2) * 5 + sway;
+                ctx.beginPath();
+                ctx.moveTo(this.x + i * 5, this.y);
+                ctx.quadraticCurveTo(
+                    this.x + offsetX + i * 5,
+                    this.y - this.height * 0.6,
+                    this.x + offsetX + i * 5,
+                    this.y - this.height
+                );
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
         }
     }
 
@@ -166,8 +177,8 @@ export class GroundDecoration {
     
     drawFlower(ctx) {
         if (this.flowerImageLoaded && this.flowerProcessedCanvas) {
-            const width = this.flowerProcessedCanvas.width;
-            const height = this.flowerProcessedCanvas.height;
+            const width = this.flowerProcessedCanvas.width * 1.5;
+            const height = this.flowerProcessedCanvas.height * 1.5;
             ctx.drawImage(this.flowerProcessedCanvas, this.x - width / 2, this.y - height, width, height);
         } else {
             const sway = Math.sin(this.swayOffset) * this.swayAmount;
@@ -204,8 +215,8 @@ export class GroundDecoration {
     
     drawMushroom(ctx) {
         if (this.mushroomImageLoaded && this.mushroomProcessedCanvas) {
-            const width = this.mushroomProcessedCanvas.width;
-            const height = this.mushroomProcessedCanvas.height;
+            const width = this.mushroomProcessedCanvas.width * 1.5;
+            const height = this.mushroomProcessedCanvas.height * 1.5;
             ctx.drawImage(this.mushroomProcessedCanvas, this.x - width / 2, this.y - height, width, height);
         } else {
             ctx.beginPath();
@@ -473,6 +484,23 @@ export class DecorationManager {
             }
         };
         
+        this.grassProcessedCanvas = null;
+        this.grassImageLoaded = false;
+        
+        const grassImage = new Image();
+        grassImage.src = 'images/grass.png';
+        grassImage.onload = () => {
+            this.grassProcessedCanvas = this.removeBlackBackground(grassImage);
+            this.grassImageLoaded = true;
+            
+            for (const deco of this.decorations) {
+                if (deco.type === 'grass') {
+                    deco.grassProcessedCanvas = this.grassProcessedCanvas;
+                    deco.grassImageLoaded = true;
+                }
+            }
+        };
+        
         this.generateDecorations();
         this.generateParticles();
     }
@@ -540,6 +568,11 @@ export class DecorationManager {
             if (type === 'flower' && this.flowerImageLoaded) {
                 deco.flowerProcessedCanvas = this.flowerProcessedCanvas;
                 deco.flowerImageLoaded = true;
+            }
+            
+            if (type === 'grass' && this.grassImageLoaded) {
+                deco.grassProcessedCanvas = this.grassProcessedCanvas;
+                deco.grassImageLoaded = true;
             }
             
             this.decorations.push(deco);
