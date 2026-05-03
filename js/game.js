@@ -35,12 +35,14 @@ export class Game {
         this.projectilePool = new ObjectPool(
             () => new Projectile(),
             (obj, x, y, targetX, targetY, speed, damage) => obj.init(x, y, targetX, targetY, speed, damage),
-            30
+            50,
+            200
         );
         this.explosionPool = new ObjectPool(
             () => new Explosion(),
             (obj, x, y) => obj.init(x, y),
-            20
+            20,
+            50
         );
         this.enemyProjectiles = [];
         this.expOrbs = [];
@@ -59,22 +61,26 @@ export class Game {
         this.bossSpawnPool = new ObjectPool(
             () => new BossSpawnEffect(),
             (obj, x, y) => obj.init(x, y),
-            3
+            3,
+            10
         );
         this.shieldBreakPool = new ObjectPool(
             () => new ShieldBreakEffect(),
             (obj, x, y) => obj.init(x, y),
-            5
+            5,
+            15
         );
         this.bossDeathPool = new ObjectPool(
             () => new BossDeathEffect(),
             (obj, x, y) => obj.init(x, y),
-            2
+            2,
+            10
         );
         this.splitEffectPool = new ObjectPool(
             () => new SplitEffect(),
             (obj, x, y) => obj.init(x, y),
-            10
+            10,
+            30
         );
         this.achievementManager = new AchievementManager();
         this.screenShake = { x: 0, y: 0 };
@@ -171,6 +177,16 @@ export class Game {
             
             if ((e.key === 'q' || e.key === 'Q') && this.isRunning && !this.isPaused && this.player.canUseSkill()) {
                 this.useUltimateSkill();
+            }
+            
+            if (e.key === 'p' || e.key === 'P') {
+                if (e.ctrlKey && e.shiftKey) {
+                    this.logPoolStats();
+                    this.keys['p'] = false;
+                    this.keys['P'] = false;
+                    e.preventDefault();
+                    return;
+                }
             }
         });
         
@@ -440,6 +456,18 @@ this.autoFire();
         this.ui.updateTimer(this.gameTime);
         
         this.updateEffects(dt);
+        
+        this.projectilePool.cleanInactive();
+        
+        if (Math.floor(this.gameTime) % 30 === 0 && Math.floor(this.gameTime) !== Math.floor(this.gameTime - dt)) {
+            this.projectilePool.autoAdjust();
+        }
+        
+        this.projectilePool.cleanInactive();
+        
+        if (this.gameTime % 30 < dt) {
+            this.projectilePool.autoAdjust();
+        }
         
         this.screenShake = { x: 0, y: 0 };
         for (const spawnEffect of this.bossSpawnPool.getActiveObjects()) {
