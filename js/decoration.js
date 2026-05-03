@@ -81,8 +81,9 @@ export class GroundDecoration {
             const r = data[i];
             const g = data[i + 1];
             const b = data[i + 2];
+            const brightness = (r + g + b) / 3;
             
-            if (r < 30 && g < 30 && b < 30) {
+            if (brightness < 20) {
                 data[i + 3] = 0;
             }
         }
