@@ -140,7 +140,7 @@ export class Game {
             this.keys[e.key] = true;
             
             if (e.key === 'd' || e.key === 'D') {
-                if (e.ctrlKey || e.altKey) {
+                if (e.ctrlKey && e.shiftKey) {
                     this.debugOverlay.toggle();
                     this.keys['d'] = false;
                     this.keys['D'] = false;

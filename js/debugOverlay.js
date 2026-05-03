@@ -27,7 +27,7 @@ export class DebugOverlay {
         
         ctx.font = '14px monospace';
         ctx.fillStyle = '#2ecc71';
-        ctx.fillText('=== DEBUG OVERLAY (按 D 鍵關閉) ===', 10, 20);
+        ctx.fillText('=== DEBUG OVERLAY (按Ctrl+Shift+D 鍵關閉) ===', 10, 20);
         
         this.drawGridStatus(ctx, 40);
         this.drawUpdatePipeline(ctx, 70);
