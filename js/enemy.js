@@ -172,7 +172,10 @@ export class Enemy {
     set hp(value) { this.core.hp = value; }
     
     get damage() { return this.core.damage; }
+    set damage(value) { this.core.damage = value; }
+    
     get expValue() { return this.core.expValue; }
+    set expValue(value) { this.core.expValue = value; }
     
     get color() { return this.core.type.color; }
     get strokeColor() { return this.core.type.strokeColor; }
