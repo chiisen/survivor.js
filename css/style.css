@@ -487,9 +487,14 @@ body {
 }
 
 .difficulty-btn.selected {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
-    border-color: #f1c40f;
     transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    border-width: 3px;
+}
+
+.difficulty-btn[data-difficulty="normal"].selected {
+    background: linear-gradient(135deg, #2980b9, #1a5276);
+    border-color: #5dade2;
 }
 
 .difficulty-btn[data-difficulty="hard"] {
@@ -498,8 +503,8 @@ body {
 }
 
 .difficulty-btn[data-difficulty="hard"].selected {
-    background: linear-gradient(135deg, #c0392b, #922b21);
-    border-color: #e74c3c;
+    background: linear-gradient(135deg, #d35400, #a04000);
+    border-color: #f39c12;
 }
 
 .difficulty-btn[data-difficulty="hell"] {
@@ -508,9 +513,8 @@ body {
 }
 
 .difficulty-btn[data-difficulty="hell"].selected {
-    background: linear-gradient(135deg, #8e44ad, #6c3483);
-    border-color: #9b59b6;
-    transform: scale(1.1);
+    background: linear-gradient(135deg, #922b21, #641e16);
+    border-color: #c0392b;
 }
 
 #instructions {
