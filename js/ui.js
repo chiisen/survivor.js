@@ -1,5 +1,7 @@
 export class UI {
     constructor() {
+        this.shieldFill = document.getElementById('shield-fill');
+        this.shieldText = document.getElementById('shield-text');
         this.hpFill = document.getElementById('hp-fill');
         this.hpText = document.getElementById('hp-text');
         this.expFill = document.getElementById('exp-fill');
@@ -93,6 +95,25 @@ export class UI {
         const percentage = (current / max) * 100;
         this.hpFill.style.width = `${percentage}%`;
         this.hpText.textContent = `${Math.ceil(current)} / ${max}`;
+    }
+    
+    updateShield(current, max) {
+        if (max <= 0) {
+            this.shieldFill.parentElement.style.display = 'none';
+            return;
+        }
+        
+        this.shieldFill.parentElement.style.display = 'block';
+        
+        const percentage = (current / max) * 100;
+        this.shieldFill.style.width = `${percentage}%`;
+        this.shieldText.textContent = `${Math.ceil(current)} / ${max}`;
+        
+        if (current <= 0) {
+            this.shieldFill.parentElement.style.opacity = '0.3';
+        } else {
+            this.shieldFill.parentElement.style.opacity = '1';
+        }
     }
 
     updateExp(current, max) {

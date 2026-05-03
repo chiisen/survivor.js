@@ -21,6 +21,7 @@ import { SplitEffect } from './splitEffect.js';
 import { AchievementManager } from './achievement.js';
 import { GameLogger } from './gameLogger.js';
 import { DebugOverlay } from './debugOverlay.js';
+import { VisibilityMask } from './visibilityMask.js';
 
 export class Game {
     constructor(canvas) {
@@ -79,6 +80,7 @@ export class Game {
         
         this.logger = new GameLogger();
         this.debugOverlay = new DebugOverlay(this);
+        this.visibilityMask = new VisibilityMask();
         
         this.keys = {};
         this.isRunning = false;
@@ -244,6 +246,7 @@ start() {
         this.audioStarted = false;
         this.screenShake = { x: 0, y: 0 };
         this.ui.updateHp(this.player.hp, this.player.maxHp);
+        this.ui.updateShield(this.player.shield, this.player.maxShield);
         this.ui.updateExp(0, this.expToLevel);
         this.ui.updateLevel(this.level);
         this.updateSkillStats();
@@ -297,6 +300,7 @@ update(dt) {
         
         if (this.waveManager.isBreak && this.player.maxShield > 0) {
             this.player.shield = this.player.maxShield;
+            this.ui.updateShield(this.player.shield, this.player.maxShield);
         }
         
         this.spawnTimer += dt;
@@ -445,11 +449,13 @@ update(dt) {
             const distSq = distanceSquared(enemy.x, enemy.y, this.player.x, this.player.y);
             const radiusSum = enemy.radius + this.player.radius;
             if (distSq < radiusSum * radiusSum) {
-                if (this.player.takeDamage(enemy.damage)) {
+                const result = this.player.takeDamage(enemy.damage);
+                if (result.hpChanged) {
                     this.audio.playDamage();
                     this.ui.updateHp(this.player.hp, this.player.maxHp);
+                    this.ui.updateShield(this.player.shield, this.player.maxShield);
                     
-                    if (this.player.hp <= 0) {
+                    if (result.isDead) {
                         this.gameOver();
                         return;
                     }
@@ -469,15 +475,17 @@ update(dt) {
             
             const dist = distance(proj.x, proj.y, this.player.x, this.player.y);
             if (dist < proj.radius + this.player.radius) {
-                if (this.player.takeDamage(proj.damage)) {
+                const result = this.player.takeDamage(proj.damage);
+                if (result.hpChanged) {
                     this.audio.playDamage();
                     this.ui.updateHp(this.player.hp, this.player.maxHp);
-                    this.enemyProjectiles.splice(i, 1);
-                    
-                    if (this.player.hp <= 0) {
-                        this.gameOver();
-                        return;
-                    }
+                    this.ui.updateShield(this.player.shield, this.player.maxShield);
+                }
+                this.enemyProjectiles.splice(i, 1);
+                
+                if (result.isDead) {
+                    this.gameOver();
+                    return;
                 }
             }
         }
@@ -549,6 +557,7 @@ update(dt) {
         if (this.player.lifesteal > 0) {
             this.player.heal(this.player.lifesteal);
             this.ui.updateHp(this.player.hp, this.player.maxHp);
+            this.ui.updateShield(this.player.shield, this.player.maxShield);
         }
         
         if (enemy.type.isBoss) {
@@ -759,11 +768,12 @@ update(dt) {
     createExplosiveDeath(enemy) {
         const dist = distance(enemy.x, enemy.y, this.player.x, this.player.y);
         if (dist < enemy.explosionRadius + this.player.radius) {
-            if (this.player.takeDamage(enemy.explosionDamage)) {
+            const result = this.player.takeDamage(enemy.explosionDamage);
+            if (result.hpChanged) {
                 this.audio.playDamage();
                 this.ui.updateHp(this.player.hp, this.player.maxHp);
                 
-                if (this.player.hp <= 0) {
+                if (result.isDead) {
                     this.gameOver();
                     return;
                 }
@@ -968,6 +978,7 @@ update(dt) {
         this.ui.showUpgradeModal(upgrades, (selectedUpgrade) => {
             this.player.applyUpgrade(selectedUpgrade);
             this.ui.updateHp(this.player.hp, this.player.maxHp);
+            this.ui.updateShield(this.player.shield, this.player.maxShield);
             this.updateSkillStats();
             this.isPaused = false;
         });
@@ -1178,6 +1189,8 @@ update(dt) {
         
         this.debugOverlay.draw(this.ctx);
         
+        this.visibilityMask.draw(this.ctx, this.canvas.width, this.canvas.height, this.player.x, this.player.y);
+        
         this.ctx.restore();
     }
 
@@ -1188,7 +1201,7 @@ update(dt) {
         const barWidth = this.canvas.width * 0.6;
         const barHeight = 24;
         const barX = (this.canvas.width - barWidth) / 2;
-        const barY = 80;
+        const barY = this.canvas.height * 0.25;
         
         this.ctx.save();
         

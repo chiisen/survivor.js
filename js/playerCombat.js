@@ -102,32 +102,32 @@ export class PlayerCombat {
         if (this.core.shield > 0) {
             if (this.core.shield >= actualDamage) {
                 this.core.shield -= actualDamage;
-                return false;
+                return { hpChanged: true, isDead: false };
             } else {
                 const remainingDamage = actualDamage - this.core.shield;
                 this.core.shield = 0;
                 this.core.hp -= remainingDamage;
                 if (this.core.hp <= 0) {
                     this.core.hp = 0;
-                    return true;
+                    return { hpChanged: true, isDead: true };
                 }
-                return false;
+                return { hpChanged: true, isDead: false };
             }
         }
         
         if (this.core.invincibleTime > 0) {
-            return false;
+            return { hpChanged: false, isDead: false };
         }
         
         this.core.hp -= actualDamage;
         if (this.core.hp <= 0) {
             this.core.hp = 0;
-            return true;
+            return { hpChanged: true, isDead: true };
         }
         
         this.core.invincibleTime = 1;
         this.core.flashTime = 1;
-        return false;
+        return { hpChanged: true, isDead: false };
     }
     
     applyUpgrade(upgrade) {
