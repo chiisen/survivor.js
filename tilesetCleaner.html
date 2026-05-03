@@ -68,6 +68,33 @@
 <body>
     <h1>🛠️ Tileset 清理工具</h1>
     
+    <div style="max-width: 800px; margin: 20px auto; padding: 20px; background: rgba(46, 204, 113, 0.2); border-radius: 10px; border-left: 4px solid #2ecc71;">
+        <h2 style="color: #2ecc71; margin-bottom: 15px;">📁 选择图片</h2>
+        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 10px;">
+                <span style="color: #f1c40f; font-weight: bold;">本地图片：</span>
+                <input type="file" id="image-file-input" accept="image/*" style="padding: 8px; background: #34495e; color: #ecf0f1; border: 1px solid #2ecc71; border-radius: 5px; cursor: pointer;">
+            </label>
+            
+            <label style="display: flex; align-items: center; gap: 10px;">
+                <span style="color: #f1c40f; font-weight: bold;">预设图片：</span>
+                <select id="preset-image-select" style="padding: 8px; background: #34495e; color: #ecf0f1; border: 1px solid #2ecc71; border-radius: 5px; cursor: pointer;">
+                    <option value="">-- 选择预设图片 --</option>
+                    <option value="images/floor_tileset.png">floor_tileset.png（地板）</option>
+                    <option value="images/mushroom.png">mushroom.png（蘑菇）</option>
+                    <option value="images/flower.png">flower.png（花）</option>
+                    <option value="images/grass.png">grass.png（草）</option>
+                    <option value="images/rock.png">rock.png（石头）</option>
+                    <option value="images/地板與環境素材設計圖集.png">地板與環境素材設計圖集.png</option>
+                    <option value="images/盔甲武士動作圖集.png">盔甲武士動作圖集.png</option>
+                    <option value="images/怪物動作設計圖集.png">怪物動作設計圖集.png</option>
+                    <option value="images/BOSS動作圖集.png">BOSS動作圖集.png</option>
+                </select>
+            </label>
+        </div>
+        <p style="color: #bdc3c7; margin-top: 10px; font-size: 14px;">提示：选择本地图片或预设图片后，工具会自动加载</p>
+    </div>
+    
     <div class="instruction">
         <h2>📖 使用說明</h2>
         <ul>
@@ -131,7 +158,40 @@
         import { TilesetCleaner } from './js/tilesetCleaner.js';
         
         const cleaner = new TilesetCleaner();
-        cleaner.createTilePositionEditor('editor-container', 'images/地板與環境素材設計圖集.png');
+        
+        const fileInput = document.getElementById('image-file-input');
+        const presetSelect = document.getElementById('preset-image-select');
+        const editorContainer = document.getElementById('editor-container');
+        
+        let currentImageUrl = null;
+        
+        function loadImage(imageUrl) {
+            if (currentImageUrl) {
+                editorContainer.innerHTML = '';
+            }
+            currentImageUrl = imageUrl;
+            cleaner.createTilePositionEditor('editor-container', imageUrl);
+        }
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const imageUrl = URL.createObjectURL(file);
+                loadImage(imageUrl);
+                presetSelect.value = '';
+            }
+        });
+        
+        presetSelect.addEventListener('change', (e) => {
+            const imageUrl = e.target.value;
+            if (imageUrl) {
+                loadImage(imageUrl);
+                fileInput.value = '';
+            }
+        });
+        
+        // 预设加载地板素材图集
+        loadImage('images/地板與環境素材設計圖集.png');
     </script>
 </body>
 </html>
