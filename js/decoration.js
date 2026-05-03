@@ -5,6 +5,15 @@ export class GroundDecoration {
         this.type = type;
         this.alpha = 0.3 + Math.random() * 0.2;
         
+        if (type === 'mushroom') {
+            this.mushroomImage = new Image();
+            this.mushroomImage.src = 'images/floor_tileset.png';
+            this.mushroomImageLoaded = false;
+            this.mushroomImage.onload = () => {
+                this.mushroomImageLoaded = true;
+            };
+        }
+        
         switch (type) {
             case 'rock':
                 this.width = 20 + Math.random() * 30;
@@ -191,27 +200,32 @@ export class GroundDecoration {
     }
     
     drawMushroom(ctx) {
-        ctx.beginPath();
-        ctx.moveTo(this.x - this.width * 0.15, this.y);
-        ctx.lineTo(this.x - this.width * 0.1, this.y - this.height * 0.6);
-        ctx.lineTo(this.x + this.width * 0.1, this.y - this.height * 0.6);
-        ctx.lineTo(this.x + this.width * 0.15, this.y);
-        ctx.closePath();
-        ctx.fillStyle = '#ecf0f1';
-        ctx.fill();
-        
-        ctx.beginPath();
-        ctx.arc(this.x, this.y - this.height * 0.6, this.width * 0.5, Math.PI, 0);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        
-        for (let i = 0; i < 3; i++) {
-            const dotX = this.x + (Math.random() - 0.5) * this.width * 0.3;
-            const dotY = this.y - this.height * 0.6 - Math.random() * this.width * 0.2;
+        if (this.mushroomImageLoaded) {
+            const size = 32;
+            ctx.drawImage(this.mushroomImage, this.x - size / 2, this.y - size, size, size);
+        } else {
             ctx.beginPath();
-            ctx.arc(dotX, dotY, 2, 0, Math.PI * 2);
+            ctx.moveTo(this.x - this.width * 0.15, this.y);
+            ctx.lineTo(this.x - this.width * 0.1, this.y - this.height * 0.6);
+            ctx.lineTo(this.x + this.width * 0.1, this.y - this.height * 0.6);
+            ctx.lineTo(this.x + this.width * 0.15, this.y);
+            ctx.closePath();
             ctx.fillStyle = '#ecf0f1';
             ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(this.x, this.y - this.height * 0.6, this.width * 0.5, Math.PI, 0);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            
+            for (let i = 0; i < 3; i++) {
+                const dotX = this.x + (Math.random() - 0.5) * this.width * 0.3;
+                const dotY = this.y - this.height * 0.6 - Math.random() * this.width * 0.2;
+                ctx.beginPath();
+                ctx.arc(dotX, dotY, 2, 0, Math.PI * 2);
+                ctx.fillStyle = '#ecf0f1';
+                ctx.fill();
+            }
         }
     }
     
