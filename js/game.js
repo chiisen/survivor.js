@@ -19,6 +19,8 @@ import { ShieldBreakEffect } from './shieldBreakEffect.js';
 import { BossDeathEffect } from './bossDeathEffect.js';
 import { SplitEffect } from './splitEffect.js';
 import { AchievementManager } from './achievement.js';
+import { GameLogger } from './gameLogger.js';
+import { DebugOverlay } from './debugOverlay.js';
 
 export class Game {
     constructor(canvas) {
@@ -74,6 +76,9 @@ export class Game {
         );
         this.achievementManager = new AchievementManager();
         this.screenShake = { x: 0, y: 0 };
+        
+        this.logger = new GameLogger();
+        this.debugOverlay = new DebugOverlay(this);
         
         this.keys = {};
         this.isRunning = false;
@@ -133,6 +138,12 @@ export class Game {
     setupInput() {
         window.addEventListener('keydown', (e) => {
             this.keys[e.key] = true;
+            
+            if (e.key === 'd' || e.key === 'D') {
+                if (e.ctrlKey || e.altKey) {
+                    this.debugOverlay.toggle();
+                }
+            }
             
             if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
                 if (this.isRunning && !this.ui.isUpgradeModalOpen()) {
@@ -258,15 +269,349 @@ start() {
         requestAnimationFrame(() => this.loop());
     }
 
-    update(dt) {
+update(dt) {
         this.gameTime += dt;
+        this.logger.reset();
         
+        // ==================== Phase 1: 清理與準備 ====================
+        this.logger.phase('phase1', { enemies: this.enemies.length });
+        this.enemyGrid.clear();
+        for (const enemy of this.enemies) {
+            this.enemyGrid.insert(enemy);
+        }
+        
+        // ==================== Phase 2: 狀態更新 ====================
+        this.logger.phase('phase2', { fireCooldown: this.player.fireCooldown });
+        
+        // 2.1 玩家狀態（必須最先更新）
         this.player.update(dt, this.keys, this.canvas.width, this.canvas.height);
-        this.player.updateSkillCooldown(dt);
         
+        // 2.2 敵人狀態（生成後立即插入 Grid）
         this.decorationManager.update(dt, this.gameTime);
         const normalEnemyCount = this.enemies.filter(e => !e.type.isBoss).length;
-this.waveManager.update(dt, this.gameTime, normalEnemyCount);
+        this.waveManager.update(dt, this.gameTime, normalEnemyCount);
+        
+        if (this.waveManager.isBreak && this.player.maxShield > 0) {
+            this.player.shield = this.player.maxShield;
+        }
+        
+        this.spawnTimer += dt;
+        const difficultySettings = this.difficultySettings[this.difficulty];
+        const spawnInterval = this.waveManager.getSpawnInterval() / difficultySettings.enemySpawnMultiplier;
+        
+        const spawnCount = difficultySettings.enemySpawnMultiplier > 1.5 ? 2 : 1;
+        
+        if (this.spawnTimer >= spawnInterval) {
+            this.spawnTimer = 0;
+            if (this.waveManager.shouldSpawnEnemy(this.enemies.length)) {
+                for (let i = 0; i < spawnCount; i++) {
+                    if (this.waveManager.shouldSpawnEnemy(this.enemies.length)) {
+                        this.spawnEnemy(false);
+                    }
+                }
+            }
+        }
+        
+        if (this.waveManager.shouldSpawnBoss()) {
+            const boss = this.spawnEnemy(true);
+            if (boss) {
+                this.bossSpawnPool.get(boss.x, boss.y);
+                this.audio.playChainKill();
+            }
+        }
+        
+        for (const enemy of this.enemies) {
+            const shootData = enemy.update(dt, this.player.x, this.player.y, this.player.attackRange);
+            
+            if (shootData) {
+                if (shootData.type === 'spawn_minion') {
+                    const spawnCount = enemy.phase >= 3 ? 3 : 2;
+                    const spawnElite = enemy.phase >= 3;
+                    this.spawnMinionEnemies(shootData.x, shootData.y, spawnCount, spawnElite);
+                } else if (shootData.type === 'multi_projectile') {
+                    for (const proj of shootData.projectiles) {
+                        this.enemyProjectiles.push(proj);
+                    }
+                } else {
+                    this.enemyProjectiles.push(shootData);
+                }
+            }
+        }
+        
+        // 2.3 投射物狀態
+        const projectiles = this.projectilePool.getActiveObjects();
+        for (let i = projectiles.length - 1; i >= 0; i--) {
+            const projectile = projectiles[i];
+            if (!projectile.active) continue;
+            projectile.update(dt);
+        }
+        
+        for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
+            const proj = this.enemyProjectiles[i];
+            
+            if (proj.trail) {
+                proj.trail.unshift({ x: proj.x, y: proj.y });
+                if (proj.trail.length > proj.maxTrailLength) {
+                    proj.trail.pop();
+                }
+            }
+            
+            proj.x += proj.vx * dt;
+            proj.y += proj.vy * dt;
+        }
+        
+        // ==================== Phase 3: 系統更新 ====================
+        this.logger.phase('phase3', { canFire: this.player.canFire() });
+        
+        // 3.1 自動射擊（依賴 player.fireCooldown 已更新）
+        this.autoFire();
+        
+        // 3.2 碰撞檢測（依賴 Grid 已填充）
+        this.checkCollisions(dt);
+        
+        // ==================== Phase 4: UI 更新 ====================
+        this.logger.phase('phase4', { kills: this.kills, exp: this.exp });
+        
+        this.updateSkillCooldownUI();
+        
+        const explosions = this.explosionPool.getActiveObjects();
+        for (let i = explosions.length - 1; i >= 0; i--) {
+            const explosion = explosions[i];
+            if (!explosion.active) continue;
+            
+            explosion.update(dt);
+            
+            if (explosion.isFinished()) {
+                this.explosionPool.release(explosion);
+            }
+        }
+        
+        for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
+            const damageNumber = this.damageNumbers[i];
+            damageNumber.update(dt);
+            
+            if (damageNumber.isFinished()) {
+                this.damageNumbers.splice(i, 1);
+            }
+        }
+        
+        this.chainKillDisplay.update(dt);
+        
+        for (let i = this.expOrbs.length - 1; i >= 0; i--) {
+            const orb = this.expOrbs[i];
+            
+            const forceAttract = this.waveManager.isBreak && this.expOrbs.length > 0;
+            const effectivePickupRange = forceAttract ? 1000 : this.player.pickupRange;
+            
+            orb.update(dt, this.player.x, this.player.y, effectivePickupRange);
+            
+            if (orb.isCollected(this.player.x, this.player.y, this.player.radius)) {
+                this.audio.playPickup();
+                const expValue = Math.floor(orb.value * (1 + this.player.expBonus));
+                this.exp += expValue;
+                this.expOrbs.splice(i, 1);
+                
+                this.checkLevelUp();
+            }
+        }
+        
+        this.ui.updateTimer(this.gameTime);
+        
+        this.updateEffects(dt);
+        
+        this.screenShake = { x: 0, y: 0 };
+        for (const spawnEffect of this.bossSpawnPool.getActiveObjects()) {
+            if (spawnEffect.active) {
+                const shake = spawnEffect.getShakeOffset();
+                this.screenShake.x += shake.x;
+                this.screenShake.y += shake.y;
+            }
+        }
+        
+        // 更新 DebugOverlay
+        this.debugOverlay.update();
+    }
+    
+    checkCollisions(dt) {
+        // 敵人與玩家碰撞
+        const nearbyEnemies = this.enemyGrid.getNearby(this.player.x, this.player.y, this.player.radius + 50);
+        for (const enemy of nearbyEnemies) {
+            if (!this.enemies.includes(enemy)) continue;
+            
+            const distSq = distanceSquared(enemy.x, enemy.y, this.player.x, this.player.y);
+            const radiusSum = enemy.radius + this.player.radius;
+            if (distSq < radiusSum * radiusSum) {
+                if (this.player.takeDamage(enemy.damage)) {
+                    this.audio.playDamage();
+                    this.ui.updateHp(this.player.hp, this.player.maxHp);
+                    
+                    if (this.player.hp <= 0) {
+                        this.gameOver();
+                        return;
+                    }
+                }
+            }
+        }
+        
+        // 敵人投射物與玩家碰撞
+        for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
+            const proj = this.enemyProjectiles[i];
+            
+            if (proj.x < -100 || proj.x > this.canvas.width + 100 ||
+                proj.y < -100 || proj.y > this.canvas.height + 100) {
+                this.enemyProjectiles.splice(i, 1);
+                continue;
+            }
+            
+            const dist = distance(proj.x, proj.y, this.player.x, this.player.y);
+            if (dist < proj.radius + this.player.radius) {
+                if (this.player.takeDamage(proj.damage)) {
+                    this.audio.playDamage();
+                    this.ui.updateHp(this.player.hp, this.player.maxHp);
+                    this.enemyProjectiles.splice(i, 1);
+                    
+                    if (this.player.hp <= 0) {
+                        this.gameOver();
+                        return;
+                    }
+                }
+            }
+        }
+        
+        // 玩家投射物與敵人碰撞
+        const projectiles = this.projectilePool.getActiveObjects();
+        for (let i = projectiles.length - 1; i >= 0; i--) {
+            const projectile = projectiles[i];
+            if (!projectile.active) continue;
+            
+            if (projectile.isOutOfBounds(this.canvas.width, this.canvas.height)) {
+                this.projectilePool.release(projectile);
+                continue;
+            }
+            
+            const nearbyEnemies = this.enemyGrid.getNearby(projectile.x, projectile.y, projectile.radius + 30);
+            
+            for (const enemy of nearbyEnemies) {
+                if (!this.enemies.includes(enemy)) continue;
+                
+                const distSq = distanceSquared(projectile.x, projectile.y, enemy.x, enemy.y);
+                const radiusSum = projectile.radius + enemy.radius;
+                
+                if (distSq < radiusSum * radiusSum) {
+                    if (enemy.isStealth) {
+                        enemy.reveal();
+                    }
+                    
+                    let actualDamage = projectile.damage;
+                    let damageColor = null;
+                    
+                    if (enemy.hasShield && enemy.shieldHp > 0) {
+                        if (enemy.shieldHp >= actualDamage) {
+                            enemy.shieldHp -= actualDamage;
+                            actualDamage = 0;
+                            damageColor = '#3498db';
+                        } else {
+                            actualDamage -= enemy.shieldHp;
+                            enemy.shieldHp = 0;
+                            enemy.hasShield = false;
+                            this.shieldBreakPool.get(enemy.x, enemy.y);
+                        }
+                    }
+                    
+                    if (actualDamage > 0) {
+                        enemy.hp -= actualDamage;
+                    }
+                    
+                    if (projectile.isCrit) {
+                        damageColor = '#e74c3c';
+                    }
+                    
+                    this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage, damageColor));
+                    this.audio.playHit();
+                    this.projectilePool.release(projectile);
+                    
+                    if (enemy.hp <= 0) {
+                        this.handleEnemyDeath(enemy, projectile);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    
+    handleEnemyDeath(enemy, projectile) {
+        this.audio.playKill();
+        
+        if (this.player.lifesteal > 0) {
+            this.player.heal(this.player.lifesteal);
+            this.ui.updateHp(this.player.hp, this.player.maxHp);
+        }
+        
+        if (enemy.type.isBoss) {
+            this.bossesKilled++;
+            this.bossDeathPool.get(enemy.x, enemy.y);
+            this.audio.playChainKill();
+        }
+        
+        if (enemy.explosive) {
+            this.createExplosiveDeath(enemy);
+        }
+        
+        if (!enemy.type.isBoss) {
+            this.explosionPool.get(enemy.x, enemy.y);
+        }
+        
+        let chainKills = 1;
+        const chainKillExpBonus = this.getChainKillExpBonus(chainKills);
+        const expValue = Math.floor(enemy.expValue * (1 + chainKillExpBonus));
+        this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, expValue));
+        
+        if (enemy.canSplit) {
+            this.createSplitEnemies(enemy);
+        }
+        
+        const chainRadius = 40;
+        const chainNearby = this.enemyGrid.getNearby(enemy.x, enemy.y, chainRadius);
+        
+        const initialExpBonus = this.getChainKillExpBonus(1);
+        
+        for (const nearbyEnemy of chainNearby) {
+            if (nearbyEnemy === enemy) continue;
+            if (!this.enemies.includes(nearbyEnemy)) continue;
+            
+            const chainDistSq = distanceSquared(enemy.x, enemy.y, nearbyEnemy.x, nearbyEnemy.y);
+            if (chainDistSq <= chainRadius * chainRadius) {
+                this.explosionPool.get(nearbyEnemy.x, nearbyEnemy.y);
+                const nearbyExpBonus = this.getChainKillExpBonus(chainKills + 1);
+                const nearbyExpValue = Math.floor(nearbyEnemy.expValue * (1 + nearbyExpBonus));
+                this.expOrbs.push(new ExperienceOrb(nearbyEnemy.x, nearbyEnemy.y, nearbyExpValue));
+                this.damageNumbers.push(new DamageNumber(nearbyEnemy.x, nearbyEnemy.y - nearbyEnemy.radius, projectile.damage));
+                const idx = this.enemies.indexOf(nearbyEnemy);
+                if (idx !== -1) {
+                    this.enemies.splice(idx, 1);
+                }
+                chainKills++;
+            }
+        }
+        
+        const enemyIdx = this.enemies.indexOf(enemy);
+        if (enemyIdx !== -1) {
+            this.enemies.splice(enemyIdx, 1);
+        }
+        this.kills += chainKills;
+        
+        if (chainKills >= 2) {
+            this.audio.playChainKill();
+            this.chainKillDisplay.trigger(chainKills);
+            
+            if (!this.player.hasFireRateBuff) {
+                this.player.activateFireRateBuff();
+                this.ui.showBuffNotification(`連殺！攻擊速度 +30% | 經驗 +${Math.floor(chainKillExpBonus * 100)}%`, 5);
+            } else {
+                this.ui.showBuffNotification(`連殺！經驗 +${Math.floor(chainKillExpBonus * 100)}%`, 5);
+            }
+        }
+    }
         
         if (this.waveManager.isBreak && this.player.maxShield > 0) {
             this.player.shield = this.player.maxShield;
@@ -1118,6 +1463,8 @@ this.waveManager.update(dt, this.gameTime, normalEnemyCount);
         this.waveManager.drawWaveInfo(this.ctx, this.canvas.width - 180, this.canvas.height * 0.75);
         
         this.drawBossHealthBar();
+        
+        this.debugOverlay.draw(this.ctx);
         
         this.ctx.restore();
     }

@@ -68,6 +68,12 @@
 - 修復敵人無法被子彈命中的問題：每幀更新前將敵人插入 SpatialGrid，確保碰撞檢測正常運作
 - 修復主角射擊一次就停止的問題：在 update() 中調用 player.update() 更新 fireCooldown
 
+### 重構
+- Update Loop 重構：明確四個 Phase（清理 → 狀態 → 系統 → UI）
+- 新增 GameLogger：Console 日誌系統，記錄每個 Phase 執行狀態
+- 新增 DebugOverlay：可視化調試工具（Ctrl+D 鍵開啟），顯示 Grid、fireCooldown、警告等狀態
+- 拆分 checkCollisions() 和 handleEnemyDeath() 方法，降低 update() 職責
+
 ## [0.1.0] - 2026-05-02
 
 ### 新增
