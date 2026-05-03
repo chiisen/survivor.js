@@ -461,16 +461,23 @@ export class DecorationManager {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
         
+        let blackPixels = 0;
+        let processedPixels = 0;
+        
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i];
             const g = data[i + 1];
             const b = data[i + 2];
             const brightness = (r + g + b) / 3;
             
-            if (brightness < 20) {
+            if (brightness < 50) {
+                blackPixels++;
                 data[i + 3] = 0;
+                processedPixels++;
             }
         }
+        
+        console.log(`[Mushroom] Total pixels: ${data.length / 4}, Black pixels: ${blackPixels}, Processed: ${processedPixels}`);
         
         ctx.putImageData(imageData, 0, 0);
         return canvas;
