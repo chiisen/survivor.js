@@ -445,6 +445,7 @@ this.waveManager.update(dt, this.gameTime, normalEnemyCount);
                             this.explosionPool.get(enemy.x, enemy.y);
                         }
                         
+                        let chainKills = 1;
                         const chainKillExpBonus = this.getChainKillExpBonus(chainKills);
                         const expValue = Math.floor(enemy.expValue * (1 + chainKillExpBonus));
                         this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, expValue));
@@ -453,7 +454,6 @@ this.waveManager.update(dt, this.gameTime, normalEnemyCount);
                             this.createSplitEnemies(enemy);
                         }
                         
-                        let chainKills = 1;
                         const chainRadius = 40;
                         const chainNearby = this.enemyGrid.getNearby(enemy.x, enemy.y, chainRadius);
                         

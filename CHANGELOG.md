@@ -63,6 +63,9 @@
 - 物件池化（ObjectPool）：重用 Projectile、Explosion、特效物件，減少 GC 壓力
 - Projectile/Explosion 類別支援 init/reset 方法，預先建立粒子結構
 
+### 修正
+- 修復 `chainKills` 變數未定義錯誤：移動變數定義至使用前，解決主角只攻擊一次就停止的問題
+
 ## [0.1.0] - 2026-05-02
 
 ### 新增
