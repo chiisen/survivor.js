@@ -2,6 +2,12 @@
 
 網頁版生存遊戲 - 類倖存者 (Survivor-like) 遊戲 Demo
 
+![P1](images/P1.png)
+
+![P2](images/P2.png)
+
+![P3](images/P3.png)
+
 ## 遊戲特色
 
 - 純 JavaScript + HTML5 Canvas 實現
