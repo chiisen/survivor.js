@@ -99,6 +99,70 @@ npm run dev
 
 ---
 
+## 🎨 專業切圖工具推薦
+
+### 推薦工具對比
+
+| 工具 | 用途 | 優點 | 缺點 | 適用場景 |
+|------|------|------|------|---------|
+| **TexturePacker** | Sprite Sheet/Tileset 自動排列 | 專為遊戲設計、自動優化空白、多格式导出、去除透明邊框 | 付费版才有高级功能 | 專業遊戲開發、批量處理 |
+| **Tiled Map Editor** | Tilemap 地圖編輯 | 免費開源、專業地圖編輯、多層支持、多格式导出 | 不會自動生成 tileset | 已有 tileset、需設計地圖 |
+| **Aseprite** | 像素藝術 + Sprite Sheet | 專為像素風格、動畫編輯、便宜（$20） | 主要用於像素風格 | 像素風格遊戲、動畫編輯 |
+| **SpriteForge** | 線上 Sprite Sheet 工具 | 免費線上、簡單易用、拖放操作 | 功能較簡單 | 快速處理、不想安裝軟體 |
+
+### 推薦選擇
+
+| 需求 | 推薦工具 |
+|------|---------|
+| **專業遊戲開發** | TexturePacker（自動優化、多格式导出） |
+| **已有 tileset，需設計地圖** | Tiled Map Editor（免費、專業地圖編輯） |
+| **像素風格遊戲** | Aseprite（像素編輯、動畫、 sprite sheet） |
+| **快速簡單處理** | SpriteForge（線上免費） |
+| **手動裁切設計稿** | 本專案 TilesetCleaner（避開文字說明） |
+
+### 最佳實踐：組合使用流程
+
+```
+設計稿（含文字說明）
+↓
+TilesetCleaner（手動框選、生成乾淨圖集）
+↓
+TexturePacker（自動優化排列、去除透明邊框）
+↓
+Tiled Map Editor（設計地圖、設定碰撞）
+↓
+遊戲引擎渲染
+```
+
+### TexturePacker 設定建議
+
+```
+Algorithm: MaxRects（最小空白）
+Padding: 2px（避免素材相連）
+Trim: Enable（去除透明邊框）
+Extrude: 1px（避免渲染缝隙）
+Format: JSON-Array（通用格式）
+```
+
+### 為什麼需要 TilesetCleaner？
+
+**問題：**
+- TexturePacker 等工具無法處理設計稿中的文字說明、尺寸標註
+- 只能處理純素材圖片
+
+**解決方案：**
+1. 先用 **TilesetCleaner** 手動框選設計稿 → 生成乾淨圖集（不含文字）
+2. 再用 **TexturePacker** 自動優化排列 → 最小化空白
+
+### 官網連結
+
+- **TexturePacker**: https://www.codeandweb.com/texturepacker
+- **Tiled Map Editor**: https://www.mapeditor.org/
+- **Aseprite**: https://www.aseprite.org/
+- **SpriteForge**: https://spriteforge.com/
+
+---
+
 ## 技術架構
 
 - **渲染引擎**：HTML5 Canvas API
