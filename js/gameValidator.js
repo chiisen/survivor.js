@@ -29,15 +29,33 @@ export class GameValidator {
     }
     
     validatePhase3() {
-        if (this.game.projectilePool.getActiveObjects().length > 0 && this.game.enemies.length > 0) {
-            const nearby = this.game.enemyGrid.getNearby(
-                this.game.player.x,
-                this.game.player.y,
-                this.game.player.attackRange
-            );
+        const projectiles = this.game.projectilePool.getActiveObjects().filter(p => p.active);
+        
+        if (projectiles.length > 0 && this.game.enemies.length > 0) {
+            let nearbyEnemyExists = false;
             
-            if (nearby.length === 0 && this.game.enemies.length > 0) {
-                throw new Error('Phase 3 失敗：getNearby 返回空陣列，碰撞檢測失效');
+            for (const enemy of this.game.enemies) {
+                const dist = Math.sqrt(
+                    Math.pow(enemy.x - this.game.player.x, 2) +
+                    Math.pow(enemy.y - this.game.player.y, 2)
+                );
+                
+                if (dist <= this.game.player.attackRange + 50) {
+                    nearbyEnemyExists = true;
+                    break;
+                }
+            }
+            
+            if (nearbyEnemyExists) {
+                const nearbyFromGrid = this.game.enemyGrid.getNearby(
+                    this.game.player.x,
+                    this.game.player.y,
+                    this.game.player.attackRange + 50
+                );
+                
+                if (nearbyFromGrid.length === 0) {
+                    throw new Error('Phase 3 失敗：附近有敵人但 Grid 返回空陣列');
+                }
             }
         }
         
