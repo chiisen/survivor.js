@@ -3,10 +3,13 @@ export class GroundDecoration {
         this.x = x;
         this.y = y;
         this.type = type;
-        this.alpha = type === 'mushroom' ? 1.0 : 0.3 + Math.random() * 0.2;
+        this.alpha = (type === 'mushroom' || type === 'flower') ? 1.0 : 0.3 + Math.random() * 0.2;
         
         this.mushroomProcessedCanvas = null;
         this.mushroomImageLoaded = false;
+        
+        this.flowerProcessedCanvas = null;
+        this.flowerImageLoaded = false;
         
         switch (type) {
             case 'rock':
@@ -162,35 +165,41 @@ export class GroundDecoration {
     }
     
     drawFlower(ctx) {
-        const sway = Math.sin(this.swayOffset) * this.swayAmount;
-        
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y);
-        ctx.lineTo(this.x + sway, this.y - this.height * 0.7);
-        ctx.strokeStyle = '#27ae60';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        const petalCount = 5;
-        const centerX = this.x + sway;
-        const centerY = this.y - this.height;
-        const petalRadius = this.width * 0.3;
-        
-        for (let i = 0; i < petalCount; i++) {
-            const angle = (Math.PI * 2 / petalCount) * i;
-            const px = centerX + Math.cos(angle) * petalRadius;
-            const py = centerY + Math.sin(angle) * petalRadius;
+        if (this.flowerImageLoaded && this.flowerProcessedCanvas) {
+            const width = this.flowerProcessedCanvas.width;
+            const height = this.flowerProcessedCanvas.height;
+            ctx.drawImage(this.flowerProcessedCanvas, this.x - width / 2, this.y - height, width, height);
+        } else {
+            const sway = Math.sin(this.swayOffset) * this.swayAmount;
             
             ctx.beginPath();
-            ctx.arc(px, py, petalRadius * 0.5, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x + sway, this.y - this.height * 0.7);
+            ctx.strokeStyle = '#27ae60';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            const petalCount = 5;
+            const centerX = this.x + sway;
+            const centerY = this.y - this.height;
+            const petalRadius = this.width * 0.3;
+            
+            for (let i = 0; i < petalCount; i++) {
+                const angle = (Math.PI * 2 / petalCount) * i;
+                const px = centerX + Math.cos(angle) * petalRadius;
+                const py = centerY + Math.sin(angle) * petalRadius;
+                
+                ctx.beginPath();
+                ctx.arc(px, py, petalRadius * 0.5, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, petalRadius * 0.3, 0, Math.PI * 2);
+            ctx.fillStyle = '#f1c40f';
             ctx.fill();
         }
-        
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, petalRadius * 0.3, 0, Math.PI * 2);
-        ctx.fillStyle = '#f1c40f';
-        ctx.fill();
     }
     
     drawMushroom(ctx) {
@@ -447,6 +456,23 @@ export class DecorationManager {
             }
         };
         
+        this.flowerProcessedCanvas = null;
+        this.flowerImageLoaded = false;
+        
+        const flowerImage = new Image();
+        flowerImage.src = 'images/flower.png';
+        flowerImage.onload = () => {
+            this.flowerProcessedCanvas = this.removeBlackBackground(flowerImage);
+            this.flowerImageLoaded = true;
+            
+            for (const deco of this.decorations) {
+                if (deco.type === 'flower') {
+                    deco.flowerProcessedCanvas = this.flowerProcessedCanvas;
+                    deco.flowerImageLoaded = true;
+                }
+            }
+        };
+        
         this.generateDecorations();
         this.generateParticles();
     }
@@ -509,6 +535,11 @@ export class DecorationManager {
             if (type === 'mushroom' && this.mushroomImageLoaded) {
                 deco.mushroomProcessedCanvas = this.mushroomProcessedCanvas;
                 deco.mushroomImageLoaded = true;
+            }
+            
+            if (type === 'flower' && this.flowerImageLoaded) {
+                deco.flowerProcessedCanvas = this.flowerProcessedCanvas;
+                deco.flowerImageLoaded = true;
             }
             
             this.decorations.push(deco);
