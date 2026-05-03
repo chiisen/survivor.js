@@ -540,8 +540,8 @@ export class DecorationManager {
 
     generateDecorations() {
         const decorationCount = 50;
-        const types = ['rock', 'grass', 'bush', 'crack', 'flower', 'mushroom', 'tree_stump', 'crystal'];
-        const weights = [0.15, 0.25, 0.15, 0.15, 0.15, 0.05, 0.05, 0.05];
+        const types = ['grass', 'flower', 'mushroom'];
+        const weights = [0.6, 0.3, 0.1];
         
         for (let i = 0; i < decorationCount; i++) {
             const x = Math.random() * this.canvasWidth;
