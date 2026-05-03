@@ -299,7 +299,9 @@ this.waveManager.update(dt, this.gameTime, normalEnemyCount);
         
         this.autoFire();
         
+        this.enemyGrid.clear();
         for (const enemy of this.enemies) {
+            this.enemyGrid.insert(enemy);
             const shootData = enemy.update(dt, this.player.x, this.player.y, this.player.attackRange);
             
             if (shootData) {
