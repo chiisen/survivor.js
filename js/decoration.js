@@ -3,7 +3,7 @@ export class GroundDecoration {
         this.x = x;
         this.y = y;
         this.type = type;
-        this.alpha = 0.3 + Math.random() * 0.2;
+        this.alpha = type === 'mushroom' ? 1.0 : 0.3 + Math.random() * 0.2;
         
         if (type === 'mushroom') {
             this.mushroomImage = new Image();
