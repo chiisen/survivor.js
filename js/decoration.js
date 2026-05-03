@@ -134,10 +134,6 @@ export class GroundDecoration {
             ctx.strokeStyle = '#2ecc71';
             ctx.lineWidth = 2;
             ctx.stroke();
-            
-            ctx.fillStyle = '#2ecc71';
-            ctx.font = '10px Arial';
-            ctx.fillText('草', this.x - 5, this.y + 15);
         } else {
             const sway = Math.sin(this.swayOffset) * this.swayAmount;
             const blades = 3 + Math.floor(Math.random() * 2);
