@@ -16,6 +16,16 @@
 - TILESET_FIX_GUIDE.md：設計稿文字說明問題的解決方案對比
 - tilesetCleaner.html：可視化框選工具，即時预览、統計資訊、自動下載
 - 視野遮罩系統：玩家周圍清晰可見，視野外深色模糊，營造戰爭迷霧效果
+
+### 重構
+- **Phase 2（部分）**：Enemy 拆分成 EnemyCore + EnemyBehaviors + BossPhaseManager
+  - EnemyCore.js：位置、移動、碰撞、傷害計算
+  - EnemyBehaviors.js：射擊、分裂、隱形行為
+  - BossPhaseManager.js：Boss 多階段管理（狂暴模式、召喚小怪）
+- **Phase 3（完成）**：調試機制完善
+  - GameValidator.js：硬斷言檢查（Ctrl+Shift+V 鍵開啟）
+  - DebugOverlay FPS顯示、内存监控、實體数量統計
+  - 自動警告：FPS過低、Memory過高、Grid空、冷卻未更新等
 - 藍色護盾 UI：HP 條上方顯示護盾值，護盾歸零時半透明顯示
 - 护盾变化即时同步 UI：护盾吸收伤害、护盾恢复均实时更新显示
 

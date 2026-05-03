@@ -21,6 +21,7 @@ import { SplitEffect } from './splitEffect.js';
 import { AchievementManager } from './achievement.js';
 import { GameLogger } from './gameLogger.js';
 import { DebugOverlay } from './debugOverlay.js';
+import { GameValidator } from './gameValidator.js';
 import { VisibilityMask } from './visibilityMask.js';
 
 export class Game {
@@ -80,6 +81,7 @@ export class Game {
         
         this.logger = new GameLogger();
         this.debugOverlay = new DebugOverlay(this);
+        this.gameValidator = new GameValidator(this);
         this.visibilityMask = new VisibilityMask();
         
         this.keys = {};
@@ -146,6 +148,16 @@ export class Game {
                     this.debugOverlay.toggle();
                     this.keys['d'] = false;
                     this.keys['D'] = false;
+                    e.preventDefault();
+                    return;
+                }
+            }
+            
+            if (e.key === 'v' || e.key === 'V') {
+                if (e.ctrlKey && e.shiftKey) {
+                    this.gameValidator.toggle();
+                    this.keys['v'] = false;
+                    this.keys['V'] = false;
                     e.preventDefault();
                     return;
                 }
@@ -288,10 +300,11 @@ update(dt) {
         }
         
         // ==================== Phase 2: 狀態更新 ====================
-        this.logger.phase('phase2', { fireCooldown: this.player.fireCooldown });
+this.logger.phase('phase2', { fireCooldown: this.player.fireCooldown });
         
-        // 2.1 玩家狀態（必須最先更新）
         this.player.update(dt, this.keys, this.canvas.width, this.canvas.height);
+        
+        this.gameValidator.validatePhase2();
         
         // 2.2 敵人狀態（生成後立即插入 Grid）
         this.decorationManager.update(dt, this.gameTime);
@@ -372,10 +385,11 @@ update(dt) {
         this.logger.phase('phase3', { canFire: this.player.canFire() });
         
         // 3.1 自動射擊（依賴 player.fireCooldown 已更新）
-        this.autoFire();
+this.autoFire();
         
-        // 3.2 碰撞檢測（依賴 Grid 已填充）
         this.checkCollisions(dt);
+        
+        this.gameValidator.validatePhase3();
         
         // ==================== Phase 4: UI 更新 ====================
         this.logger.phase('phase4', { kills: this.kills, exp: this.exp });
