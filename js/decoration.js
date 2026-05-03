@@ -9,7 +9,10 @@ export class GroundDecoration {
             this.mushroomImage = new Image();
             this.mushroomImage.src = 'images/mushroom.png';
             this.mushroomImageLoaded = false;
+            this.mushroomProcessedCanvas = null;
+            
             this.mushroomImage.onload = () => {
+                this.mushroomProcessedCanvas = GroundDecoration.removeBlackBackground(this.mushroomImage);
                 this.mushroomImageLoaded = true;
             };
         }
@@ -61,6 +64,31 @@ export class GroundDecoration {
                 this.glowTime = Math.random() * Math.PI * 2;
                 break;
         }
+    }
+
+    static removeBlackBackground(image) {
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext('2d');
+        
+        ctx.drawImage(image, 0, 0);
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            
+            if (r < 30 && g < 30 && b < 30) {
+                data[i + 3] = 0;
+            }
+        }
+        
+        ctx.putImageData(imageData, 0, 0);
+        return canvas;
     }
 
     update(dt, gameTime) {
@@ -200,9 +228,9 @@ export class GroundDecoration {
     }
     
     drawMushroom(ctx) {
-        if (this.mushroomImageLoaded) {
+        if (this.mushroomImageLoaded && this.mushroomProcessedCanvas) {
             const size = 32;
-            ctx.drawImage(this.mushroomImage, this.x - size / 2, this.y - size, size, size);
+            ctx.drawImage(this.mushroomProcessedCanvas, this.x - size / 2, this.y - size, size, size);
         } else {
             ctx.beginPath();
             ctx.moveTo(this.x - this.width * 0.15, this.y);
