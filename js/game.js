@@ -795,6 +795,7 @@ this.waveManager.update(dt, this.gameTime, normalEnemyCount);
         this.audio.playChainKill();
         
         const skillDamage = this.player.damage * 10;
+        const killedCount = this.enemies.filter(e => e.hp > 0).length;
         
         for (const enemy of this.enemies) {
             enemy.hp -= skillDamage;
@@ -808,7 +809,8 @@ this.waveManager.update(dt, this.gameTime, normalEnemyCount);
         }
         
         this.enemies = this.enemies.filter(e => e.hp > 0);
-        this.kills += this.enemies.filter(e => e.hp <= 0).length;
+        const nowKilledCount = killedCount - this.enemies.length;
+        this.kills += nowKilledCount;
         
         this.ui.showBuffNotification('終極技能！全屏攻擊', 2);
     }
