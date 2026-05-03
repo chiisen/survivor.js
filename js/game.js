@@ -1235,5 +1235,4 @@ togglePause() {
             displays[2].textContent = bgmSlider.value + '%';
         }
     }
-    }
 }
