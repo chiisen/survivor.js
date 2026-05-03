@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tileset 清理工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #1a1a2e;
+            color: #ecf0f1;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #3498db;
+            margin-bottom: 30px;
+        }
+        
+        .instruction {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(52, 152, 219, 0.2);
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .instruction h2 {
+            color: #f1c40f;
+            margin-bottom: 15px;
+        }
+        
+        .instruction ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        
+        .instruction li {
+            margin: 10px 0;
+        }
+        
+        #editor-container {
+            max-width: 1200px;
+            margin: 30px auto;
+        }
+        
+        #preview-result {
+            max-width: 800px;
+            margin: 30px auto;
+            display: none;
+        }
+        
+        #preview-result canvas {
+            border: 3px solid #2ecc71;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛠️ Tileset 清理工具</h1>
+    
+    <div class="instruction">
+        <h2>📖 使用說明</h2>
+        <ul>
+            <li>設計稿通常包含<strong>素材 + 設計說明文字 + 尺寸標註</strong></li>
+            <li>文字說明會導致自動裁切錯亂，需要<strong>手動框選純素材區域</strong></li>
+            <li><strong style="color: #f1c40f;">新功能：可手動調整框選範圍！</strong>
+                <ul>
+                    <li>✅ 框選後顯示 <strong style="color: #3498db;">X Y W H</strong> 四個輸入框</li>
+                    <li>✅ 點擊輸入框可直接修改數值（如將 72x74 改為 72x72）</li>
+                    <li>✅ 修改後自動更新框選範圍顯示（紅色高亮）</li>
+                    <li>✅ 支持精確控制裁切範圍，避免浮點誤差</li>
+                </ul>
+            </li>
+                <ul>
+                    <li>✅ <strong>點擊</strong>已框選區域可<strong style="color: #e74c3c;">選中</strong>（紅色高亮）</li>
+                    <li>✅ 選中後可點擊「<strong style="color: #e74c3c;">❌ 删除选中</strong>」移除</li>
+                    <li>✅ 點擊「<strong style="color: #9b59b6;">↩️ 撤销</strong>」可移除最後一個框選</li>
+                    <li>✅ 框選太小（< 5px）會自動忽略，避免誤觸</li>
+                </ul>
+            </li>
+            <li>操作流程：
+                <ol>
+                    <li>點擊「➕ 新增素材位置」</li>
+                    <li>在設計稿上<strong>框選</strong>純素材區域（避開文字說明）</li>
+                    <li><strong style="color: #2ecc71;">框選後可手動調整 X Y W H 輸入框修正範圍</strong></li>
+                    <li><strong style="color: #e74c3c;">例如：框選 72x74 → 手動改為 72x72（完美正方形）</strong></li>
+                    <li>調整<strong style="color: #f1c40f;">素材尺寸</strong>（預設 32px）和<strong style="color: #f1c40f;">格子間距</strong></li>
+                    <li>重複步驟 1-4，框選所有需要的素材</li>
+                    <li>點擊「<strong style="color: #f39c12;">👀 预览图集</strong>」</li>
+                    <li><strong style="color: #e74c3c;">檢查預覽是否正確！</strong></li>
+                    <li>確認無誤後點擊「<strong style="color: #2ecc71;">⬇️ 確認下載</strong>」</li>
+                </ol>
+            </li>
+            <li>生成的乾淨圖集特性：
+                <ul>
+                    <li>✅ 可選擇<strong>最優布局</strong>（避免空白格）或<strong>自定義尺寸</strong></li>
+                    <li>✅ 每個素材統一為 <strong>32x32</strong> 尺寸（可調整為 16/64/128）</li>
+                    <li>✅ <strong style="color: #2ecc71;">關閉格子間距 → 生成完美正方形</strong>（如 3x3素材 = 96x96px）</li>
+                    <li>✅ 啟用格子間距（2px）→ 可清楚分隔素材，但非完美正方形</li>
+                    <li>✅ 空白區域會填充背景色，方便識別</li>
+                    <li>✅ 關閉間距時不顯示序號，保持乾淨</li>
+                </ul>
+            </li>
+            <li><strong>範例</strong>：
+                <ul>
+                    <li>框選 9 個素材 → 生成 3x3 正方形（完美填滿）</li>
+                    <li>框選 10 個素材 → 生成 4x3（最優布局，2格空白）</li>
+                    <li>框選 16 個素材 → 生成 4x4 正方形（完美填滿）</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    
+    <div id="editor-container"></div>
+    
+    <div id="preview-result">
+        <h2 style="text-align: center; color: #2ecc71;">✅ 生成的乾淨圖集预览</h2>
+    </div>
+    
+    <script type="module">
+        import { TilesetCleaner } from './js/tilesetCleaner.js';
+        
+        const cleaner = new TilesetCleaner();
+        cleaner.createTilePositionEditor('editor-container', 'images/地板與環境素材設計圖集.png');
+    </script>
+</body>
+</html>
