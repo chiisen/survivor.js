@@ -128,6 +128,16 @@ export class GroundDecoration {
             const width = this.grassProcessedCanvas.width * 1.5;
             const height = this.grassProcessedCanvas.height * 1.5;
             ctx.drawImage(this.grassProcessedCanvas, this.x - width / 2, this.y - height, width, height);
+            
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+            ctx.strokeStyle = '#2ecc71';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#2ecc71';
+            ctx.font = '10px Arial';
+            ctx.fillText('草', this.x - 5, this.y + 15);
         } else {
             const sway = Math.sin(this.swayOffset) * this.swayAmount;
             const blades = 3 + Math.floor(Math.random() * 2);
