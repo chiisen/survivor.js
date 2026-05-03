@@ -86,7 +86,7 @@ export class Game {
         this.screenShake = { x: 0, y: 0 };
         
         this.floorImage = new Image();
-        this.floorImage.src = 'images/clean_tileset.png';
+        this.floorImage.src = 'images/floor_tileset.png';
         this.floorImageLoaded = false;
         this.floorImage.onload = () => {
             this.floorImageLoaded = true;
