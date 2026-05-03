@@ -7,7 +7,7 @@ export class GroundDecoration {
         
         if (type === 'mushroom') {
             this.mushroomImage = new Image();
-            this.mushroomImage.src = 'images/floor_tileset.png';
+            this.mushroomImage.src = 'images/mushroom.png';
             this.mushroomImageLoaded = false;
             this.mushroomImage.onload = () => {
                 this.mushroomImageLoaded = true;
