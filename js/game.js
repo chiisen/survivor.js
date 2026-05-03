@@ -188,6 +188,16 @@ export class Game {
                     return;
                 }
             }
+            
+            if (e.key === 'l' || e.key === 'L') {
+                if (e.ctrlKey && e.shiftKey) {
+                    this.logger.cycleLogLevel();
+                    this.keys['l'] = false;
+                    this.keys['L'] = false;
+                    e.preventDefault();
+                    return;
+                }
+            }
         });
         
         window.addEventListener('keyup', (e) => {

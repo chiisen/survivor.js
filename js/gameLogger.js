@@ -1,6 +1,7 @@
 export class GameLogger {
     constructor() {
         this.logLevel = 'error';
+        this.logLevels = ['error', 'info', 'debug'];
         this.phaseExecuted = {
             phase1: false,
             phase2: false,
@@ -11,6 +12,14 @@ export class GameLogger {
     
     setLogLevel(level) {
         this.logLevel = level;
+    }
+    
+    cycleLogLevel() {
+        const currentIndex = this.logLevels.indexOf(this.logLevel);
+        const nextIndex = (currentIndex + 1) % this.logLevels.length;
+        this.logLevel = this.logLevels[nextIndex];
+        console.log(`[GameLogger] Log level changed to: ${this.logLevel.toUpperCase()}`);
+        return this.logLevel;
     }
     
     phase(phaseName, details) {
