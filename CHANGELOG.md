@@ -17,6 +17,16 @@
 - tilesetCleaner.html：可視化框選工具，即時预览、統計資訊、自動下載
 - 視野遮罩系統：玩家周圍清晰可見，視野外深色模糊，營造戰爭迷霧效果
 
+### 優化
+- **ObjectPool 全面優化**：
+  - 預分配大小調整：ProjectilePool 50→200，其他池按需調整
+  - 對象狀態標記（_active）避免 indexOf 性能损耗
+  - 自動扩容：池用完后自动扩容 50%（限制 maxSize）
+  - 统计监控：peakActiveCount、hitRate、efficiency、autoExpansions
+  - 清理优化：cleanInactive() 定期清理无效对象
+  - 自动调整：autoAdjust() 根据峰值使用量自动扩容
+  - 调试热键：Ctrl+Shift+P 查看 ObjectPool 统计
+
 ### 重構
 - **Phase 2（完成）**：Enemy 拆分成四個模組並整合為組合模式
   - EnemyCore.js：位置、移動、碰撞、傷害計算
