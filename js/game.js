@@ -612,7 +612,6 @@ update(dt) {
             }
         }
     }
-    }
 
     updateEffects(dt) {
         for (const effect of this.bossSpawnPool.getActiveObjects()) {
