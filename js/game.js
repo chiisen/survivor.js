@@ -289,6 +289,10 @@ start() {
         this.ui.updateLevel(this.level);
         this.updateSkillStats();
         
+        this.audio.audioStarted = true;
+        this.audio.resumeContext();
+        this.audio.startBGM();
+        
         this.lastTime = performance.now();
         this.loop();
     }
@@ -1046,6 +1050,8 @@ this.autoFire();
             const skillType = item.dataset.skill;
             const valueSpan = item.querySelector('.skill-value');
             
+            item.classList.remove('active');
+            
             if (skillType === 'projectileCount') {
                 valueSpan.textContent = this.player.projectileCount;
                 if (this.player.projectileCount > 3) {
@@ -1064,8 +1070,9 @@ this.autoFire();
                     item.classList.add('active');
                 }
             } else if (skillType === 'shield') {
-                valueSpan.textContent = `${this.player.shield}/${this.player.maxShield}`;
-                if (stats[skillType] > 0) {
+                const level = stats[skillType] || 0;
+                valueSpan.textContent = `Lv.${level} (${this.player.shield}/${this.player.maxShield})`;
+                if (level > 0) {
                     item.classList.add('active');
                 }
             } else if (skillType === 'expBonus') {
@@ -1087,7 +1094,7 @@ this.autoFire();
             } else {
                 const level = stats[skillType] || 0;
                 valueSpan.textContent = `Lv.${level}`;
-                if (stats[skillType] > 0) {
+                if (level > 0) {
                     item.classList.add('active');
                 }
             }

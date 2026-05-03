@@ -23,7 +23,8 @@ export class PlayerCore {
             speed: 0,
             pickupRange: 0,
             attackRange: 0,
-            armor: 0
+            armor: 0,
+            shield: 0
         };
     }
     
@@ -73,6 +74,10 @@ export class PlayerCore {
                 break;
             case 'armor':
                 this.armor += upgrade.value;
+                break;
+            case 'shield':
+                this.maxShield += upgrade.value;
+                this.shield += upgrade.value;
                 break;
         }
     }
