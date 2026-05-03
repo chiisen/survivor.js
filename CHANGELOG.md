@@ -18,11 +18,12 @@
 - 視野遮罩系統：玩家周圍清晰可見，視野外深色模糊，營造戰爭迷霧效果
 
 ### 重構
-- **Phase 2（完成）**：Enemy 拆分成四個模組
+- **Phase 2（完成）**：Enemy 拆分成四個模組並整合為組合模式
   - EnemyCore.js：位置、移動、碰撞、傷害計算
   - EnemyBehaviors.js：射擊、分裂、隱形行為
   - BossPhaseManager.js：Boss 多階段管理（狂暴模式、召喚小怪）
   - EnemyRenderer.js：繪製敌人外觀（240行繪製邏輯，支援 9 種敵人類型）
+  - Enemy.js：組合模式（使用 Getter/Setter 暴露所有原有屬性，保持接口兼容）
 - **Phase 3（完成）**：調試機制完善
   - GameValidator.js：硬斷言檢查（Ctrl+Shift+V 鍵開啟）
   - DebugOverlay FPS顯示、内存监控、實體数量統計（P/E/Exp/EP/DN）

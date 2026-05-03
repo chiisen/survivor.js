@@ -1,4 +1,8 @@
 import { normalize, distance, randomRange } from './utils.js';
+import { EnemyCore } from './enemyCore.js';
+import { EnemyBehaviors } from './enemyBehaviors.js';
+import { BossPhaseManager } from './bossPhaseManager.js';
+import { EnemyRenderer } from './enemyRenderer.js';
 
 const EnemyTypes = {
     NORMAL: {
@@ -142,395 +146,100 @@ const EnemyTypes = {
 export class Enemy {
     constructor(x, y, type = EnemyTypes.NORMAL) {
         this.type = type;
-        this.x = x;
-        this.y = y;
-        this.radius = type.radius;
-        this.speed = type.speed + randomRange(-10, 10);
-        this.maxHp = type.maxHp;
-        this.hp = this.maxHp;
-        this.damage = type.damage;
-        this.color = type.color;
-        this.strokeColor = type.strokeColor;
-        this.expValue = type.expValue;
-        this.eyeColor = type.eyeColor;
-        this.mouthStyle = type.mouthStyle;
+        this.core = new EnemyCore(type, x, y);
+        this.behaviors = new EnemyBehaviors(type, this.core);
+        this.renderer = new EnemyRenderer(type);
         
-        this.canShoot = type.canShoot;
-        this.shootInterval = type.shootInterval;
-        this.shootCooldown = 0;
+        if (type.isBoss) {
+            this.phaseManager = new BossPhaseManager(this.core, this.behaviors);
+        }
+        
         this.projectiles = [];
-        
-        this.isElite = type.isElite || false;
-        this.canSplit = type.canSplit || false;
-        this.splitTriggered = false;
-        this.explosive = type.explosive || false;
-        this.explosionRadius = type.explosionRadius || 0;
-        this.explosionDamage = type.explosionDamage || 0;
-        this.isStealth = type.isStealth || false;
-        this.baseAlpha = type.baseAlpha || 1;
-        this.currentAlpha = this.baseAlpha;
-        this.revealTime = 0;
-        
-        this.shieldHp = type.shieldHp || 0;
-        this.shieldMaxHp = type.shieldHp || 0;
-        this.hasShield = this.shieldHp > 0;
-        
-        this.phase = 1;
-        this.rageMode = false;
-        this.spawnCooldown = 0;
     }
-
+    
+    get x() { return this.core.x; }
+    set x(value) { this.core.x = value; }
+    
+    get y() { return this.core.y; }
+    set y(value) { this.core.y = value; }
+    
+    get radius() { return this.core.radius; }
+    get speed() { return this.core.speed; }
+    set speed(value) { this.core.speed = value; }
+    
+    get maxHp() { return this.core.maxHp; }
+    get hp() { return this.core.hp; }
+    set hp(value) { this.core.hp = value; }
+    
+    get damage() { return this.core.damage; }
+    get expValue() { return this.core.expValue; }
+    
+    get color() { return this.core.type.color; }
+    get strokeColor() { return this.core.type.strokeColor; }
+    get eyeColor() { return this.core.type.eyeColor; }
+    get mouthStyle() { return this.core.type.mouthStyle; }
+    
+    get isElite() { return this.core.isElite; }
+    get canSplit() { return this.core.canSplit; }
+    get splitTriggered() { return this.core.splitTriggered; }
+    set splitTriggered(value) { this.core.splitTriggered = value; }
+    
+    get explosive() { return this.core.explosive; }
+    get explosionRadius() { return this.core.explosionRadius; }
+    get explosionDamage() { return this.core.explosionDamage; }
+    
+    get isStealth() { return this.core.isStealth; }
+    get baseAlpha() { return this.core.baseAlpha; }
+    get currentAlpha() { return this.core.currentAlpha; }
+    
+    get hasShield() { return this.core.hasShield; }
+    get shieldHp() { return this.core.shieldHp; }
+    get shieldMaxHp() { return this.core.shieldMaxHp; }
+    
+    get phase() { return this.phaseManager ? this.phaseManager.phase : 1; }
+    get rageMode() { return this.phaseManager ? this.phaseManager.rageMode : false; }
+    
     update(dt, playerX, playerY, playerAttackRange = 300) {
-        const dx = playerX - this.x;
-        const dy = playerY - this.y;
-        const normalized = normalize(dx, dy);
+        this.core.updatePosition(dt, playerX, playerY, playerAttackRange);
         
-        const distToPlayer = Math.sqrt(dx * dx + dy * dy);
-        const speedMultiplier = distToPlayer <= playerAttackRange ? 1.1 : 1.0;
-        const actualSpeed = this.speed * speedMultiplier;
+        const behaviorActions = this.behaviors.update(dt, playerX, playerY);
         
-        if (this.type.isBoss) {
-            const hpPercentage = this.hp / this.maxHp;
+        let bossActions = null;
+        if (this.phaseManager) {
+            bossActions = this.phaseManager.update(dt);
             
-            if (hpPercentage <= 0.3 && !this.rageMode) {
-                this.rageMode = true;
-                this.phase = 3;
-                this.speed *= 1.5;
-                this.shootInterval *= 0.5;
-            } else if (hpPercentage <= 0.6 && this.phase < 2) {
-                this.phase = 2;
-                this.shootInterval *= 0.7;
-            }
-            
-            if (this.phase >= 2 && this.spawnCooldown <= 0) {
-                this.spawnCooldown = 5;
-                return { type: 'spawn_minion', x: this.x, y: this.y };
-            }
-            
-            if (this.spawnCooldown > 0) {
-                this.spawnCooldown -= dt;
+            if (this.behaviors.canShoot && this.behaviors.shootCooldown <= 0) {
+                const bossShootResult = this.phaseManager.shoot(playerX, playerY);
+                if (bossShootResult) {
+                    return bossShootResult;
+                }
             }
         }
         
-        this.x += normalized.x * actualSpeed * dt;
-        this.y += normalized.y * actualSpeed * dt;
-        
-        if (this.isStealth) {
-            if (this.revealTime > 0) {
-                this.revealTime -= dt;
-                this.currentAlpha = 1;
-            } else {
-                this.currentAlpha = this.baseAlpha;
-            }
+        if (bossActions) {
+            return bossActions[0];
         }
         
-        if (this.canShoot) {
-            this.shootCooldown -= dt;
-            if (this.shootCooldown <= 0) {
-                this.shootCooldown = this.shootInterval;
-                return this.shoot(playerX, playerY);
-            }
+        if (behaviorActions && behaviorActions.length > 0) {
+            return behaviorActions[0];
         }
         
         return null;
     }
-
+    
     reveal() {
-        if (this.isStealth) {
-            this.revealTime = 2;
-        }
+        this.core.reveal();
     }
-
-    shoot(targetX, targetY) {
-        const dx = targetX - this.x;
-        const dy = targetY - this.y;
-        const normalized = normalize(dx, dy);
-        
-        if (this.type.isBoss && this.phase >= 2) {
-            const projectiles = [];
-            const bulletCount = this.phase >= 3 ? 8 : 4;
-            
-            for (let i = 0; i < bulletCount; i++) {
-                const angle = (Math.PI * 2 / bulletCount) * i;
-                const speed = 150 + (this.phase * 20);
-                
-                projectiles.push({
-                    x: this.x,
-                    y: this.y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    damage: this.phase >= 3 ? 10 : 5,
-                    radius: 5,
-                    color: '#e74c3c',
-                    trail: [],
-                    maxTrailLength: 10
-                });
-            }
-            
-            return { type: 'multi_projectile', projectiles };
-        }
-        
-        const projectileData = {
-            x: this.x,
-            y: this.y,
-            vx: normalized.x * 150,
-            vy: normalized.y * 150,
-            damage: 5,
-            radius: 5,
-            color: '#9b59b6',
-            trail: [],
-            maxTrailLength: 10
-        };
-        
-        return projectileData;
-    }
-
+    
     draw(ctx) {
-        ctx.save();
-        
-        if (this.isStealth) {
-            if (this.revealTime > 0) {
-                const flashRate = Math.sin(this.revealTime * 10) * 0.3 + 0.7;
-                ctx.globalAlpha = flashRate;
-                
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius + 8, 0, Math.PI * 2);
-                ctx.strokeStyle = '#3498db';
-                ctx.lineWidth = 3;
-                ctx.globalAlpha = flashRate * 0.6;
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius + 12, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(52, 152, 219, 0.3)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                
-                ctx.globalAlpha = flashRate;
-            } else {
-                ctx.globalAlpha = this.baseAlpha;
-            }
-        }
-        
-        if (this.type === EnemyTypes.BOSS) {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius + 10, 0, Math.PI * 2);
-            ctx.fillStyle = this.rageMode ? 'rgba(231, 76, 60, 0.4)' : 'rgba(192, 57, 43, 0.2)';
-            ctx.fill();
-            
-            if (this.rageMode) {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius + 20, 0, Math.PI * 2);
-                ctx.strokeStyle = '#e74c3c';
-                ctx.lineWidth = 4;
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius + 30, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(231, 76, 60, 0.3)';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                
-                for (let i = 0; i < 8; i++) {
-                    const flameAngle = (Math.PI * 2 / 8) * i + Math.sin(Date.now() / 100) * 0.2;
-                    const flameX = this.x + Math.cos(flameAngle) * (this.radius + 15);
-                    const flameY = this.y + Math.sin(flameAngle) * (this.radius + 15);
-                    ctx.beginPath();
-                    ctx.arc(flameX, flameY, 5, 0, Math.PI * 2);
-                    ctx.fillStyle = '#f39c12';
-                    ctx.fill();
-                }
-            }
-            
-            ctx.beginPath();
-            ctx.moveTo(this.x - 15, this.y - this.radius - 25);
-            ctx.lineTo(this.x, this.y - this.radius - 35);
-            ctx.lineTo(this.x + 15, this.y - this.radius - 25);
-            ctx.lineTo(this.x + 10, this.y - this.radius - 25);
-            ctx.lineTo(this.x, this.y - this.radius - 30);
-            ctx.lineTo(this.x - 10, this.y - this.radius - 25);
-            ctx.closePath();
-            ctx.fillStyle = this.rageMode ? '#e74c3c' : '#f1c40f';
-            ctx.fill();
-            ctx.strokeStyle = this.rageMode ? '#c0392b' : '#e67e22';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-        
-        if (this.type === EnemyTypes.ELITE) {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius + 8, 0, Math.PI * 2);
-            ctx.strokeStyle = '#f1c40f';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius + 12, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(241, 196, 15, 0.3)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            
-            if (this.hasShield && this.shieldHp > 0) {
-                const shieldAlpha = 0.4 + (this.shieldHp / this.shieldMaxHp) * 0.3;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius + 18, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(52, 152, 219, ${shieldAlpha})`;
-                ctx.fill();
-                ctx.strokeStyle = '#3498db';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                
-                const shieldBarWidth = this.radius * 1.5;
-                const shieldBarHeight = 4;
-                const shieldBarY = this.y - this.radius - 18;
-                
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                ctx.fillRect(this.x - shieldBarWidth / 2, shieldBarY, shieldBarWidth, shieldBarHeight);
-                
-                ctx.fillStyle = '#3498db';
-                ctx.fillRect(this.x - shieldBarWidth / 2, shieldBarY, shieldBarWidth * (this.shieldHp / this.shieldMaxHp), shieldBarHeight);
-            }
-        }
-        
-        if (this.type === EnemyTypes.SPLITTER) {
-            ctx.beginPath();
-            ctx.moveTo(this.x - this.radius * 0.3, this.y - this.radius * 1.2);
-            ctx.lineTo(this.x + this.radius * 0.3, this.y - this.radius * 1.2);
-            ctx.lineTo(this.x, this.y - this.radius * 0.8);
-            ctx.closePath();
-            ctx.fillStyle = '#1abc9c';
-            ctx.fill();
-        }
-        
-        if (this.type === EnemyTypes.EXPLOSIVE) {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius + 6, 0, Math.PI * 2);
-            ctx.strokeStyle = '#f39c12';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            ctx.beginPath();
-            ctx.moveTo(this.x - this.radius * 0.4, this.y - this.radius);
-            ctx.lineTo(this.x, this.y - this.radius * 1.3);
-            ctx.lineTo(this.x + this.radius * 0.4, this.y - this.radius);
-            ctx.fillStyle = '#f39c12';
-            ctx.fill();
-        }
-        
-        if (this.type === EnemyTypes.TANK) {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius + 4, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(127, 140, 141, 0.3)';
-            ctx.fill();
-        }
-        
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.strokeStyle = this.strokeColor;
-        ctx.lineWidth = this.type === EnemyTypes.BOSS ? 4 : 2;
-        ctx.stroke();
-
-        if (this.type === EnemyTypes.FAST) {
-            const angle = Math.atan2(this.vy || 0, this.vx || 0);
-            ctx.beginPath();
-            ctx.moveTo(this.x - this.radius * 0.5, this.y - this.radius * 0.8);
-            ctx.lineTo(this.x, this.y - this.radius * 1.5);
-            ctx.lineTo(this.x + this.radius * 0.5, this.y - this.radius * 0.8);
-            ctx.fillStyle = this.color;
-            ctx.fill();
-        }
-
-        if (this.type === EnemyTypes.RANGED) {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y - this.radius * 0.5, this.radius * 0.4, 0, Math.PI * 2);
-            ctx.fillStyle = '#8e44ad';
-            ctx.fill();
-            ctx.strokeStyle = '#7d3c98';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-        }
-
-        ctx.beginPath();
-        ctx.arc(this.x - this.radius * 0.3, this.y - this.radius * 0.2, this.radius * 0.2, 0, Math.PI * 2);
-        ctx.arc(this.x + this.radius * 0.3, this.y - this.radius * 0.2, this.radius * 0.2, 0, Math.PI * 2);
-        ctx.fillStyle = this.eyeColor;
-        ctx.fill();
-
-        ctx.beginPath();
-        switch (this.mouthStyle) {
-            case 'angry':
-                ctx.moveTo(this.x - this.radius * 0.35, this.y + this.radius * 0.35);
-                ctx.lineTo(this.x + this.radius * 0.35, this.y + this.radius * 0.35);
-                break;
-            case 'neutral':
-                ctx.arc(this.x, this.y + this.radius * 0.3, this.radius * 0.15, 0, Math.PI);
-                break;
-            case 'wide':
-                ctx.arc(this.x, this.y + this.radius * 0.3, this.radius * 0.4, 0, Math.PI);
-                break;
-            case 'shooter':
-                ctx.arc(this.x, this.y + this.radius * 0.35, this.radius * 0.25, Math.PI * 0.2, Math.PI * 0.8);
-                break;
-            case 'boss':
-                ctx.arc(this.x, this.y + this.radius * 0.35, this.radius * 0.5, Math.PI, 0, true);
-                break;
-            case 'elite':
-                ctx.moveTo(this.x - this.radius * 0.4, this.y + this.radius * 0.3);
-                ctx.lineTo(this.x - this.radius * 0.2, this.y + this.radius * 0.5);
-                ctx.lineTo(this.x + this.radius * 0.2, this.y + this.radius * 0.5);
-                ctx.lineTo(this.x + this.radius * 0.4, this.y + this.radius * 0.3);
-                break;
-            case 'split':
-                ctx.moveTo(this.x - this.radius * 0.3, this.y + this.radius * 0.25);
-                ctx.lineTo(this.x, this.y + this.radius * 0.5);
-                ctx.lineTo(this.x + this.radius * 0.3, this.y + this.radius * 0.25);
-                break;
-            case 'explosive':
-                ctx.arc(this.x, this.y + this.radius * 0.35, this.radius * 0.35, 0, Math.PI);
-                ctx.closePath();
-                ctx.fillStyle = '#f39c12';
-                ctx.fill();
-                break;
-            case 'stealth':
-                ctx.moveTo(this.x - this.radius * 0.25, this.y + this.radius * 0.3);
-                ctx.lineTo(this.x + this.radius * 0.25, this.y + this.radius * 0.3);
-                break;
-        }
-        ctx.strokeStyle = this.strokeColor;
-        ctx.lineWidth = this.type === EnemyTypes.BOSS ? 4 : 2;
-        ctx.stroke();
-
-        if (this.maxHp > 1) {
-            const hpPercentage = this.hp / this.maxHp;
-            const barWidth = this.type === EnemyTypes.BOSS ? this.radius * 2.5 : this.radius * 1.5;
-            const barHeight = this.type === EnemyTypes.BOSS ? 6 : 4;
-            const barY = this.y - this.radius - (this.type === EnemyTypes.BOSS ? 12 : 8);
-            
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            ctx.fillRect(this.x - barWidth / 2, barY, barWidth, barHeight);
-            
-            ctx.fillStyle = this.type === EnemyTypes.BOSS 
-                ? (hpPercentage > 0.5 ? '#e74c3c' : '#922b21')
-                : (hpPercentage > 0.5 ? '#2ecc71' : '#e74c3c');
-            ctx.fillRect(this.x - barWidth / 2, barY, barWidth * hpPercentage, barHeight);
-            
-            if (this.type === EnemyTypes.BOSS) {
-                ctx.strokeStyle = '#922b21';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(this.x - barWidth / 2, barY, barWidth, barHeight);
-            }
-        }
-
-        ctx.restore();
+        this.renderer.draw(ctx, this.core, this.behaviors, this.phaseManager);
     }
-
+    
     static spawn(canvasWidth, canvasHeight, playerX, playerY, gameTime, isBoss = false, hpMultiplier = 1) {
         const side = Math.floor(Math.random() * 4);
         let x, y;
         const margin = 50;
-
+        
         switch (side) {
             case 0:
                 x = randomRange(-margin, canvasWidth + margin);
@@ -549,7 +258,7 @@ export class Enemy {
                 y = randomRange(-margin, canvasHeight + margin);
                 break;
         }
-
+        
         let type;
         
         if (isBoss) {
@@ -579,12 +288,12 @@ export class Enemy {
         }
         
         if (!type) type = EnemyTypes.NORMAL;
-
+        
         const enemy = new Enemy(x, y, type);
         
         if (!isBoss && hpMultiplier > 1) {
-            enemy.maxHp = Math.ceil(enemy.maxHp * hpMultiplier);
-            enemy.hp = enemy.maxHp;
+            enemy.core.maxHp = Math.ceil(enemy.core.maxHp * hpMultiplier);
+            enemy.core.hp = enemy.core.maxHp;
         }
         
         return enemy;
