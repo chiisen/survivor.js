@@ -21,38 +21,43 @@ export class DebugOverlay {
     draw(ctx) {
         if (!this.enabled) return;
         
+        const boxWidth = 400;
+        const boxHeight = 200;
+        const x = (this.game.canvas.width - boxWidth) / 2;
+        const y = (this.game.canvas.height - boxHeight) / 2;
+        
         ctx.save();
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.fillRect(0, 0, 400, 200);
+        ctx.fillRect(x, y, boxWidth, boxHeight);
         
-        ctx.font = '14px monospace';
+        ctx.font = '21px monospace';
         ctx.fillStyle = '#2ecc71';
-        ctx.fillText('=== DEBUG OVERLAY (按Ctrl+Shift+D 鍵關閉) ===', 10, 20);
+        ctx.fillText('=== DEBUG OVERLAY (按Ctrl+Shift+D 鍵關閉) ===', x + 10, y + 20);
         
-        this.drawGridStatus(ctx, 40);
-        this.drawUpdatePipeline(ctx, 70);
-        this.drawPlayerStatus(ctx, 100);
-        this.drawEntityCounts(ctx, 130);
-        this.drawWarnings(ctx, 160);
+        this.drawGridStatus(ctx, y + 40, x);
+        this.drawUpdatePipeline(ctx, y + 70, x);
+        this.drawPlayerStatus(ctx, y + 100, x);
+        this.drawEntityCounts(ctx, y + 130, x);
+        this.drawWarnings(ctx, y + 160, x);
         
         ctx.restore();
     }
     
-    drawGridStatus(ctx, y) {
+    drawGridStatus(ctx, y, x) {
         const gridEntities = this.game.enemyGrid.getTotalEntities();
         const enemies = this.game.enemies.length;
         const color = gridEntities === enemies ? '#2ecc71' : '#e74c3c';
         
         ctx.fillStyle = color;
-        ctx.fillText(`Grid: ${gridEntities} entities / ${enemies} enemies`, 10, y);
+        ctx.fillText(`Grid: ${gridEntities} entities / ${enemies} enemies`, x + 10, y);
         
         if (gridEntities === 0 && enemies > 0) {
             ctx.fillStyle = '#e74c3c';
-            ctx.fillText('⚠ Grid 未填充！', 220, y);
+            ctx.fillText('⚠ Grid 未填充！', x + 220, y);
         }
     }
     
-    drawUpdatePipeline(ctx, y) {
+    drawUpdatePipeline(ctx, y, x) {
         const phases = [
             { name: 'Phase1', executed: this.game.logger.phaseExecuted.phase1, label: 'Grid' },
             { name: 'Phase2', executed: this.game.logger.phaseExecuted.phase2, label: 'State' },
@@ -67,46 +72,46 @@ export class DebugOverlay {
         }).join(' ');
         
         ctx.fillStyle = '#f39c12';
-        ctx.fillText(`Pipeline: ${statusLine}`, 10, y);
+        ctx.fillText(`Pipeline: ${statusLine}`, x + 10, y);
     }
     
-    drawPlayerStatus(ctx, y) {
+    drawPlayerStatus(ctx, y, x) {
         const fireCooldown = this.game.player.fireCooldown.toFixed(2);
         const canFire = this.game.player.canFire();
         const color = canFire ? '#2ecc71' : '#f39c12';
         
         ctx.fillStyle = color;
-        ctx.fillText(`fireCooldown: ${fireCooldown}s, canFire: ${canFire}`, 10, y);
+        ctx.fillText(`fireCooldown: ${fireCooldown}s, canFire: ${canFire}`, x + 10, y);
         
         if (!canFire && this.game.player.fireCooldown > 0.6) {
             ctx.fillStyle = '#e74c3c';
-            ctx.fillText('⚠ 冷卻過長！', 220, y);
+            ctx.fillText('⚠ 冷卻過長！', x + 220, y);
         }
         
         if (this.lastFireCooldown === this.game.player.fireCooldown && this.game.player.fireCooldown > 0) {
             ctx.fillStyle = '#e74c3c';
-            ctx.fillText('⚠ 未減少！', 320, y);
+            ctx.fillText('⚠ 未減少！', x + 320, y);
         }
     }
     
-    drawEntityCounts(ctx, y) {
+    drawEntityCounts(ctx, y, x) {
         const projectiles = this.game.projectilePool.getActiveObjects().filter(p => p.active).length;
         const enemies = this.game.enemies.length;
         const expOrbs = this.game.expOrbs.length;
         
         ctx.fillStyle = '#3498db';
-        ctx.fillText(`Projectiles: ${projectiles}, Enemies: ${enemies}, ExpOrbs: ${expOrbs}`, 10, y);
+        ctx.fillText(`Projectiles: ${projectiles}, Enemies: ${enemies}, ExpOrbs: ${expOrbs}`, x + 10, y);
     }
     
-    drawWarnings(ctx, y) {
+    drawWarnings(ctx, y, x) {
         this.detectWarnings();
         
         if (this.warnings.length === 0) {
             ctx.fillStyle = '#2ecc71';
-            ctx.fillText('✓ 系統正常', 10, y);
+            ctx.fillText('✓ 系統正常', x + 10, y);
         } else {
             ctx.fillStyle = '#e74c3c';
-            ctx.fillText(this.warnings.join(' | '), 10, y);
+            ctx.fillText(this.warnings.join(' | '), x + 10, y);
         }
     }
     
