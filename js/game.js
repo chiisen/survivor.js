@@ -261,6 +261,9 @@ start() {
     update(dt) {
         this.gameTime += dt;
         
+        this.player.update(dt, this.keys, this.canvas.width, this.canvas.height);
+        this.player.updateSkillCooldown(dt);
+        
         this.decorationManager.update(dt, this.gameTime);
         const normalEnemyCount = this.enemies.filter(e => !e.type.isBoss).length;
 this.waveManager.update(dt, this.gameTime, normalEnemyCount);
@@ -294,7 +297,6 @@ this.waveManager.update(dt, this.gameTime, normalEnemyCount);
             }
         }
         
-        this.player.updateSkillCooldown(dt);
         this.updateSkillCooldownUI();
         
         this.autoFire();
