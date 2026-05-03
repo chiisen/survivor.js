@@ -5,17 +5,8 @@ export class GroundDecoration {
         this.type = type;
         this.alpha = type === 'mushroom' ? 1.0 : 0.3 + Math.random() * 0.2;
         
-        if (type === 'mushroom') {
-            this.mushroomImage = new Image();
-            this.mushroomImage.src = 'images/mushroom.png';
-            this.mushroomImageLoaded = false;
-            this.mushroomProcessedCanvas = null;
-            
-            this.mushroomImage.onload = () => {
-                this.mushroomProcessedCanvas = GroundDecoration.removeBlackBackground(this.mushroomImage);
-                this.mushroomImageLoaded = true;
-            };
-        }
+        this.mushroomProcessedCanvas = null;
+        this.mushroomImageLoaded = false;
         
         switch (type) {
             case 'rock':
@@ -64,32 +55,6 @@ export class GroundDecoration {
                 this.glowTime = Math.random() * Math.PI * 2;
                 break;
         }
-    }
-
-    static removeBlackBackground(image) {
-        const canvas = document.createElement('canvas');
-        canvas.width = image.width;
-        canvas.height = image.height;
-        const ctx = canvas.getContext('2d');
-        
-        ctx.drawImage(image, 0, 0);
-        
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-        
-        for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            const brightness = (r + g + b) / 3;
-            
-            if (brightness < 20) {
-                data[i + 3] = 0;
-            }
-        }
-        
-        ctx.putImageData(imageData, 0, 0);
-        return canvas;
     }
 
     update(dt, gameTime) {
@@ -464,8 +429,51 @@ export class DecorationManager {
         this.decorations = [];
         this.particles = [];
         
+        this.mushroomProcessedCanvas = null;
+        this.mushroomImageLoaded = false;
+        
+        const mushroomImage = new Image();
+        mushroomImage.src = 'images/mushroom.png';
+        mushroomImage.onload = () => {
+            this.mushroomProcessedCanvas = this.removeBlackBackground(mushroomImage);
+            this.mushroomImageLoaded = true;
+            
+            for (const deco of this.decorations) {
+                if (deco.type === 'mushroom') {
+                    deco.mushroomProcessedCanvas = this.mushroomProcessedCanvas;
+                    deco.mushroomImageLoaded = true;
+                }
+            }
+        };
+        
         this.generateDecorations();
         this.generateParticles();
+    }
+
+    removeBlackBackground(image) {
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext('2d');
+        
+        ctx.drawImage(image, 0, 0);
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const brightness = (r + g + b) / 3;
+            
+            if (brightness < 20) {
+                data[i + 3] = 0;
+            }
+        }
+        
+        ctx.putImageData(imageData, 0, 0);
+        return canvas;
     }
 
     generateDecorations() {
@@ -488,7 +496,14 @@ export class DecorationManager {
                 }
             }
             
-            this.decorations.push(new GroundDecoration(x, y, type));
+            const deco = new GroundDecoration(x, y, type);
+            
+            if (type === 'mushroom' && this.mushroomImageLoaded) {
+                deco.mushroomProcessedCanvas = this.mushroomProcessedCanvas;
+                deco.mushroomImageLoaded = true;
+            }
+            
+            this.decorations.push(deco);
         }
     }
 
