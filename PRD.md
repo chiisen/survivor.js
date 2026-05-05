@@ -684,57 +684,788 @@ update(dt) {
 *   **格式化輸出**：`formatTime()` 轉換秒數為「N分M秒」格式。
 
 ## 12. 已開發功能清單 (Completed Features)
+
+### 核心遊戲功能
 - [x] 基礎 Canvas 畫布與玩家移動控制（WASD / 方向鍵）。
 - [x] 盔甲戰士外觀渲染（頭盔、盔甲、劍）。
 - [x] 攻擊範圍限制與雙圈顯示（藍色基礎 + 綠色升級）。
 - [x] 自動索敵射擊邏輯（範圍內最近敵人）。
 - [x] 揮劍動畫與特效（揮動軌跡 + 劍尖閃光）。
 - [x] 怪物波次生成器（難度隨時間遞增）。
-- [x] 敵人類型多樣化（普通型、快速型、坦克型、遠程型）。
+- [x] 敵人類型多樣化（9種類型）。
 - [x] 遠程型敵人射擊系統（紫色追蹤子彈）。
 - [x] 坦克型敵人血量條顯示。
 - [x] 爆炸特效（粒子爆散 + 中心閃光）。
 - [x] 背景裝飾（石頭/草叢/灌木/裂痕 + 環境粒子）。
 - [x] 傷害數字顯示（浮動數字 + 放大漸隱動畫）。
 - [x] 經驗值拾取與升級 UI 彈窗。
-- [x] 三選一隨機天賦系統（8種強化選項）。
-- [x] 連殺系統與攻擊速度 buff。
+- [x] 天賦系統（14種強化選項：暴击率、暴击伤害、吸血、护盾、经验加成、护甲等）。
+- [x] 連殺系統與攻擊速度 buff + 經驗加成（最高+150%）。
 - [x] 連殺顯示系統（DOUBLE/TRIPLE/QUAD/MEGA/ULTRA/GODLIKE 大字動畫）。
-- [x] 波次系統（每60秒一波 + Boss戰機制）。
-- [x] Boss敵人（皇冠 + 光環 + 大血量條 + 射擊）。
-- [x] 存檔功能（localStorage 儲存最高紀錄）。
+- [x] 波次系統（每60秒一波 + 5秒休息時間 + Boss戰機制）。
+- [x] Boss敵人（皇冠 + 光環 + 大血量條 + 多階段狂暴模式 + 多方向子彈 +召喚精英小怪）。
+- [x] 存檔功能（localStorage 储存最高紀錄）。
 - [x] 音效系統（揮劍/命中/擊殺/連殺/升級/受傷/拾取/結束）。
 - [x] 背景音樂（三角波 oscillator + LFO 調變）。
 - [x] 暫停功能（ESC/P 鍵暫停遊戲）。
 - [x] Buff 通知 UI（倒計時 + 滑入滑出動畫）。
 - [x] 遊戲結束畫面與重新開始功能。
 
-## 13. 檔案結構
+### 新增功能（詳細）
+- [x] **視野遮罩系統**：玩家周圍清晰可見，視野外深色模糊（戰爭迷霧效果）。
+- [x] **護盾系統**：藍色護盾 UI（HP 條上方）+ 護盾吸收傷害 + 護盾破碎特效 + 休息時間自動回復。
+- [x] **技能狀態顯示**：左上方顯示已升級技能 + 右上角顯示技能冷卻（Q鍵终极技能）。
+- [x] **成就系統**：19個成就（首殺/百殺/千殺/存活時間/Boss擊殺/波次/等級/遊戲次數/地狱模式）。
+- [x] **排行榜 TOP 10**：本地排行榜顯示前10名最高成绩（預設關閉，點擊展開）。
+- [x] **難度系統**：普通/困難/地狱模式（影響敵人生成速度、血量、傷害）。
+- [x] **遊戲開始畫面**：標題、操作說明、難度選擇、開始按鈕、設定選單。
+- [x] **遊戲內音量設定**：暫停畫面可調整主音量/音效/背景音量。
+- [x] **Q键终极技能**：按Q键釋放全屏攻擊（傷害=玩家攻擊力×10，冷卻30秒）。
+- [x] **暴击系统**：暴击子弹显示红色 + 金色光环 + 暴击傷害倍率。
+- [x] **連殺經驗加成**：連殺數越高獲得額外經驗加成（最高+150%）。
+
+### 敵人類型擴展
+- [x] **精英敵人**：金色光環、藍色護盾（需先破盾才能傷害本體）、護盾破碎特效。
+- [x] **分裂敵人**：死亡時分裂成2個小型敵人、觸發周圍80px內分裂敵人鏈式分裂、分裂特效。
+- [x] **爆炸敵人**：死亡時對範圍內玩家造成爆炸傷害（範圍60px）。
+- [x] **隱形敵人**：半透明狀態（alpha 0.3）、受擊後短暫現形閃爍（1秒）。
+- [x] **敵人類型權重系統**：根據遊戲時間動態調整出現機率。
+
+### Boss 多階段系統
+- [x] **Boss 出場特效**：紅色光環擴散、警告公告、震動效果。
+- [x] **Boss 放大**：radius 160 + UI 血量條标注（屏幕上方显示 BOSS 血量）。
+- [x] **Boss 多階段**：血量低時進入狂暴模式（速度加快、射擊加快、召喚小怪）。
+- [x] **Boss 狂暴技能**：第二階段射出4方向子彈，第三階段射出8方向子彈並召喚精英小怪。
+- [x] **Boss 死亡特效**：多重粒子爆散、光環擴散、閃電效果。
+
+### Tileset 系統
+- [x] **TileManager 系統**：從素材圖集裁切 tiles，支援地板拼接與環境物件（待圖集裁切完成後使用）。
+- [x] **TilesetCleaner 工具**：手動框選素材區域，生成乾淨圖集（避開設計稿文字說明）。
+- [x] **TILESET_GUIDE.md**：Canvas drawImage() 裁切原理、素材定位表、與 DecorationManager 分工說明。
+- [x] **TILESET_FIX_GUIDE.md**：設計稿文字說明問題的4種解決方案對比。
+
+### 重構完成（Phase 1-3）
+- [x] **Phase 1**：Update Loop 四個 Phase（清理 → 狀態 → 系統 → UI）+ GameLogger + DebugOverlay。
+- [x] **Phase 2**：
+    - Player 拆分（PlayerCore + PlayerCombat + PlayerRenderer）。
+    - Enemy 拆分（EnemyCore + EnemyBehaviors + BossPhaseManager + EnemyRenderer）。
+- [x] **Phase 3**：
+    - GameValidator.js（硬斷言檢查）。
+    - DebugOverlay FPS/内存/實體統計（P/E/Exp/EP/DN）。
+    - 自動警告系統（FPS過低、Memory過高、Grid空、冷卻未更新、敵人過多）。
+    - 日誌等級切換（Ctrl+Shift+L 循環切換 ERROR → INFO → DEBUG）。
+
+### 效能優化
+- [x] **ObjectPool 全面優化**：
+    - 預分配大小調整：ProjectilePool 50→200，其他池按需調整。
+    - 對象狀態標記（_active）避免 indexOf 性能损耗。
+    - 自動扩容：池用完后自动扩容 50%（限制 maxSize）。
+    - 統計监控：peakActiveCount、hitRate、efficiency、autoExpansions。
+    - 清理优化：cleanInactive() 定期清理无效对象。
+    - 自动调整：autoAdjust() 根据峰值使用量自动扩容。
+    - 调试热键：Ctrl+Shift+P 查看 ObjectPool 统计。
+- [x] **空間網格分割（SpatialGrid）**：格子大小 100px，優化碰撞檢測從 O(n×m) 降至 O(n×k)。
+- [x] **距離平方比較**：新增 distanceSquared() 函數避免 Math.sqrt 運算。
+- [x] **網格緩存**：每幀清空重建，僅檢測鄰近格子內物件。
+
+### Bug 修復
+- [x] **修復 chainKills 變數未定義錯誤**：移動變數定義至使用前（Commit: 6350085）。
+- [x] **修復敵人無法被子彈命中**：每幀更新前將敵人插入 SpatialGrid（Commit: f5926c7）。
+- [x] **修復主角射擊一次就停止**：在 update() 中調用 player.update() 更新 fireCooldown（Commit: 8b79a6e）。
+- [x] **HP 條同步問題**：护盾吸收傷害時 UI 即時更新，避免玩家突然死亡無預警。
+
+## 13. TileManager 系統規格
+
+### A. 系統概述
+TileManager 用於從素材圖集裁切 tiles，支援地板拼接與環境物件渲染。與 DecorationManager 分工：TileManager 畫底層地板，DecorationManager 畫頂層動態裝飾。
+
+### B. Canvas drawImage() 裁切原理
+```javascript
+ctx.drawImage(
+    image,            // 原圖
+    sx, sy,           // 裁切起始座標（在原圖上的位置）
+    sWidth, sHeight,  // 裁切尺寸
+    dx, dy,           // 繪製目標座標（在 Canvas 上的位置）
+    dWidth, dHeight   // 繪製尺寸（可放大/縮小）
+);
+```
+
+**範例：取出第一格草地**
+```javascript
+ctx.drawImage(
+    tilesetImage,
+    0, 0, 32, 32,     // 裁切原圖 (0,0) 位置的 32x32區塊
+    100, 100, 32, 32  // 繪製到 Canvas (100,100) 位置
+);
+```
+
+### C. 素材定位表
+
+#### 地板類（32x32）
+| 素材名稱 | 定位座標 | 尺寸 |
+|---------|---------|------|
+| grass | (0, 0) | 32x32 |
+| grass2 | (32, 0) | 32x32 |
+| grass3 | (64, 0) | 32x32 |
+| dirt | (0, 32) | 32x32 |
+| dirt2 | (32, 32) | 32x32 |
+| stone | (0, 64) | 32x32 |
+| stone2 | (32, 64) | 32x32 |
+| water | (0, 96) | 32x32 |
+| water2 | (32, 96) | 32x32 |
+
+#### 環境物件
+| 素材名稱 | 定位座標 | 尺寸 |
+|---------|---------|------|
+| tree | (160, 0) | 64x96 |
+| bush | (224, 0) | 32x32 |
+| flower | (256, 0) | 32x32 |
+| flower2 | (288, 0) | 32x32 |
+| rock | (160, 96) | 48x48 |
+| mushroom | (224, 32) | 32x32 |
+
+#### 其他
+| 素材名稱 | 定位座標 | 尺寸 |
+|---------|---------|------|
+| fence_h | (320, 0) | 水平圍欄 |
+| fence_v | (352, 0) | 垂直圍欄 |
+| fence_corner | (384, 0) | 圍欄轉角 |
+
+### D. TileManager 與 DecorationManager 分工
+
+| 功能 | TileManager | DecorationManager |
+|------|-------------|-------------------|
+| 地板拼接 | ✅ 草地、泥土、水面 | ❌ |
+| 靜態物件 | ✅ 樹木、石頭、圍欄 | ❌ |
+| 動態裝飾 | ❌ | ✅ 搖擺的草、發光水晶 |
+| 粒子效果 | ❌ | ✅ 螢火虫、落叶、星光 |
+| 地圖生成 | ✅ 隨機地板 | ❌ |
+
+**建議**：兩者並存，TileManager 畫底層地板，DecorationManager 畫頂層動態裝飾。
+
+### E. 使用方式
+
+#### 1. 在 game.js 中引入
+```javascript
+import { TileManager } from './tileManager.js';
+
+export class Game {
+    constructor(canvas) {
+        this.tileManager = new TileManager();
+    }
+    
+    async start() {
+        await this.tileManager.load();  // 載入素材圖集
+        this.generateMap();
+    }
+}
+```
+
+#### 2. 生成地板地圖
+```javascript
+generateMap() {
+    this.groundMap = this.tileManager.generateRandomGround(
+        this.canvas.width * 2,  // 地圖比畫面大
+        this.canvas.height * 2
+    );
+    this.tileManager.addDecorations(this.groundMap, 100);
+}
+```
+
+#### 3. 在 render() 中繪製
+```javascript
+render() {
+    // 1. 先畫地板（底層）
+    this.tileManager.drawMap(this.ctx, this.groundMap);
+    
+    // 2. 畫玩家和敵人（中層）
+    this.player.draw(this.ctx);
+    for (const enemy of this.enemies) {
+        enemy.draw(this.ctx);
+    }
+    
+    // 3. 畫動態裝飾（頂層）
+    this.decorationManager.draw(this.ctx);
+}
+```
+
+### F. 下一步優化
+1. **地圖捲動**：隨玩家移動調整 offsetX/offsetY
+2. **碰撞檢測**：部分 tile（水、石頭）可設為障礙物
+3. **多層渲染**：地板 → 物件 → 玩家 → 敵人 → 特效
+4. **動態載入**：大地圖只渲染視野範圍內的 tiles
+
+## 14. TilesetCleaner 工具規格
+
+### A. 工具用途
+設計稿通常包含 **素材 + 設計說明文字 + 尺寸標註**，文字說明會導致自動裁切錯亂。TilesetCleaner 可手動框選純素材區域，生成乾淨的 tileset.png。
+
+### B. 啟動方式
+```bash
+npm run dev
+# 瀏覽器打開 http://localhost:3000/tilesetCleaner.html
+```
+
+### C. 操作流程
+1. **調整素材尺寸**（預設 32px，可改為 16/64/128）
+2. **選擇尺寸處理模式**：
+   - 🔒 **保留原始尺寸**（推薦）：保持每個素材的原始大小
+   - 📐 **縮放為統一尺寸**：強制縮放為 32x32
+3. **點擊「➕ 新增素材位置」**
+4. **在設計稿上框選純素材區域**（避開文字說明）
+5. **手動調整 X Y W H 輸入框**（精確控制裁切範圍）
+6. **框選錯誤時**：
+   - 點擊已框選區域（紅色高亮）
+   - 點擊「❌ 删除选中」或「↩️ 撤销」
+7. **選擇布局模式**：
+   - 🎯 **最優布局**（推薦）：自動計算最小空白格數
+   - ⬜ **強制正方形**：適合需要正方形圖集的場合
+   - ⚙️ **自定義尺寸**：手動設定列數/行數
+8. **點擊「👀 预览图集」**
+9. **檢查預覽是否正確**
+10. **確認無誤後點擊「⬇️ 確認下載」**
+
+### D. 功能特色
+
+| 功能 | 說明 |
+|------|------|
+| **手動框選** | 避開設計稿文字說明，只選取純素材 |
+| **手動調整** | X Y W H 四個輸入框，精確控制裁切範圍 |
+| **浮點誤差修正** | 自動計算圖片缩放比例，避免坐標偏移 |
+| **預覽功能** | 先預覽生成的圖集，確認無誤後再下載 |
+| **多種布局** | 最優布局、強制正方形、水平/垂直排列、自定義尺寸 |
+| **格子間距** | 可關閉生成完美正方形，或啟用 2px 間距 |
+| **尺寸處理** | 保留原始尺寸或縮放為統一尺寸 |
+
+### E. 設計稿文字說明問題的解決方案
+
+| 方案 | 適用對象 | 優點 | 缺點 |
+|------|---------|------|------|
+| **方案1：手動框選工具** | 進階使用者 | 可視化操作、自動生成乾淨圖集 | 需要操作工具 |
+| **方案2：圖片編輯軟體** | 新手 | 最簡單、最可靠 | 需要圖片編輯技能 |
+| **方案3：修改定義** | 快速修復 | 不需修改原始圖片 | 需手動測量每個素材位置 |
+| **方案4：自動化腳本** | 專業使用者 | 全自動處理、批量處理 | 需圖像處理知識 |
+
+**推薦方案**：
+- 新手 → 方案 2（圖片編輯軟體）
+- 進階 → 方案 1（手動框選工具）
+- 專業 → 方案 4（自動化腳本）
+
+## 15. 專業切圖工具推薦
+
+### A. 工具對比表
+
+| 工具 | 用途 | 優點 | 缺點 | 適用場景 |
+|------|------|------|------|---------|
+| **TexturePacker** | Sprite Sheet/Tileset 自動排列 | 專為遊戲設計、自動優化空白、多格式导出、去除透明邊框 | 付费版才有高级功能 | 專業遊戲開發、批量處理 |
+| **Tiled Map Editor** | Tilemap 地圖編輯 | 免費開源、專業地圖編輯、多層支持、多格式导出 | 不會自動生成 tileset | 已有 tileset、需設計地圖 |
+| **Aseprite** | 像素藝術 + Sprite Sheet | 專為像素風格、動畫編輯、便宜（$20） | 主要用於像素風格 | 像素風格遊戲、動畫編輯 |
+| **SpriteForge** | 線上 Sprite Sheet 工具 | 免費線上、簡單易用、拖放操作 | 功能較簡單 | 快速處理、不想安裝軟體 |
+
+### B. 推薦選擇
+
+| 求 | 推薦工具 |
+|------|---------|
+| **專業遊戲開發** | TexturePacker（自動優化、多格式导出） |
+| **已有 tileset，需設計地圖** | Tiled Map Editor（免費、專業地圖編輯） |
+| **像素風格遊戲** | Aseprite（像素編輯、動畫、 sprite sheet） |
+| **快速簡單處理** | SpriteForge（線上免費） |
+| **手動裁切設計稿** | TilesetCleaner（避開文字說明） |
+
+### C. 最佳實踐：組合使用流程
+```
+設計稿（含文字說明）
+↓
+TilesetCleaner（手動框選、生成乾淨圖集）
+↓
+TexturePacker（自動優化排列、去除透明邊框）
+↓
+Tiled Map Editor（設計地圖、設定碰撞）
+↓
+遊戲引擎渲染
+```
+
+### D. TexturePacker 設定建議
+```
+Algorithm: MaxRects（最小空白）
+Padding: 2px（避免素材相連）
+Trim: Enable（去除透明邊框）
+Extrude: 1px（避免渲染缝隙）
+Format: JSON-Array（通用格式）
+```
+
+### E. 官網連結
+- **TexturePacker**: https://www.codeandweb.com/texturepacker
+- **Tiled Map Editor**: https://www.mapeditor.org/
+- **Aseprite**: https://www.aseprite.org/
+- **SpriteForge**: https://spriteforge.com/
+
+## 16. 視野遮罩系統
+
+### A. 系統概述
+玩家周圍清晰可見，視野外深色模糊，營造戰爭迷霧效果。
+
+### B. 實作方式
+- **遮罩範圍**：玩家位置為中心，半徑可調整
+- **渲染順序**：所有遊戲物件 → 視野遮罩（最後繪製）
+- **模糊效果**：視野外區域降低透明度 + 深色覆蓋
+
+### C. 技術實作
+```javascript
+// visibilityMask.js
+class VisibilityMask {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.radius = 200;  // 可視半徑
+    }
+    
+    draw(ctx, playerX, playerY) {
+        ctx.save();
+        
+        // 繪製遮罩（視野外深色）
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // 清除玩家周圍區域（可視範圍）
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(playerX, playerY, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+    }
+}
+```
+
+## 17. 成就系統
+
+### A. 成就列表（19個）
+
+| 成就名稱 | 觸發條件 | 描述 |
+|---------|---------|------|
+| 首殺 | 擊殺 1隻敵人 | 第一次擊殺敵人 |
+| 百殺 | 擊殺 100隻敵人 | 擊殺100隻敵人 |
+| 千殺 | 擊殺 1000隻敵人 | 擊殺1000隻敵人 |
+| 存活時間 5分 | 存活 5分鐘 | 存活5分鐘 |
+| 存活時間 10分 | 存活 10分鐘 | 存活10分鐘 |
+| 存活時間 20分 | 存活 20分鐘 | 存活20分鐘 |
+| Boss擊殺 1 | 擊殺 1隻Boss | 第一次擊殺Boss |
+| Boss擊殺 5 | 擊殺 5隻Boss | 擊殺5隻Boss |
+| Boss擊殺 10 | 擊殺 10隻Boss | 擊殺10隻Boss |
+| 波次 5 | 完成第5波 | 完成第5波 |
+| 波次 10 | 完成第10波 | 完成第10波 |
+| 波次 20 | 完成第20波 | 完成第20波 |
+| 等級 5 |達到等級5 |達到等級5 |
+| 等級 10 |達到等級10 |達到等級10 |
+| 等級 20 |達到等級20 |達到等級20 |
+| 游戲次数 10 | 游玩 10次 | 游玩10次 |
+| 游戲次数 50 | 游玩 50次 | 游玩50次 |
+| 地狱模式存活 5分 | 地狱模式存活 5分鐘 |地狱模式存活5分鐘 |
+| 地狱模式波次 10 | 地狱模式完成第10波 |地狱模式完成第10波 |
+
+### B. 成就顯示
+- **位置**：遊戲結束畫面
+- **新成就標記**：金色標籤 + ⭐ 符號
+- **通知動畫**：達成成就時彈出通知（2秒後消失）
+
+### C. 技術實作
+```javascript
+// achievement.js
+class Achievement {
+    constructor(storage) {
+        this.storage = storage;
+        this.achievements = this.initAchievements();
+    }
+    
+    check(type, value) {
+        const achievement = this.achievements.find(a => 
+            a.type === type && value >= a.threshold
+        );
+        if (achievement && !achievement.unlocked) {
+            achievement.unlocked = true;
+            this.showNotification(achievement);
+            this.storage.saveAchievements(this.achievements);
+        }
+    }
+}
+```
+
+## 18. 排行榜系統
+
+### A. 排行榜功能
+- **TOP 10 排行榜**：顯示前10名最高成绩
+- **預設關閉**：点击按钮展開
+- **排序依據**：存活時間 + 等級 + 擊殺數
+
+### B. 排行榜顯示
+| 排名 | 等級 | 存活時間 | 擊殺數 | Boss擊殺 |
+|------|------|---------|-------|---------|
+| 1 | Lv.20 | 20分30秒 | 500 | 5 |
+| 2 | Lv.15 | 15分20秒 | 300 | 3 |
+| ... | ... | ... | ... | ... |
+
+### C. 技術實作
+```javascript
+// storage.js
+class StorageManager {
+    getLeaderboard() {
+        const records = this.getAllRecords();
+        return records
+            .sort((a, b) => b.time - a.time || b.level - a.level)
+            .slice(0, 10);
+    }
+}
+```
+
+## 19. 階段性難度系統
+
+### A. 难度模式
+
+| 难度 | 敵人生成速度 | 敵人血量倍率 | 敵人傷害倍率 | 描述 |
+|------|-------------|-------------|-------------|------|
+| **普通** | 1.0x | 1.0x | 1.0x | 預設難度 |
+| **困難** | 1.5x | 1.5x | 1.5x | 敵人更快更強 |
+| **地狱** | 2.0x | 2.0x | 2.0x | 极限挑戰 |
+
+### B. 难度選擇
+- **位置**：遊戲開始畫面
+- **按鈕**：三個難度選項（普通/困難/地狱）
+- **標籤**：地狱模式標記 🔥 符號
+
+### C. 技術實作
+```javascript
+// game.js
+class Game {
+    constructor(canvas, difficulty = 'normal') {
+        this.difficulty = difficulty;
+        this.setDifficultyParams();
+    }
+    
+    setDifficultyParams() {
+        switch (this.difficulty) {
+            case 'hard':
+                this.spawnRateMultiplier = 1.5;
+                this.hpMultiplier = 1.5;
+                this.damageMultiplier = 1.5;
+                break;
+            case 'hell':
+                this.spawnRateMultiplier = 2.0;
+                this.hpMultiplier = 2.0;
+                this.damageMultiplier = 2.0;
+                break;
+            default:
+                this.spawnRateMultiplier = 1.0;
+                this.hpMultiplier = 1.0;
+                this.damageMultiplier = 1.0;
+        }
+    }
+}
+```
+
+## 20. 敵人類型擴展
+
+### A. 精英敵人 (Elite)
+*   **外觀**：金色光環 + 藍色護盾（需先破盾才能傷害本體）。
+*   **屬性**：血量 5、速度 60px/秒、傷害 15、經驗值 50。
+*   **護盾**：藍色護盾（HP 20），護盾破碎特效（藍色碎片爆散）。
+*   **出現時間**：90秒後開始出現。
+
+### B. 分裂敵人 (Split)
+*   **外觀**：綠色圓形怪物 + 分裂標記。
+*   **屬性**：血量 2、速度 70px/秒、傷害 10、經驗值 20。
+*   **特殊**：死亡時分裂成2個小型敵人（半徑 10px），觸發周圍80px內分裂敵人鏈式分裂。
+*   **分裂特效**：綠色光環擴散 + 粒子爆散。
+*   **出現時間**：120秒後開始出現。
+
+### C. 爆炸敵人 (Explosive)
+*   **外觀**：橙色圓形怪物 + 爆炸標記。
+*   **屬性**：血量 1、速度 50px/秒、傷害 5（爆炸傷害 30）、經驗值 15。
+*   **特殊**：死亡時對範圍內玩家造成爆炸傷害（範圍 60px）。
+*   **出現時間**：150秒後開始出現。
+
+### D.隱形敵人 (Invisible)
+*   **外觀**：半透明灰色怪物，受擊後短暫現形閃爍。
+*   **屬性**：血量 2、速度 80px/秒、傷害 12、經驗值 25。
+*   **特殊**：初始半透明（alpha 0.3），受擊後現形（alpha 1.0）1秒。
+*   **出現時間**：180秒後開始出現。
+
+### E. 敵人類型權重系統
+根據遊戲時間動態調整各類型出現機率（詳見 waveManager.js）。
+
+## 21. 护盾系統規格
+
+### A. 系統概述
+玩家擁有藍色護盾，可吸收傷害。護盾歸零後才能傷害本體 HP。
+
+### B. 护盾属性
+- **初始护盾**：0（需透過天賦「护盾强化」獲得）
+- **护盾上限**：50（可透過天賦提升）
+- **护盾回復**：休息時間自動回復至满值
+
+### C. 护盾 UI
+- **位置**：HP 條上方
+- **顏色**：藍色半透明
+- **顯示**：「护盾: 20/50」
+- **护盾歸零**：半透明顯示（提示護盾已失效）
+
+### D. 护盾變化
+- **护盾吸收傷害**：UI 即時更新
+- **护盾恢復**：休息時間自動回復，UI 即時更新
+
+### E. 技術實作
+```javascript
+// player.js
+class Player {
+    constructor(x, y) {
+        this.shield = 0;
+        this.maxShield = 50;
+    }
+    
+    takeDamage(damage) {
+        if (this.shield > 0) {
+            const shieldDamage = Math.min(damage, this.shield);
+            this.shield -= shieldDamage;
+            damage -= shieldDamage;
+        }
+        this.hp -= damage;
+    }
+    
+    recoverShield() {
+        if (this.shield < this.maxShield) {
+            this.shield = this.maxShield;
+        }
+    }
+}
+```
+
+## 22. 技能狀態顯示系統
+
+### A. 技能狀態 UI
+- **位置**：畫面左上方
+- **顯示內容**：已升級技能（未升級不顯示）
+- **格式**：圖示 + 技能名稱 + 數值
+
+### B. 技能冷卻 UI
+- **位置**：右上角
+- **顯示內容**：Q键终极技能狀態
+- **格式**：「Q技能: 就緒」或「Q技能: 冷卻 15秒」
+- **冷卻時間**：30秒
+
+### C. 技術實作
+```javascript
+// ui.js
+class UI {
+    drawSkills(ctx, player) {
+        const skills = player.getUpgradedSkills();
+        ctx.font = '16px Arial';
+        ctx.fillStyle = '#fff';
+        ctx.fillText('已升級技能:', 10, 30);
+        
+        skills.forEach((skill, i) => {
+            ctx.fillText(`${skill.icon} ${skill.name}: ${skill.value}`, 10, 50 + i * 20);
+        });
+    }
+    
+    drawSkillCooldown(ctx, player) {
+        const cooldown = player.skillCooldown;
+        const status = cooldown > 0 ? `冷卻 ${cooldown.toFixed(1)}秒` : '就緒';
+        ctx.fillText(`Q技能: ${status}`, this.canvas.width - 120, 30);
+    }
+}
+```
+
+## 23. 重構後的物件架構
+
+### A. Player 拆分（組合模式）
+
+#### 1. PlayerCore.js
+**職責**：位置、移動、碰撞
+- **屬性**：x, y, radius, speed, hp, shield
+- **方法**：update(), move(), takeDamage()
+
+#### 2. PlayerCombat.js
+**職責**：射擊、技能、傷害計算
+- **屬性**：fireRate, fireCooldown, damage, critChance, skillCooldown
+- **方法**：canFire(), shoot(), useSkill()
+
+#### 3. PlayerRenderer.js
+**職責**：繪製盔甲戰士
+- **方法**：draw(), drawHelmet(), drawBody(), drawLegs(), drawArms(), drawSword()
+
+#### 4. Player.js（組合類別）
+```javascript
+class Player {
+    constructor(x, y) {
+        this.core = new PlayerCore(x, y);
+        this.combat = new PlayerCombat(this.core);
+        this.renderer = new PlayerRenderer();
+    }
+    
+    // 使用 Getter/Setter 暴露所有原有屬性（保持接口兼容）
+    get x() { return this.core.x; }
+    get y() { return this.core.y; }
+    get hp() { return this.core.hp; }
+    get fireCooldown() { return this.combat.fireCooldown; }
+    
+    update(dt, keys, canvasWidth, canvasHeight) {
+        this.core.update(dt, keys, canvasWidth, canvasHeight);
+        this.combat.update(dt);
+    }
+    
+    draw(ctx) {
+        this.renderer.draw(ctx, this.core, this.combat);
+    }
+}
+```
+
+### B. Enemy 拆分（組合模式）
+
+#### 1. EnemyCore.js
+**職責**：位置、移動、碰撞、傷害計算
+- **屬性**：x, y, radius, speed, hp, damage, type
+- **方法**：update(), move(), takeDamage()
+
+#### 2. EnemyBehaviors.js
+**職責**：射擊、分裂、隱形行為
+- **屬性**：shootCooldown, canShoot, canSplit, isInvisible
+- **方法**：update(), shoot(), split(), reveal()
+
+#### 3. BossPhaseManager.js
+**職責**：Boss 多階段管理（狂暴模式、召喚小怪）
+- **屬性**：phase, phaseThresholds, isEnraged
+- **方法**：update(), enterNextPhase(), summonMinions()
+
+#### 4. EnemyRenderer.js
+**職責**：繪製敵人外觀（240行繪製邏輯，支援 9種敵人類型）
+- **方法**：draw(), drawNormal(), drawFast(), drawTank(), drawRanged(), drawBoss()
+
+#### 5. Enemy.js（組合類別）
+```javascript
+class Enemy {
+    constructor(type, x, y) {
+        this.core = new EnemyCore(type, x, y);
+        this.behaviors = new EnemyBehaviors(type, this.core);
+        this.renderer = new EnemyRenderer(type);
+        
+        if (type.isBoss) {
+            this.phaseManager = new BossPhaseManager(this.core);
+        }
+    }
+    
+    update(dt, playerX, playerY) {
+        this.core.update(dt, playerX, playerY);
+        
+        if (this.phaseManager) {
+            this.phaseManager.update(dt, this.core.hp);
+        }
+        
+        return this.behaviors.update(dt, playerX, playerY);
+    }
+    
+    draw(ctx) {
+        this.renderer.draw(ctx, this.core, this.behaviors);
+    }
+}
+```
+
+## 24. 调试機制完善
+
+### A. DebugOverlay 功能
+
+| 功能 | 熱鍵 | 描述 |
+|------|------|------|
+| **開啟調試** | Ctrl+D |顯示 Grid、fireCooldown、警告 |
+| **FPS顯示** | Ctrl+D |顯示 FPS、Memory、實體數量 |
+| **硬斷言** | Ctrl+Shift+V |啟用 GameValidator 檢查 |
+
+#### DebugOverlay顯示內容
+- **Grid 狀態**：格子數、實體數、⚠ Grid空警告
+- **Player 狀態**：fireCooldown、canFire、⚠ 冷卻未更新警告
+- **FPS/Memory**：FPS數值、Memory使用量、⚠ FPS過低警告
+- **實體統計**：P（玩家）、E（敵人）、Exp（經驗球）、EP（投射物）、DN（傷害數字）
+
+### B. GameLogger 日誌等級切換
+
+| 等級 | 熱鍵 | 描述 |
+|------|------|------|
+| **ERROR** | Ctrl+Shift+L | 只顯示錯誤 |
+| **INFO** | Ctrl+Shift+L |顯示重要資訊 + 錯誤 |
+| **DEBUG** | Ctrl+Shift+L |顯示所有日誌（包含每個Phase） |
+
+#### 日誌內容
+- **Phase 日誌**：每個 Phase 的執行狀態
+- **關鍵變數**：Grid 實體數、fireCooldown、projectiles數量
+- **錯誤警告**：Grid空、冷卻未更新、敵人過多
+
+### C. GameValidator 硬斷言
+
+| 檢查項目 | 描述 | 錯誤訊息 |
+|---------|------|---------|
+| **validatePhase1** | Grid 實體數 = 敵人數 | Phase 1失敗：Grid實體數 ≠ 敵人數 |
+| **validatePhase2** | fireCooldown 已減少 | Phase 2失敗：fireCooldown未減少 |
+| **validatePhase3** | getNearby返回非空陣列 | Phase 3失敗：碰撞檢測失效 |
+
+### D. ObjectPool 統計
+
+| 功能 | 熱鍵 | 描述 |
+|------|------|------|
+| **統計顯示** | Ctrl+Shift+P |顯示 ObjectPool 使用率、峰值、命中率 |
+
+#### ObjectPool 統計內容
+- **peakActiveCount**：峰值使用量
+- **hitRate**：命中率（reuse /total requests）
+- **efficiency**：效率（active / poolSize）
+- **autoExpansions**：自動扩容次數
+
+## 25. 檔案結構（更新版）
 ```
 survivor.js/
-├── index.html          # 遊戲主頁面
+├── index.html              # 遊戲主頁面
+├── tilesetCleaner.html     # Tileset 清理工具
 ├── css/
-│   └── style.css       # 遊戲樣式（含動畫）
+│   └── style.css           # 遊戲樣式（含動畫）
 ├── js/
-│   ├── main.js         # 入口檔案
-│   ├── game.js         # 遊戲主邏輯
-│   ├── player.js       # 玩家類別（盔甲戰士）
-│   ├── enemy.js        # 敵人類別
-│   ├── projectile.js   # 魔法彈類別
-│   ├── experience.js   # 經驗值類別
-│   ├── explosion.js    # 爆炸特效類別
-│   ├── damageNumber.js # 傷害數字類別
+│   ├── main.js             # 入口檔案
+│   ├── game.js             # 遊戲主邏輯
+│   ├── gameLogger.js       # Console 日誌（ERROR/INFO/DEBUG）
+│   ├── debugOverlay.js     # 可視化調試工具（Ctrl+D）
+│   ├── gameValidator.js    # 硬斷言檢查（Ctrl+Shift+V）
+│   ├── player.js           # 玩家類別（組合模式）
+│   ├── playerCore.js       # 玩家核心（位置、移動）
+│   ├── playerCombat.js     # 玩家戰鬥（射擊、技能）
+│   ├── playerRenderer.js   # 玩家繪製
+│   ├── enemy.js            # 敵人類別（組合模式）
+│   ├── enemyCore.js        # 敵人核心（位置、移動）
+│   ├── enemyBehaviors.js   # 敵人行为（射擊、分裂、隱形）
+│   ├── bossPhaseManager.js # Boss 阶段管理
+│   ├── enemyRenderer.js    # 敵人繪製（240行，9種敵人）
+│   ├── projectile.js       # 魔法彈類別
+│   ├── experience.js       # 經驗值類別
+│   ├── explosion.js        # 爆炸特效類別
+│   ├── damageNumber.js     # 傷害數字類別
 │   ├── chainKillDisplay.js # 連殺顯示類別
-│   ├── spatialGrid.js  # 空間網格分割（碰撞優化）
-│   ├── objectPool.js   # 物件池化（GC 優化）
-│   ├── audio.js        # 音效管理（Web Audio API）
-│   ├── decoration.js   # 背景裝飾（地面裝飾物 + 環境粒子）
-│   ├── waveManager.js  # 波次管理（波次機制 + Boss戰）
-│   ├── storage.js      # 存檔管理（localStorage 紀錄）
-│   ├── talent.js       # 天賦系統
-│   ├── ui.js           # UI 管理（含 Buff 通知）
-│   └── utils.js        # 工具函數（含 distanceSquared）
-├── PRD.md              # 產品需求文件
-├── CHANGELOG.md        # 更新日誌
-└── README.md           # 專案說明
+│   ├── spatialGrid.js      # 空間網格分割（碰撞優化）
+│   ├── objectPool.js       # 物件池化（GC 優化）
+│   ├── audio.js            # 音效管理（Web Audio API）
+│   ├── decoration.js       # 背景裝飾（地面裝飾物 + 環境粒子）
+│   ├── waveManager.js      # 波次管理（波次機制 + Boss戰）
+│   ├── storage.js          # 存檔管理 + 排行榜 TOP 10
+│   ├── talent.js           # 天賦系統（14種技能）
+│   ├── achievement.js      # 成就系統（19個成就）
+│   ├── ui.js               # UI 管理（含 Buff 通知 + 技能狀態）
+│   ├── visibilityMask.js   # 視野遮罩（戰爭迷霧）
+│   ├── tileManager.js      # Tileset 管理器（待圖集裁切完成後使用）
+│   ├── tilesetCleaner.js   # Tileset 清理工具
+│   ├── bossSpawnEffect.js  # Boss 出場特效
+│   ├── bossDeathEffect.js  # Boss 死亡特效
+│   ├── shieldBreakEffect.js# 精英護盾破碎特效
+│   ├── splitEffect.js      # 分裂敵人分裂特效
+│   └── utils.js            # 工具函數（含 distanceSquared）
+├── PRD.md                  # 產品需求文件
+├── TILESET_GUIDE.md        # Tileset 使用指南
+├── TILESET_FIX_GUIDE.md    # Tileset 問題解決方案
+├── REFACTOR_PLAN.md        # 重構計畫（已完成）
+├── CHANGELOG.md            # 更新日誌
+├── README.md               # 專案說明
+└── .agent_task_state.md    # 任務狀態快照
 ```
