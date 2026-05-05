@@ -12,10 +12,18 @@
 - TilesetCleaner 工具：手動框選素材區域，生成乾淨圖集（避開設計稿文字說明）
 - 編輯功能：點擊已框選區域可選中、删除、撤销，避免框選錯誤無法修正
 - 多種布局模式：最優布局、強制正方形、水平排列、垂直排列、自定義尺寸
-- TILESET_GUIDE.md：完整的 Tileset 使用指南與範例代碼
-- TILESET_FIX_GUIDE.md：設計稿文字說明問題的解決方案對比
 - tilesetCleaner.html：可視化框選工具，即時预览、統計資訊、自動下載
 - 視野遮罩系統：玩家周圍清晰可見，視野外深色模糊，營造戰爭迷霧效果
+
+### 說明文件
+- **文件架構重構**：將根目錄的所有文件移至 `docs/` 目錄，並依據職責拆分為多個專門文件
+  - `docs/PRD.md`：產品需求文件
+  - `docs/AGENT_GUIDELINES.md`：AI Agent 開發規範與 Checklist
+  - `docs/TECHNICAL_SPECS.md`：架構、調試機制與技術規格
+  - `docs/TOOL_SPECS.md`：開發工具（TilesetCleaner）操作手冊
+  - `docs/PROJECT_STATUS.md`：詳細功能清單與重構紀錄
+  - `docs/ENGINE_ANALYSIS.md`：遊戲引擎技術選型分析
+- **README.md 更新**：新增「文件中心」導覽，連結至各個專門文件
 
 ### 優化
 - **日誌等級切換**：Ctrl+Shift+L 循環切換 ERROR → INFO → DEBUG，便於開發調試
