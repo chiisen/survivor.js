@@ -680,11 +680,12 @@ this.autoFire();
             this.audio.playChainKill();
             this.chainKillDisplay.trigger(chainKills);
             
+            const finalExpBonus = this.getChainKillExpBonus(chainKills);
             if (!this.player.hasFireRateBuff) {
                 this.player.activateFireRateBuff();
-                this.ui.showBuffNotification(`連殺！攻擊速度 +30% | 經驗 +${Math.floor(chainKillExpBonus * 100)}%`, 5);
+                this.ui.showBuffNotification(`連殺！攻擊速度 +30% | 經驗 +${Math.floor(finalExpBonus * 100)}%`, 5);
             } else {
-                this.ui.showBuffNotification(`連殺！經驗 +${Math.floor(chainKillExpBonus * 100)}%`, 5);
+                this.ui.showBuffNotification(`連殺！經驗 +${Math.floor(finalExpBonus * 100)}%`, 5);
             }
         }
     }
