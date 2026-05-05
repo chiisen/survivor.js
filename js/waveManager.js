@@ -8,7 +8,7 @@ export class WaveManager {
         this.isBossWave = false;
         this.bossSpawned = false;
         this.enemiesSpawned = 0;
-        this.baseEnemiesPerWave = 10;
+        this.baseEnemiesPerWave = 20;
         this.waveAnnouncementTime = 0;
         this.showAnnouncement = false;
         this.announcementText = '';
@@ -85,16 +85,18 @@ export class WaveManager {
     }
 
     getTargetEnemyCount() {
+        // 使用二次方增長，讓後期敵人數量明顯增加，營造「越來越多」的感覺
+        const growth = 1 + (this.currentWave * 0.5) + (Math.pow(this.currentWave, 2) * 0.05);
         if (this.isBossWave) {
-            return Math.floor(this.baseEnemiesPerWave * (1 + this.currentWave * 0.3) * 0.5);
+            return Math.floor(this.baseEnemiesPerWave * growth * 0.6);
         }
-        return Math.floor(this.baseEnemiesPerWave * (1 + this.currentWave * 0.3));
+        return Math.floor(this.baseEnemiesPerWave * growth);
     }
 
     getSpawnInterval() {
-        const baseInterval = 1.5;
-        const reduction = this.currentWave * 0.05;
-        return Math.max(0.3, baseInterval - reduction);
+        const baseInterval = 1.2;
+        const reduction = this.currentWave * 0.08;
+        return Math.max(0.1, baseInterval - reduction);
     }
 
     getEnemyHpMultiplier() {

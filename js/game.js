@@ -726,8 +726,9 @@ this.autoFire();
     spawnEnemy(isBoss = false) {
         const difficultySettings = this.difficultySettings[this.difficulty];
         const waveHpMultiplier = this.waveManager.getEnemyHpMultiplier();
-        const hpMultiplier = waveHpMultiplier * difficultySettings.enemyHpMultiplier;
-        const bossHpMultiplier = waveHpMultiplier * difficultySettings.bossHpMultiplier;
+        const playerLevelMultiplier = 1 + (this.level - 1) * 0.8; // 每級增加 80% HP 以對抗玩家攻擊力提升
+        const hpMultiplier = waveHpMultiplier * difficultySettings.enemyHpMultiplier * playerLevelMultiplier;
+        const bossHpMultiplier = waveHpMultiplier * difficultySettings.bossHpMultiplier * playerLevelMultiplier;
         
         const enemy = Enemy.spawn(
             this.canvas.width,
@@ -1050,9 +1051,17 @@ this.autoFire();
             this.level++;
             this.expToLevel = Math.floor(this.expToLevel * this.expGrowthRate);
             
+            // 升級獎勵：攻擊力 +1, HP +10%, HP 全滿
+            this.player.damage += 1;
+            const hpBonus = Math.floor(this.player.maxHp * 0.1);
+            this.player.maxHp += hpBonus;
+            this.player.hp = this.player.maxHp;
+            
             this.audio.playLevelUp();
             this.ui.updateLevel(this.level);
             this.ui.updateExp(this.exp, this.expToLevel);
+            this.ui.updateHp(this.player.hp, this.player.maxHp);
+            this.updateSkillStats(); // 即時更新左側 UI 顯示獎勵
             
             this.showUpgradeModal();
         }
@@ -1124,6 +1133,12 @@ this.autoFire();
                 if (stats[skillType] > 0) {
                     item.classList.add('active');
                 }
+            } else if (skillType === 'damage') {
+                valueSpan.textContent = `${this.player.damage}`;
+                item.classList.add('active');
+            } else if (skillType === 'maxHp') {
+                valueSpan.textContent = `${this.player.maxHp}`;
+                item.classList.add('active');
             } else {
                 const level = stats[skillType] || 0;
                 valueSpan.textContent = `Lv.${level}`;

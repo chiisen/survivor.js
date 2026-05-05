@@ -196,8 +196,13 @@ export class Enemy {
     get currentAlpha() { return this.core.currentAlpha; }
     
     get hasShield() { return this.core.hasShield; }
+    set hasShield(value) { this.core.hasShield = value; }
+    
     get shieldHp() { return this.core.shieldHp; }
+    set shieldHp(value) { this.core.shieldHp = value; }
+    
     get shieldMaxHp() { return this.core.shieldMaxHp; }
+    set shieldMaxHp(value) { this.core.shieldMaxHp = value; }
     
     get phase() { return this.phaseManager ? this.phaseManager.phase : 1; }
     get rageMode() { return this.phaseManager ? this.phaseManager.rageMode : false; }
