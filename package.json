@@ -1,9 +1,26 @@
 {
-  "name": "survivor.js",
+  "name": "survivor",
   "version": "0.1.0",
   "description": "網頁版生存遊戲",
   "scripts": {
     "dev": "npx serve .",
-    "start": "npx serve ."
+    "start": "npx serve .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com-chiisen:chiisen/survivor.js.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "vitest": "^4.1.6"
   }
 }
