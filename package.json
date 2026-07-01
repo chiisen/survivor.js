@@ -21,6 +21,7 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
+    "@rolldown/binding-win32-x64-msvc": "^1.1.4",
     "vitest": "^4.1.6"
   }
 }
