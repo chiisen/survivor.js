@@ -35,3 +35,7 @@ export function clamp(value, min, max) {
 export function lerp(a, b, t) {
     return a + (b - a) * t;
 }
+
+export function getExpLevelMultiplier(level, growthRate = 1.5) {
+    return Math.pow(growthRate, level - 1);
+}

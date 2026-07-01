@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
     distance, distanceSquared, normalize, randomRange, randomInt,
-    formatTime, clamp, lerp
+    formatTime, clamp, lerp, getExpLevelMultiplier
 } from '../js/utils.js';
 
 describe('utils.js', () => {
@@ -101,6 +101,30 @@ describe('utils.js', () => {
             expect(formatTime(65)).toBe('01:05');
             expect(formatTime(0)).toBe('00:00');
             expect(formatTime(3600)).toBe('60:00');
+        });
+    });
+
+    describe('getExpLevelMultiplier', () => {
+        it('L1 = 1 (無加成)', () => {
+            expect(getExpLevelMultiplier(1)).toBe(1);
+        });
+
+        it('L5 = 1.5^4 = 5.0625', () => {
+            expect(getExpLevelMultiplier(5)).toBeCloseTo(5.0625, 5);
+        });
+
+        it('L10 = 1.5^9 ≈ 38.4434', () => {
+            expect(getExpLevelMultiplier(10)).toBeCloseTo(38.4434, 4);
+        });
+
+        it('自訂 growthRate 正確套用', () => {
+            expect(getExpLevelMultiplier(3, 2)).toBe(4); // 2^(3-1) = 4
+        });
+
+        it('L0 不會崩潰 (level-1 = -1)', () => {
+            // 雖然遊戲中不會出現 L0，但純函式應有定義行為
+            // 1.5^(-1) = 2/3 ≈ 0.6667
+            expect(getExpLevelMultiplier(0)).toBeCloseTo(2 / 3, 4);
         });
     });
 });
