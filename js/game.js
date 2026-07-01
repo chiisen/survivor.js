@@ -13,7 +13,7 @@ import { WaveManager } from './waveManager.js';
 import { StorageManager } from './storage.js';
 import { getRandomUpgrades } from './talent.js';
 import { UI } from './ui.js';
-import { distance, distanceSquared } from './utils.js';
+import { distance, distanceSquared, getExpLevelMultiplier } from './utils.js';
 import { BossSpawnEffect } from './bossSpawnEffect.js';
 import { ShieldBreakEffect } from './shieldBreakEffect.js';
 import { BossDeathEffect } from './bossDeathEffect.js';
@@ -639,7 +639,7 @@ this.autoFire();
         
         let chainKills = 1;
         const chainKillExpBonus = this.getChainKillExpBonus(chainKills);
-        const expValue = Math.floor(enemy.expValue * (1 + chainKillExpBonus));
+        const expValue = this.calculateExpValue(enemy.expValue, chainKillExpBonus);
         this.spawnExpOrbs(enemy.x, enemy.y, expValue);
         
         if (enemy.canSplit) {
@@ -659,7 +659,7 @@ this.autoFire();
             if (chainDistSq <= chainRadius * chainRadius) {
                 this.explosionPool.get(nearbyEnemy.x, nearbyEnemy.y);
                 const nearbyExpBonus = this.getChainKillExpBonus(chainKills + 1);
-                const nearbyExpValue = Math.floor(nearbyEnemy.expValue * (1 + nearbyExpBonus));
+                const nearbyExpValue = this.calculateExpValue(nearbyEnemy.expValue, nearbyExpBonus);
                 this.expOrbs.push(new ExperienceOrb(nearbyEnemy.x, nearbyEnemy.y, nearbyExpValue));
                 this.damageNumbers.push(new DamageNumber(nearbyEnemy.x, nearbyEnemy.y - nearbyEnemy.radius, projectile.damage));
                 const idx = this.enemies.indexOf(nearbyEnemy);
@@ -932,6 +932,11 @@ this.autoFire();
         }
     }
 
+    calculateExpValue(baseExpValue, bonus = 0) {
+        const levelMult = getExpLevelMultiplier(this.level, this.expGrowthRate);
+        return Math.floor(baseExpValue * levelMult * (1 + bonus));
+    }
+
     getChainKillExpBonus(chainKills) {
         if (chainKills >= 10) return 1.5;
         if (chainKills >= 6) return 1.0;
@@ -965,7 +970,7 @@ this.autoFire();
             this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, skillDamage, '#f1c40f'));
             
             if (enemy.hp <= 0) {
-                const expValue = Math.floor(enemy.expValue * (1 + this.player.expBonus));
+                const expValue = this.calculateExpValue(enemy.expValue, this.player.expBonus);
                 this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, expValue));
             }
         }
