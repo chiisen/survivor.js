@@ -1,0 +1,87 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## 專案概覽
+
+純 JavaScript + HTML5 Canvas 的類倖存者 (Survivor-like) 網頁遊戲。無打包工具、無框架 — ES Modules 直接透過 `<script type="module">` 在瀏覽器載入 (`index.html` → `js/main.js`)。所有程式碼皆為繁體中文註解與命名風格。
+
+## 常用指令
+
+```bash
+npm run dev          # 啟動靜態伺服器 (npx serve .)，瀏覽器開 http://localhost:3000
+npm test             # 執行 Vitest 單元測試 (run 模式，跑完即退出)
+npm run test:watch   # Vitest watch 模式
+
+# 執行單一測試檔
+npx vitest run tests/utils.test.js
+
+# 執行單一測試案例 (by 名稱片段)
+npx vitest run -t "計算兩點間歐氏距離"
+```
+
+Vitest 設定見 `vitest.config.js` (`globals: true`, `environment: 'node'`)。測試檔位於 `tests/`，目前涵蓋 `utils.js`、`talent.js`、`objectPool.js`。
+
+注意：本專案**沒有** Lint/Format 工具設定 (無 ESLint/Biome/Prettier)。全域 CLAUDE.md 中提及的 Pint/Biome 不適用於此專案。
+
+## 架構：Update Loop 四階段 (核心慣例)
+
+`js/game.js` 的 `update(dt)` 嚴格遵循四個 Phase，**順序不可顛倒、不可跳過**。詳見 `docs/AGENT_GUIDELINES.md`。
+
+| Phase | 職責 | 關鍵呼叫 |
+|-------|------|---------|
+| 1. 清理與準備 | 清空 `enemyGrid` 並重新插入所有敵人 | `enemyGrid.clear()` → `enemyGrid.insert(enemy)` |
+| 2. 狀態更新 | 依序更新 player / enemy / projectile 狀態 | `player.update()` 必須在 `autoFire()` 之前 |
+| 3. 系統邏輯 | 自動射擊、碰撞檢測、清理死亡實體 | `autoFire()` → `checkCollisions(dt)` |
+| 4. UI 更新 | 特效、傷害數字、連殺顯示、UI 同步 | `explosion.update()`、`chainKillDisplay.update()` |
+
+### 必避免的歷史 Bug 模式
+
+`docs/AGENT_GUIDELINES.md` §5 記錄了三個曾發生過的回歸 Bug，修改 Update Loop 時務必警覺：
+
+1. **變數使用前未定義**：`chainKills`曾被在第 448 行引用、第 456 行才定義，導致 `ReferenceError` 中斷整個遊戲循環。
+2. **`enemyGrid` 未每幀重建**：`getNearby()` 會回傳空陣列，子彈永遠打不到敵人。Phase 1 必須 `clear() + insert()`。
+3. **`player.update()` 未被呼叫**：`fireCooldown` 不會減少，`canFire()` 永遠為 false，主角只會開火一次就停擺。
+
+## 架構：Player / Enemy 組合模式
+
+`Player` 與 `Enemy` 採組合模式拆分，以保持單一職責並讓單元測試更容易：
+
+- **Player** = `PlayerCore` (位置/移動) + `PlayerCombat` (射擊/技能) + `PlayerRenderer` (繪製)
+- **Enemy** = `EnemyCore` (位置/移動) + `EnemyBehaviors` (射擊/分裂/隱形) + `EnemyRenderer` (9 種敵人外觀) + 可選 `BossPhaseManager` (Boss 多階段)
+
+組合類別 (`Player.js`、`Enemy.js`) 透過 Getter/Setter 暴露子模組屬性，**保持向後相容的對外介面** — 外部呼叫者不需要知道拆分細節。修改時注意：在組合類別加上新的 getter 時，記得 delegating 到正確的子模組。
+
+## 效能優化層
+
+- **`spatialGrid.js`**：碰撞檢測的空間分割 (cell size 100)，必須每幀 Phase 1 重建。
+- **`objectPool.js`**：GC 壓力優化，物件重啟用透過 `_active` 旗標而非 `indexOf`。`game.js` 同時管理多個 pool (`projectilePool`、`explosionPool`、`bossSpawnPool`、`shieldBreakPool`、`bossDeathPool`、`splitEffectPool`)。
+
+## Debug 工具 (開發驗證用)
+
+修改遊戲邏輯後建議在瀏覽器中驗證，可利用以下熱鍵：
+
+| 熱鍵 | 功能 |
+|------|------|
+| `Ctrl+D` | DebugOverlay：顯示 Grid / fireCooldown / FPS / Memory / 實體計數 (P/E/Exp/EP/DN) |
+| `Ctrl+Shift+V` | GameValidator：Phase 1-3 硬斷言 |
+| `Ctrl+Shift+L` | 循環切換 GameLogger 等級 (ERROR → INFO → DEBUG) |
+| `Ctrl+Shift+P` | ObjectPool 統計 (hit rate / peak / efficiency) |
+
+DebugOverlay 會自動顯示 ⚠ 警告 (Grid 空、冷卻未更新、FPS 過低等)，是快速驗證 Update Loop 是否正確的第一線工具。
+
+## 文件資源
+
+修改前後若需要完整上下文，優先參考 `docs/`：
+
+- `docs/PRD.md` — 遊戲設計與機制規格
+- `docs/TECHNICAL_SPECS.md` — 完整模組拆分、檔案結構、Debug 機制細節
+- `docs/AGENT_GUIDELINES.md` — Update Loop Checklist 與歷史 Bug 分析 (修改遊戲迴圈前必讀)
+- `docs/PROJECT_STATUS.md` — 已完成功能清單與重構紀錄
+- `docs/TOOL_SPECS.md` — TileManager / TilesetCleaner 工具手冊
+
+## 慣例
+
+- **語言**：所有使用者可見的 UI 文字、Commit 訊息、CHANGELOG、回覆內容統一使用**繁體中文** (依全域 CLAUDE.md)。
+- **Git Commit**：`<type>(<scope>): <subject>` 格式，主旨與內容皆繁體中文。變更需同步更新 `CHANGELOG.md` (Keep a Changelog 格式)。提交流程須先詢問使用者核准。
+- **任務狀態**：`.agent_task_state.md` 為跨對話記憶快照 (≤50 行)，啟動時靜默讀取；被詢問時以 3-bullet 閃電報回報 (🚩目標 / ✅進展 / 🚀下一步)。
