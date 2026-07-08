@@ -17,6 +17,7 @@ export class PlayerCore {
         this.baseAttackRange = 300;
         this.attackRange = this.baseAttackRange;
         this.facingAngle = 0;
+        this.magnetTimer = 0;
         
         this.upgradeStats = {
             maxHp: 0,
@@ -52,6 +53,9 @@ export class PlayerCore {
         }
         if (this.flashTime > 0) {
             this.flashTime -= dt;
+        }
+        if (this.magnetTimer > 0) {
+            this.magnetTimer = Math.max(0, this.magnetTimer - dt);
         }
     }
     

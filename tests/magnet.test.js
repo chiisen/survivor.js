@@ -17,3 +17,20 @@ describe('MagnetItem', () => {
         expect(item.isCollected(100, 130, 10)).toBe(false);
     });
 });
+
+import { PlayerCore } from '../js/playerCore.js';
+
+describe('Player magnetTimer', () => {
+    it('應該能正確初始化且隨時間遞減，不會低於 0', () => {
+        const core = new PlayerCore(0, 0);
+        expect(core.magnetTimer).toBe(0);
+
+        core.magnetTimer = 5;
+        core.update(1, {}); // 更新 1 秒
+        expect(core.magnetTimer).toBe(4);
+
+        core.update(5, {}); // 再更新 5 秒，此時應降至 0，且不會為負值
+        expect(core.magnetTimer).toBe(0);
+    });
+});
+

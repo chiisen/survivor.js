@@ -43,6 +43,9 @@ export class Player {
     get pickupRange() { return this.core.pickupRange; }
     set pickupRange(value) { this.core.pickupRange = value; }
     
+    get magnetTimer() { return this.core.magnetTimer; }
+    set magnetTimer(value) { this.core.magnetTimer = value; }
+    
     get attackRange() { return this.core.attackRange; }
     set attackRange(value) { this.core.attackRange = value; }
     
