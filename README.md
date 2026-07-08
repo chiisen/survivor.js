@@ -1,4 +1,4 @@
-﻿# survivor.js
+# survivor.js
 
 網頁版生存遊戲 - 類倖存者 (Survivor-like) 遊戲 Demo
 
@@ -49,6 +49,7 @@ npm run dev
 - **[產品需求文件 (PRD)](docs/PRD.md)**：遊戲核心規格、機制與系統設計。
 - **[技術架構與規格](docs/TECHNICAL_SPECS.md)**：組合模式架構、調試機制與檔案結構詳解。
 - **[AI Agent 開發規範](docs/AGENT_GUIDELINES.md)**：專為 AI 協作設計的開發流程、Update Loop 相位與 Checklist。
+- **[AI 成本優化與高效開發課程](docs/tutorials/ai-cost-optimization-course.md)**：仿照多奇教育訓練設計的「AI 寫程式省錢術」，解密 Prompt Caching 與對話壓縮等省錢實戰。
 - **[遊戲開發工具規格](docs/TOOL_SPECS.md)**：TileManager 裁切原理、TilesetCleaner 操作手冊。
 - **[專案開發進度](docs/PROJECT_STATUS.md)**：功能清單、Bug 修復紀錄與重構歷程。
 - **[引擎選擇分析](docs/ENGINE_ANALYSIS.md)**：為何選擇純 Canvas API 的決策過程。
