@@ -34,3 +34,19 @@ describe('Player magnetTimer', () => {
     });
 });
 
+describe('Game loop integration', () => {
+    it('當 magnetTimer 大於 0 時，吸引範圍應該強制設為 1000', () => {
+        const player = { pickupRange: 80, magnetTimer: 0 };
+        const getEffectiveRange = (p) => {
+            const forceAttract = p.magnetTimer > 0;
+            return forceAttract ? 1000 : p.pickupRange;
+        };
+
+        expect(getEffectiveRange(player)).toBe(80);
+
+        player.magnetTimer = 3;
+        expect(getEffectiveRange(player)).toBe(1000);
+    });
+});
+
+

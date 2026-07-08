@@ -23,6 +23,7 @@ import { GameLogger } from './gameLogger.js';
 import { DebugOverlay } from './debugOverlay.js';
 import { GameValidator } from './gameValidator.js';
 import { VisibilityMask } from './visibilityMask.js';
+import { MagnetItem } from './magnetItem.js';
 
 export class Game {
     constructor(canvas) {
@@ -46,6 +47,7 @@ export class Game {
         );
         this.enemyProjectiles = [];
         this.expOrbs = [];
+        this.magnetItems = [];
         this.damageNumbers = [];
         this.chainKillDisplay = new ChainKillDisplay();
         this.ui = new UI();
@@ -279,6 +281,7 @@ start() {
         this.splitEffectPool.releaseAll();
         this.enemyProjectiles = [];
         this.expOrbs = [];
+        this.magnetItems = [];
         this.damageNumbers = [];
         this.chainKillDisplay.clear();
         this.waveManager.reset();
@@ -456,10 +459,14 @@ this.autoFire();
         
         this.chainKillDisplay.update(dt);
         
+        for (const item of this.magnetItems) {
+            item.update(dt);
+        }
+        
         for (let i = this.expOrbs.length - 1; i >= 0; i--) {
             const orb = this.expOrbs[i];
             
-            const forceAttract = this.waveManager.isBreak && this.expOrbs.length > 0;
+            const forceAttract = (this.waveManager.isBreak && this.expOrbs.length > 0) || this.player.magnetTimer > 0;
             const effectivePickupRange = forceAttract ? 1000 : this.player.pickupRange;
             
             orb.update(dt, this.player.x, this.player.y, effectivePickupRange);
@@ -612,6 +619,17 @@ this.autoFire();
                 }
             }
         }
+
+        // 磁鐵拾取檢測
+        for (let i = this.magnetItems.length - 1; i >= 0; i--) {
+            const item = this.magnetItems[i];
+            if (item.isCollected(this.player.x, this.player.y, this.player.radius)) {
+                this.audio.playPickup(); // 播放拾取音效
+                this.player.magnetTimer += 5; // 增加 5 秒持續時間 (時間累加)
+                this.magnetItems.splice(i, 1); // 自陣列移除
+                this.ui.showBuffNotification(`磁力風暴！持續時間增加 5 秒`, 3); // 提示
+            }
+        }
     }
     
     handleEnemyDeath(enemy, projectile) {
@@ -641,6 +659,11 @@ this.autoFire();
         const chainKillExpBonus = this.getChainKillExpBonus(chainKills);
         const expValue = this.calculateExpValue(enemy.expValue, chainKillExpBonus);
         this.spawnExpOrbs(enemy.x, enemy.y, expValue);
+        
+        // 3% 機率掉落磁鐵道具
+        if (Math.random() < 0.03) {
+            this.magnetItems.push(new MagnetItem(enemy.x, enemy.y));
+        }
         
         if (enemy.canSplit) {
             this.createSplitEnemies(enemy);
@@ -1224,6 +1247,10 @@ this.autoFire();
         
         for (const orb of this.expOrbs) {
             orb.draw(this.ctx);
+        }
+        
+        for (const item of this.magnetItems) {
+            item.draw(this.ctx);
         }
         
         for (const effect of this.bossSpawnPool.getActiveObjects()) {
