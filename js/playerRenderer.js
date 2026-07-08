@@ -8,6 +8,25 @@ export class PlayerRenderer {
         
         this.drawAttackRange(ctx, core);
         
+        if (core.magnetTimer > 0) {
+            ctx.save();
+            const t = (Date.now() / 1000) % 1;
+            const radius = 20 + t * 60;
+            const alpha = (1 - t) * 0.4;
+            
+            ctx.beginPath();
+            ctx.arc(core.x, core.y, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(52, 152, 219, ${alpha})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(core.x, core.y, 25, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.08)';
+            ctx.fill();
+            ctx.restore();
+        }
+        
         ctx.translate(core.x, core.y);
         ctx.rotate(core.facingAngle);
         ctx.translate(-core.x, -core.y);
