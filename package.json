@@ -6,7 +6,9 @@
     "dev": "npx serve .",
     "start": "npx serve .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p jsconfig.json",
+    "typecheck:watch": "tsc --noEmit -p jsconfig.json --watch"
   },
   "main": "index.js",
   "directories": {
