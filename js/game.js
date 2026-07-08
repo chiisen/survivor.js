@@ -188,6 +188,19 @@ export class Game {
                 this.useUltimateSkill();
             }
             
+            if (e.key === 'm' || e.key === 'M') {
+                if (e.ctrlKey && e.shiftKey) {
+                    if (this.player) {
+                        this.player.magnetTimer += 5;
+                        this.ui.showBuffNotification("開發者模式：啟動 5 秒磁力風暴", 3);
+                    }
+                    this.keys['m'] = false;
+                    this.keys['M'] = false;
+                    e.preventDefault();
+                    return;
+                }
+            }
+            
             if (e.key === 'p' || e.key === 'P') {
                 if (e.ctrlKey && e.shiftKey) {
                     this.logPoolStats();
