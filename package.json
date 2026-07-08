@@ -22,6 +22,7 @@
   "type": "module",
   "devDependencies": {
     "@rolldown/binding-win32-x64-msvc": "^1.1.4",
+    "typescript": "^5.9.3",
     "vitest": "^4.1.6"
   }
 }
