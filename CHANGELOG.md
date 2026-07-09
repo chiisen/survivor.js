@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### 新增
+- **SpatialGrid 測試套件與 `remove(entity)` API**：為 `js/spatialGrid.js` 新增 24 個單元測試，涵蓋 `constructor` / `getKey` / `insert` / `getNearby` / `clear` / `getCellCount` / `getTotalEntities` 全部方法，包含負座標、cellSize 邊界、空 grid、`radius=0` 等邊界案例；同時透過 TDD 流程擴充 `remove(entity)` 方法，支援移除單一實體並安全處理「cell 不存在」與「實體不在 cell 內」兩種情境。
 - **磁鐵道具系統 (Magnet Drop Item)**：擊殺普通怪物時有 3% 低機率掉落實體 U 型磁鐵 🧲，拾取後可觸發 5 秒的「磁力風暴」全螢幕經驗球吸附。若重複拾取，剩餘時間將以「累加 (Stack)」計算。伴隨淡藍色圓環擴散漸隱特效，並提供 `Ctrl+Shift+M` 開發者調試熱鍵。
 - **AI 開發成本優化與 Agent 工作流實戰教學課程**：於 `docs/tutorials/ai-cost-optimization-course.md` 新增專屬教學文件並整合至 `README.md`，內容仿照多奇教育訓練 Will 保哥的「AI 寫程式省錢術」結構，詳細說明 Token 計費機制、Prompt Caching、子任務與對話壓縮、MCP 輸出限流與 LiteLLM 團隊成本治理。
 - **經驗值等級加權**：擊殺敵人獲得的經驗值現在會隨玩家等級以 `1.5^(level-1)` 倍率放大，與 `expToLevel` 升級曲線同步，補償敵人 HP 隨等級線性增加 (每級 +80%) 造成的擊殺耗時上升；每級所需擊殺數維持 ~10 不變。Boss 戰與 minion 也一併套用。
