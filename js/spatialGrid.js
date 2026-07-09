@@ -22,6 +22,16 @@ export class SpatialGrid {
         this.grid.get(key).push(entity);
     }
 
+    remove(entity) {
+        const key = this.getKey(entity.x, entity.y);
+        const cell = this.grid.get(key);
+        if (!cell) return;
+        const index = cell.indexOf(entity);
+        if (index !== -1) {
+            cell.splice(index, 1);
+        }
+    }
+
     getNearby(x, y, radius) {
         const nearby = [];
         const cellRadius = Math.ceil(radius / this.cellSize);
