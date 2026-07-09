@@ -118,6 +118,7 @@
 - Projectile/Explosion 類別支援 init/reset 方法，預先建立粒子結構
 
 ### 修復
+- **修正 AI Agent 規則設定檔亂碼**：修復 [.agents/AGENTS.md](file:///d:/github/chiisen/survivor.js/.agents/AGENTS.md) 因編碼轉換錯誤導致的中文亂碼問題，重構為正確的繁體中文說明。
 - 修復 `Enemy` 類別中 `shieldHp` 與 `hasShield` 屬性只有 Getter 而缺少 Setter 的問題，解決菁英敵人受擊時的程式崩潰。
 - 修復連殺通知中經驗值加成顯示為 0% 的錯誤：改為使用最終連殺數計算正確的加成。
 - 修復 `chainKills` 變數未定義錯誤：移動變數定義至使用前，解決主角只攻擊一次就停止的問題
