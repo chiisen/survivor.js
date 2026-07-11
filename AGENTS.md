@@ -11,6 +11,8 @@
 
 > ⚠️ **優先級說明 (實測 2026-07-11)**:本區塊為 Pi **參考用**。Pi 對 AGENTS.md 的遵守是軟性的,實測發現 Pi 不一定會主動 echo 進度。**Claude Code 端會用 `--append-system-prompt` 把這些規範直接寫進 system prompt 強制執行**。Pi 仍應盡量遵守本規範,但若 system prompt 與本檔衝突,以 system prompt 為準。
 
+> ⚠️ **Pi stdout 緩衝行為 (實測)**:Pi 把 stdout 緩衝到整個任務結束才一次輸出。Claude Code 在 Pi 跑完前**讀不到 stdout 任何內容**,且若中途中止 Pi,stdout 會全部遺失。這表示「即時進度回報」**只能靠寫檔機制 (`echo >> pi-progress.log`)**,不能靠 stdout。Pi 在複雜任務下可能仍不遵守,監督者最終應以 `git diff` 為真相來源。
+
 監督者以「**省 token**」為最高原則,你必須配合:
 
 1. **每完成一個步驟 (讀檔/寫檔/跑測試/驗證),立即用 bash 執行**:

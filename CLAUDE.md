@@ -120,14 +120,29 @@ Pi 透過 `--append-system-prompt` 被強制要求「每個工具呼叫後 echo 
 Claude Code 定期 `tail -5 pi-progress.log` 看進度,**每次 ~30 token**。
 Pi 端每步驟成本 ~20 token (一行 echo),比完整 stdout 報告 (~幾千 token) 省 97%+。
 
-**⚠️ 實測結論 (2026-07-11 驗證)**:
+**⚠️ 實測結論 (2026-07-11 五輪驗證)**:
 
-| 派發方式 | Pi 是否遵守 echo 進度 |
-|---------|----------------------|
-| 只寫 AGENTS.md (軟性規範) | ❌ **失敗** — Pi 連 step 1 都沒 echo,跑 2 分鐘無產出 |
-| `--append-system-prompt` 強制 | ✅ **成功** — Pi 完美執行 4 步,進度檔 90 bytes 齊全 |
+| 測試 | 任務 | echo 進度 | 主任務 |
+|------|------|----------|--------|
+| v1 (只寫 AGENTS.md) | 4 步純讀 | ❌ 失敗 | N/A |
+| v2 (`--append-system-prompt`) | 4 步純讀 | ✅ 4 步齊全 | ✅ |
+| v3 (system-prompt) | objectPool.js 169 行 JSDoc | ❌ 未建立 | ✅ (中止時剛好完成) |
+| v4 (system-prompt + `@typedef`) | talent.js 24 行 JSDoc | ❌ 未建立 | ❌ timeout 130s 完全沒產出 |
+| v5 (system-prompt 簡化) | talent.js 24 行 JSDoc | ❌ 未建立 | ❌ timeout 200s 完全沒產出 |
 
-→ AGENTS.md 對 Pi 是「參考用」(專案規範/Update Loop 不變量等背景知識),**「強制行為」必須靠 `--append-system-prompt`**。
+**四個關鍵教訓**:
+
+1. **AGENTS.md 對 Pi 是「參考用」**,強制行為必須靠 `--append-system-prompt`
+2. **`--append-system-prompt` 在複雜任務下也不可靠** — pi-progress.log 機制僅供參考,**最終仍以 `git diff` 為真相**
+3. **Pi 處理時間預估要保守**:169 行 JSDoc 約需 2-3 分鐘,1.5 分鐘中止剛好錯過完成點。**預估公式 = 任務行數 × 1 秒 + 60 秒緩衝,timeout 設預估的 1.5 倍**
+4. **Pi 處理 JSDoc 補註任務不穩定** (5 次測試僅 1 次完全成功 = 20%) — 簡化 prompt 與延長 timeout 都無效,根因在 minimax-m3 model 端 (API 不穩 / 限流 / regional latency),**正式 JSDoc 工程建議由 Claude Code 自己做**
+
+**pi.log / stdout 不可信**:
+
+- Pi 把 stdout 緩衝到整個任務結束才一次輸出
+- 中止 Pi = stdout 全部遺失 (`pi.log` 0 bytes **不代表** Pi 沒產出)
+- **唯一可靠進度來源是檔案系統**:`git status --short` + `git diff <target>`
+- 結論:**派發後耐心等 timeout,不要中途看 log 判斷 Pi 是否卡住**
 
 **失敗才 debug**:
 
