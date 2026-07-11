@@ -1,4 +1,13 @@
+// @ts-check
+
 export class DamageNumber {
+    /**
+     * 建立傷害數字實例
+     * @param {number} x - 顯示位置 X 座標
+     * @param {number} y - 顯示位置 Y 座標
+     * @param {number} value - 傷害數值
+     * @param {string|null} color - 自訂顏色，null 則依傷害值自動判斷
+     */
     constructor(x, y, value, color = null) {
         this.x = x;
         this.y = y;
@@ -14,6 +23,10 @@ export class DamageNumber {
         this.fontSize = 16 + Math.min(value * 2, 20);
     }
 
+    /**
+     * 更新傷害數字的透明度、縮放與位置（向上飄動）
+     * @param {number} dt - 與上一幀的時間差（秒）
+     */
     update(dt) {
         this.time -= dt;
         
@@ -29,6 +42,10 @@ export class DamageNumber {
         this.y = this.baseY - (1 - progress) * 40;
     }
 
+    /**
+     * 繪製傷害數字（含陰影與高傷害描邊）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     draw(ctx) {
         if (this.alpha <= 0) return;
         
@@ -53,6 +70,10 @@ export class DamageNumber {
         ctx.restore();
     }
 
+    /**
+     * 判斷傷害數字動畫是否已播放完畢
+     * @returns {boolean} 是否已結束
+     */
     isFinished() {
         return this.time <= 0;
     }

@@ -1,8 +1,18 @@
+// @ts-check
+/**
+ * 連殺顯示器，用於顯示連殺文字效果（如 DOUBLE KILL、TRIPLE KILL 等）
+ */
 export class ChainKillDisplay {
     constructor() {
+        /** @type {Array<Object>} 目前活躍的顯示效果陣列 */
         this.activeDisplays = [];
     }
 
+    /**
+     * 觸發連殺顯示效果
+     * @param {number} chainCount - 連殺次數
+     * @returns {void}
+     */
     trigger(chainCount) {
         let text = '';
         let color = '#fff';
@@ -48,6 +58,11 @@ export class ChainKillDisplay {
         }
     }
 
+    /**
+     * 更新所有活躍的顯示效果
+     * @param {number} dt - 時間差（秒）
+     * @returns {void}
+     */
     update(dt) {
         for (let i = this.activeDisplays.length - 1; i >= 0; i--) {
             const display = this.activeDisplays[i];
@@ -77,6 +92,13 @@ export class ChainKillDisplay {
         }
     }
 
+    /**
+     * 繪製所有活躍的顯示效果
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {number} centerX - 中心 X 座標
+     * @param {number} centerY - 中心 Y 座標
+     * @returns {void}
+     */
     draw(ctx, centerX, centerY) {
         for (const display of this.activeDisplays) {
             if (display.alpha <= 0) continue;
@@ -106,6 +128,10 @@ export class ChainKillDisplay {
         }
     }
 
+    /**
+     * 清除所有活躍的顯示效果
+     * @returns {void}
+     */
     clear() {
         this.activeDisplays = [];
     }

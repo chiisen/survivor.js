@@ -1,6 +1,13 @@
+// @ts-check
 import { distance, lerp } from './utils.js';
 
 export class ExperienceOrb {
+    /**
+     * 建立經驗球實例
+     * @param {number} x - X 座標
+     * @param {number} y - Y 座標
+     * @param {number} value - 經驗值
+     */
     constructor(x, y, value) {
         this.x = x;
         this.y = y;
@@ -11,6 +18,13 @@ export class ExperienceOrb {
         this.beingAttracted = false;
     }
 
+    /**
+     * 更新經驗球狀態（脈衝動畫 + 進入拾取範圍後被吸引向玩家）
+     * @param {number} dt - 與上一幀的時間差（秒）
+     * @param {number} playerX - 玩家 X 座標
+     * @param {number} playerY - 玩家 Y 座標
+     * @param {number} pickupRange - 拾取範圍半徑
+     */
     update(dt, playerX, playerY, pickupRange) {
         this.pulseTime += dt * 5;
         
@@ -30,6 +44,10 @@ export class ExperienceOrb {
         }
     }
 
+    /**
+     * 繪製經驗球（含脈衝光暈效果）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     draw(ctx) {
         ctx.save();
 
@@ -54,6 +72,13 @@ export class ExperienceOrb {
         ctx.restore();
     }
 
+    /**
+     * 判斷經驗球是否已被玩家接觸拾取
+     * @param {number} playerX - 玩家 X 座標
+     * @param {number} playerY - 玩家 Y 座標
+     * @param {number} playerRadius - 玩家碰撞半徑
+     * @returns {boolean} 是否已拾取
+     */
     isCollected(playerX, playerY, playerRadius) {
         return distance(this.x, this.y, playerX, playerY) < playerRadius + this.radius;
     }

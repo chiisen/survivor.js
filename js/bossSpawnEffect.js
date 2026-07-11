@@ -1,12 +1,24 @@
+// @ts-check
+/**
+ * Boss 出生特效，用於顯示 Boss 出現時的警告效果
+ */
 export class BossSpawnEffect {
     constructor() {
+        /** @type {number} 特效 X 座標 */
         this.x = 0;
+        /** @type {number} 特效 Y 座標 */
         this.y = 0;
+        /** @type {number} 特效持續時間（秒） */
         this.duration = 1.5;
+        /** @type {number} 剩餘時間（秒） */
         this.time = 0;
+        /** @type {boolean} 是否活躍 */
         this.active = false;
+        /** @type {Array<Object>} 警告粒子陣列 */
         this.warningParticles = [];
+        /** @type {number} 擴散環半徑 */
         this.ringRadius = 0;
+        /** @type {number} 螢幕震動強度 */
         this.shakeIntensity = 0;
         
         for (let i = 0; i < 20; i++) {
@@ -22,6 +34,12 @@ export class BossSpawnEffect {
         }
     }
 
+    /**
+     * 初始化 Boss 出生特效
+     * @param {number} x - 起始 X 座標
+     * @param {number} y - 起始 Y 座標
+     * @returns {void}
+     */
     init(x, y) {
         this.x = x;
         this.y = y;
@@ -43,6 +61,10 @@ export class BossSpawnEffect {
         }
     }
 
+    /**
+     * 重置 Boss 出生特效
+     * @returns {void}
+     */
     reset() {
         this.x = 0;
         this.y = 0;
@@ -61,6 +83,11 @@ export class BossSpawnEffect {
         }
     }
 
+    /**
+     * 更新 Boss 出生特效
+     * @param {number} dt - 時間差（秒）
+     * @returns {void}
+     */
     update(dt) {
         this.time -= dt;
         
@@ -77,6 +104,10 @@ export class BossSpawnEffect {
         }
     }
 
+    /**
+     * 取得螢幕震動偏移量
+     * @returns {{x: number, y: number}} 震動偏移量
+     */
     getShakeOffset() {
         if (this.shakeIntensity <= 0) return { x: 0, y: 0 };
         return {
@@ -85,6 +116,11 @@ export class BossSpawnEffect {
         };
     }
 
+    /**
+     * 繪製 Boss 出生特效
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @returns {void}
+     */
     draw(ctx) {
         ctx.save();
         
@@ -131,6 +167,10 @@ export class BossSpawnEffect {
         ctx.restore();
     }
 
+    /**
+     * 檢查 Boss 出生特效是否已完成
+     * @returns {boolean} 是否已完成
+     */
     isFinished() {
         return this.time <= 0;
     }

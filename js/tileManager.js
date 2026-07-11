@@ -1,4 +1,10 @@
+// @ts-check
+
 export class TileManager {
+    /**
+     * 圖塊管理器
+     * @returns {void}
+     */
     constructor() {
         this.tileset = null;
         this.tileSize = 32;
@@ -29,6 +35,10 @@ export class TileManager {
         };
     }
     
+    /**
+     * 載入圖塊素材
+     * @returns {Promise<void>} 載入完成
+     */
     async load() {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -42,6 +52,15 @@ export class TileManager {
         });
     }
     
+    /**
+     * 繪製單個圖塊
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {string} tileName - 圖塊名稱
+     * @param {number} x - 繪製位置 X 座標
+     * @param {number} y - 繪製位置 Y 座標
+     * @param {number} [scale=1] - 縮放比例
+     * @returns {void}
+     */
     drawTile(ctx, tileName, x, y, scale = 1) {
         if (!this.loaded) return;
         
@@ -55,6 +74,14 @@ export class TileManager {
         );
     }
     
+    /**
+     * 繪製圖塊素材網格（除錯用）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {number} width - 繪製寬度
+     * @param {number} height - 繪製高度
+     * @param {string|null} [highlightTile=null] - 高亮顯示的圖塊名稱
+     * @returns {void}
+     */
     drawTilesetGrid(ctx, width, height, highlightTile = null) {
         if (!this.loaded) return;
         
@@ -104,6 +131,10 @@ export class TileManager {
         }
     }
     
+    /**
+     * 列出所有圖塊定義（除錯用）
+     * @returns {object} 圖塊定義物件
+     */
     listAllTiles() {
         console.log('=== TileManager 所有素材 ===');
         for (const [name, def] of Object.entries(this.tileDefinitions)) {
@@ -112,6 +143,15 @@ export class TileManager {
         return this.tileDefinitions;
     }
     
+    /**
+     * 繪製地圖
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {Array} mapData - 地圖資料
+     * @param {number} [offsetX=0] - X 座標偏移
+     * @param {number} [offsetY=0] - Y 座標偏移
+     * @param {number} [scale=1] - 縮放比例
+     * @returns {void}
+     */
     drawMap(ctx, mapData, offsetX = 0, offsetY = 0, scale = 1) {
         if (!this.loaded) return;
         
@@ -122,6 +162,12 @@ export class TileManager {
         }
     }
     
+    /**
+     * 產生隨機地面
+     * @param {number} width - 寬度
+     * @param {number} height - 高度
+     * @returns {Array} 地圖資料
+     */
     generateRandomGround(width, height) {
         const mapData = [];
         const cols = Math.ceil(width / this.tileSize);
@@ -145,6 +191,12 @@ export class TileManager {
         return mapData;
     }
     
+    /**
+     * 新增裝飾物
+     * @param {Array} mapData - 地圖資料
+     * @param {number} [count=50] - 裝飾物數量
+     * @returns {Array} 更新後的地圖資料
+     */
     addDecorations(mapData, count = 50) {
         const decorations = ['flower', 'flower2', 'bush', 'mushroom', 'rock'];
         const rows = mapData.length;
@@ -166,12 +218,26 @@ export class TileManager {
         return mapData;
     }
     
+    /**
+     * 繪製帶有變化的圖塊
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {string} baseTile - 基礎圖塊名稱
+     * @param {number} x - 繪製位置 X 座標
+     * @param {number} y - 繪製位置 Y 座標
+     * @param {number} [scale=1] - 縮放比例
+     * @returns {void}
+     */
     drawTileWithVariation(ctx, baseTile, x, y, scale = 1) {
         const variations = this.getTileVariations(baseTile);
         const randomVar = variations[Math.floor(Math.random() * variations.length)];
         this.drawTile(ctx, randomVar, x, y, scale);
     }
     
+    /**
+     * 取得圖塊變化列表
+     * @param {string} baseTile - 基礎圖塊名稱
+     * @returns {string[]} 變化圖塊名稱陣列
+     */
     getTileVariations(baseTile) {
         const variations = {
             grass: ['grass', 'grass2', 'grass3'],

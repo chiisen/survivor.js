@@ -1,4 +1,8 @@
+// @ts-check
 export class UI {
+    /**
+     * 建構 UI 管理實例，取得所有必要的 DOM 元素參考
+     */
     constructor() {
         this.shieldFill = document.getElementById('shield-fill');
         this.shieldText = document.getElementById('shield-text');
@@ -18,6 +22,9 @@ export class UI {
         this.createBuffContainer();
     }
 
+    /**
+     * 建立增益效果通知的容器元素並附加到遊戲容器
+     */
     createBuffContainer() {
         this.buffContainer = document.createElement('div');
         this.buffContainer.id = 'buff-container';
@@ -34,6 +41,11 @@ export class UI {
         document.getElementById('game-container').appendChild(this.buffContainer);
     }
 
+    /**
+     * 顯示增益效果通知，帶有計時器動畫效果
+     * @param {string} text - 通知文字內容
+     * @param {number} duration - 持續時間（秒）
+     */
     showBuffNotification(text, duration) {
         const notification = document.createElement('div');
         notification.className = 'buff-notification';
@@ -91,12 +103,22 @@ export class UI {
         }, duration * 1000);
     }
 
+    /**
+     * 更新生命值進度條顯示
+     * @param {number} current - 當前生命值
+     * @param {number} max - 最大生命值
+     */
     updateHp(current, max) {
         const percentage = (current / max) * 100;
         this.hpFill.style.width = `${percentage}%`;
         this.hpText.textContent = `${Math.ceil(current)} / ${max}`;
     }
     
+    /**
+     * 更新護盾進度條顯示，若無護盾則隱藏
+     * @param {number} current - 當前護盾值
+     * @param {number} max - 最大護盾值
+     */
     updateShield(current, max) {
         if (max <= 0) {
             this.shieldFill.parentElement.style.display = 'none';
@@ -116,22 +138,40 @@ export class UI {
         }
     }
 
+    /**
+     * 更新經驗值進度條顯示
+     * @param {number} current - 當前經驗值
+     * @param {number} max - 升級所需經驗值
+     */
     updateExp(current, max) {
         const percentage = (current / max) * 100;
         this.expFill.style.width = `${percentage}%`;
         this.expText.textContent = `${Math.floor(current)} / ${max}`;
     }
 
+    /**
+     * 更新玩家等級顯示
+     * @param {number} level - 當前等級
+     */
     updateLevel(level) {
         this.levelDisplay.textContent = `Lv. ${level}`;
     }
 
+    /**
+     * 更新遊戲計時器顯示（MM:SS 格式）
+     * @param {number} seconds - 當前經過的秒數
+     */
     updateTimer(seconds) {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         this.timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
+    /**
+     * 顯示升級選擇模態框
+     * @param {Array<{icon: string, name: string, description: string}>} upgrades - 升級選項陣列
+     * @param {function(object): void} onSelect - 選擇升級時的回調函式
+     */
     showUpgradeModal(upgrades, onSelect) {
         this.upgradeModal.classList.remove('hidden');
         this.upgradeOptions.innerHTML = '';
@@ -151,20 +191,38 @@ export class UI {
         });
     }
 
-hideUpgradeModal() {
+    /**
+     * 隱藏升級選擇模態框
+     */
+    hideUpgradeModal() {
         this.upgradeModal.classList.add('hidden');
     }
 
+    /**
+     * 檢查升級模態框是否開啟
+     * @returns {boolean} 模態框是否可見
+     */
     isUpgradeModalOpen() {
         return !this.upgradeModal.classList.contains('hidden');
     }
 
+    /**
+     * 清除所有增益效果通知
+     */
     clearBuffNotifications() {
         if (this.buffContainer) {
             this.buffContainer.innerHTML = '';
         }
     }
 
+    /**
+     * 顯示遊戲結束畫面，包含本次成績、歷史紀錄、排行榜與新成就
+     * @param {{level: number, kills: number, bossesKilled: number, wave: number, time: number}} gameStats - 本次遊戲成績
+     * @param {{highestLevel: number, longestTime: string, totalKills: number, highestWave: number, bossesKilled: number, totalGames: number}} historicalStats - 歷史統計資料
+     * @param {{type: string, isNew: boolean}[]} newRecords - 本次刷新的紀錄
+     * @param {{icon: string, name: string, description: string}[]} [newAchievements] - 新解鎖的成就
+     * @param {{level: number, kills: number, formattedTime: string, wave: number}[]} [leaderboard] - 排行榜資料
+     */
     showGameOver(gameStats, historicalStats, newRecords, newAchievements = [], leaderboard = []) {
         this.gameOverScreen.classList.remove('hidden');
         
@@ -256,16 +314,28 @@ hideUpgradeModal() {
         }
     }
 
+    /**
+     * 隱藏遊戲結束畫面
+     */
     hideGameOver() {
         this.gameOverScreen.classList.add('hidden');
     }
 
+    /**
+     * 將秒數格式化為「X分X秒」的文字
+     * @param {number} seconds - 秒數
+     * @returns {string} 格式化後的時間字串
+     */
     formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}分${secs}秒`;
     }
 
+    /**
+     * 設定重新開始按鈕的點擊事件處理函式
+     * @param {function(): void} callback - 點擊重新開始時的回調函式
+     */
     onRestart(callback) {
         this.restartBtn.addEventListener('click', callback);
     }

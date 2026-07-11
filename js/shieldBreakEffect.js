@@ -1,12 +1,24 @@
+// @ts-check
+/**
+ * 護盾破碎特效，用於顯示護盾破碎時的視覺效果
+ */
 export class ShieldBreakEffect {
     constructor() {
+        /** @type {number} 特效 X 座標 */
         this.x = 0;
+        /** @type {number} 特效 Y 座標 */
         this.y = 0;
+        /** @type {number} 特效持續時間（秒） */
         this.duration = 0.8;
+        /** @type {number} 剩餘時間（秒） */
         this.time = 0;
+        /** @type {boolean} 是否活躍 */
         this.active = false;
+        /** @type {Array<Object>} 碎片陣列 */
         this.shards = [];
+        /** @type {number} 閃光透明度 */
         this.flashAlpha = 1;
+        /** @type {number} 擴散環半徑 */
         this.ringExpanding = 0;
         
         for (let i = 0; i < 16; i++) {
@@ -24,6 +36,12 @@ export class ShieldBreakEffect {
         }
     }
 
+    /**
+     * 初始化護盾破碎特效
+     * @param {number} x - 起始 X 座標
+     * @param {number} y - 起始 Y 座標
+     * @returns {void}
+     */
     init(x, y) {
         this.x = x;
         this.y = y;
@@ -49,6 +67,10 @@ export class ShieldBreakEffect {
         }
     }
 
+    /**
+     * 重置護盾破碎特效
+     * @returns {void}
+     */
     reset() {
         this.x = 0;
         this.y = 0;
@@ -69,6 +91,11 @@ export class ShieldBreakEffect {
         }
     }
 
+    /**
+     * 更新護盾破碎特效
+     * @param {number} dt - 時間差（秒）
+     * @returns {void}
+     */
     update(dt) {
         this.time -= dt;
         
@@ -86,6 +113,11 @@ export class ShieldBreakEffect {
         }
     }
 
+    /**
+     * 繪製護盾破碎特效
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @returns {void}
+     */
     draw(ctx) {
         ctx.save();
         
@@ -147,6 +179,10 @@ export class ShieldBreakEffect {
         ctx.restore();
     }
 
+    /**
+     * 檢查護盾破碎特效是否已完成
+     * @returns {boolean} 是否已完成
+     */
     isFinished() {
         return this.time <= 0;
     }

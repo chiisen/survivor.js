@@ -1,4 +1,10 @@
+// @ts-check
+
 export class TilesetCleaner {
+    /**
+     * 素材圖集清理器
+     * @returns {void}
+     */
     constructor() {
         this.cleanTileset = null;
         this.tileSize = 32;
@@ -10,16 +16,33 @@ export class TilesetCleaner {
         this.preserveOriginalSize = true;  // 新增：保留原始尺寸
     }
     
+    /**
+     * 設定是否保留原始尺寸
+     * @param {boolean} preserve - 是否保留原始尺寸
+     * @returns {void}
+     */
     setPreserveOriginalSize(preserve) {
         this.preserveOriginalSize = preserve;
     }
     
+    /**
+     * 設定佈局模式
+     * @param {string} mode - 佈局模式 ('square'|'optimal'|'horizontal'|'vertical'|'custom')
+     * @param {number|null} [cols=null] - 自定義列數
+     * @param {number|null} [rows=null] - 自定義行數
+     * @returns {void}
+     */
     setLayoutMode(mode, cols = null, rows = null) {
         this.layoutMode = mode;
         this.customCols = cols;
         this.customRows = rows;
     }
     
+    /**
+     * 計算圖集佈局
+     * @param {number} totalTiles - 總素材數量
+     * @returns {{cols: number, rows: number, isSquare: boolean}} 佈局資訊
+     */
     calculateLayout(totalTiles) {
         switch (this.layoutMode) {
             case 'square':
@@ -49,6 +72,12 @@ export class TilesetCleaner {
         }
     }
     
+    /**
+     * 清理並產生乾淨圖集
+     * @param {string} sourceImage - 來源圖片路徑
+     * @param {Array} tilePositions - 素材位置陣列
+     * @returns {Promise<string>} 產生的圖片 Data URL
+     */
     async cleanAndGenerate(sourceImage, tilePositions) {
         return new Promise((resolve) => {
             const img = new Image();
@@ -124,6 +153,12 @@ export class TilesetCleaner {
         });
     }
     
+    /**
+     * 下載乾淨圖集
+     * @param {string} dataUrl - 圖片 Data URL
+     * @param {string} [filename='clean_tileset.png'] - 下載檔案名稱
+     * @returns {void}
+     */
     downloadCleanTileset(dataUrl, filename = 'clean_tileset.png') {
         const link = document.createElement('a');
         link.download = filename;
@@ -131,7 +166,13 @@ export class TilesetCleaner {
         link.click();
     }
     
-createTilePositionEditor(containerId, sourceImage) {
+    /**
+     * 建立素材位置編輯器
+     * @param {string} containerId - 容器元素 ID
+     * @param {string} sourceImage - 來源圖片路徑
+     * @returns {void}
+     */
+    createTilePositionEditor(containerId, sourceImage) {
         const container = document.getElementById(containerId);
         if (!container) return;
         
@@ -568,6 +609,14 @@ const layoutModeSelect = container.querySelector('#layout-mode');
         });
     }
     
+    /**
+     * 繪製素材方塊
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {Array} tiles - 素材位置陣列
+     * @param {number} [selectedIndex=-1] - 選中的素材索引
+     * @param {number} [scaleRatio=1] - 縮放比例
+     * @returns {void}
+     */
     drawTileBoxes(ctx, tiles, selectedIndex = -1, scaleRatio = 1) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         
@@ -604,6 +653,13 @@ const layoutModeSelect = container.querySelector('#layout-mode');
         });
     }
     
+    /**
+     * 更新素材列表顯示
+     * @param {HTMLElement} container - 容器元素
+     * @param {Array} tiles - 素材位置陣列
+     * @param {number} [selectedIndex=-1] - 選中的素材索引
+     * @returns {void}
+     */
     updateTileList(container, tiles, selectedIndex = -1) {
         const layout = this.calculateLayout(tiles.length);
         const { cols, rows, isSquare } = layout;

@@ -1,15 +1,30 @@
+// @ts-check
+/**
+ * Boss 死亡特效，用於顯示 Boss 死亡時的爆炸效果
+ */
 export class BossDeathEffect {
     constructor() {
+        /** @type {number} 特效 X 座標 */
         this.x = 0;
+        /** @type {number} 特效 Y 座標 */
         this.y = 0;
+        /** @type {number} 特效持續時間（秒） */
         this.duration = 2.0;
+        /** @type {number} 剩餘時間（秒） */
         this.time = 0;
+        /** @type {boolean} 是否活躍 */
         this.active = false;
+        /** @type {Array<Object>} 爆炸粒子陣列 */
         this.particles = [];
+        /** @type {Array<Object>} 核心粒子陣列 */
         this.coreParticles = [];
+        /** @type {Array<Object>} 閃電陣列 */
         this.lightningBolts = [];
+        /** @type {Array<Object>} 擴散環陣列 */
         this.expandingRings = [];
+        /** @type {number} 閃光半徑 */
         this.flashRadius = 0;
+        /** @type {number} 閃光透明度 */
         this.flashAlpha = 1;
         
         for (let i = 0; i < 30; i++) {
@@ -54,6 +69,12 @@ export class BossDeathEffect {
         }
     }
 
+    /**
+     * 初始化 Boss 死亡特效
+     * @param {number} x - 起始 X 座標
+     * @param {number} y - 起始 Y 座標
+     * @returns {void}
+     */
     init(x, y) {
         this.x = x;
         this.y = y;
@@ -110,6 +131,10 @@ export class BossDeathEffect {
         }
     }
 
+    /**
+     * 重置 Boss 死亡特效
+     * @returns {void}
+     */
     reset() {
         this.x = 0;
         this.y = 0;
@@ -147,6 +172,11 @@ export class BossDeathEffect {
         }
     }
 
+    /**
+     * 更新 Boss 死亡特效
+     * @param {number} dt - 時間差（秒）
+     * @returns {void}
+     */
     update(dt) {
         this.time -= dt;
         
@@ -183,6 +213,11 @@ export class BossDeathEffect {
         }
     }
 
+    /**
+     * 繪製 Boss 死亡特效
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @returns {void}
+     */
     draw(ctx) {
         ctx.save();
         
@@ -263,6 +298,10 @@ export class BossDeathEffect {
         ctx.restore();
     }
 
+    /**
+     * 檢查 Boss 死亡特效是否已完成
+     * @returns {boolean} 是否已完成
+     */
     isFinished() {
         return this.time <= 0;
     }

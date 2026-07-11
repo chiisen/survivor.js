@@ -1,11 +1,22 @@
+// @ts-check
+/**
+ * 分裂特效，用於顯示敵人分裂時的視覺效果
+ */
 export class SplitEffect {
     constructor() {
+        /** @type {number} 特效 X 座標 */
         this.x = 0;
+        /** @type {number} 特效 Y 座標 */
         this.y = 0;
+        /** @type {number} 特效持續時間（秒） */
         this.duration = 0.6;
+        /** @type {number} 剩餘時間（秒） */
         this.time = 0;
+        /** @type {boolean} 是否活躍 */
         this.active = false;
+        /** @type {Array<Object>} 擴散環陣列 */
         this.rings = [];
+        /** @type {Array<Object>} 粒子陣列 */
         this.particles = [];
         
         for (let i = 0; i < 3; i++) {
@@ -29,6 +40,12 @@ export class SplitEffect {
         }
     }
 
+    /**
+     * 初始化分裂特效
+     * @param {number} x - 起始 X 座標
+     * @param {number} y - 起始 Y 座標
+     * @returns {void}
+     */
     init(x, y) {
         this.x = x;
         this.y = y;
@@ -54,6 +71,10 @@ export class SplitEffect {
         }
     }
 
+    /**
+     * 重置分裂特效
+     * @returns {void}
+     */
     reset() {
         this.x = 0;
         this.y = 0;
@@ -75,6 +96,11 @@ export class SplitEffect {
         }
     }
 
+    /**
+     * 更新分裂特效
+     * @param {number} dt - 時間差（秒）
+     * @returns {void}
+     */
     update(dt) {
         this.time -= dt;
         
@@ -96,6 +122,11 @@ export class SplitEffect {
         }
     }
 
+    /**
+     * 繪製分裂特效
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @returns {void}
+     */
     draw(ctx) {
         ctx.save();
         
@@ -130,6 +161,10 @@ export class SplitEffect {
         ctx.restore();
     }
 
+    /**
+     * 檢查分裂特效是否已完成
+     * @returns {boolean} 是否已完成
+     */
     isFinished() {
         return this.time <= 0;
     }

@@ -1,4 +1,9 @@
+// @ts-check
+
 export class Explosion {
+    /**
+     * 建立爆炸特效實例（物件池用），預先分配粒子陣列
+     */
     constructor() {
         this.x = 0;
         this.y = 0;
@@ -36,6 +41,11 @@ export class Explosion {
         }
     }
 
+    /**
+     * 在指定位置觸發爆炸，初始化所有粒子的初始狀態
+     * @param {number} x - 爆炸中心 X 座標
+     * @param {number} y - 爆炸中心 Y 座標
+     */
     init(x, y) {
         this.x = x;
         this.y = y;
@@ -69,6 +79,9 @@ export class Explosion {
         }
     }
 
+    /**
+     * 重置爆炸特效為初始狀態（物件池回收用）
+     */
     reset() {
         this.x = 0;
         this.y = 0;
@@ -96,6 +109,10 @@ export class Explosion {
         }
     }
 
+    /**
+     * 更新爆炸粒子位置、大小與透明度
+     * @param {number} dt - 與上一幀的時間差（秒）
+     */
     update(dt) {
         this.time -= dt;
         
@@ -119,6 +136,10 @@ export class Explosion {
         this.flashAlpha = Math.max(0, this.time / this.duration);
     }
 
+    /**
+     * 繪製爆炸特效（閃光、核心粒子、外圍粒子）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     draw(ctx) {
         ctx.save();
 
@@ -157,6 +178,10 @@ export class Explosion {
         ctx.restore();
     }
 
+    /**
+     * 判斷爆炸動畫是否已播放完畢
+     * @returns {boolean} 是否已結束
+     */
     isFinished() {
         return this.time <= 0;
     }

@@ -1,3 +1,5 @@
+// @ts-check
+
 const EnemyTypes = {
     NORMAL: { color: '#e74c3c', strokeColor: '#c0392b', eyeColor: '#fff', mouthStyle: 'angry' },
     FAST: { color: '#27ae60', strokeColor: '#229954', eyeColor: '#fff', mouthStyle: 'neutral' },
@@ -11,6 +13,11 @@ const EnemyTypes = {
 };
 
 export class EnemyRenderer {
+    /**
+     * 敵人渲染器
+     * @param {object} type - 敵人類型配置
+     * @returns {void}
+     */
     constructor(type) {
         this.type = type;
         this.color = type.color;
@@ -19,6 +26,14 @@ export class EnemyRenderer {
         this.mouthStyle = type.mouthStyle;
     }
     
+    /**
+     * 繪製敵人
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @param {object} behaviors - 敵人行為控制器
+     * @param {object|null} phaseManager - Boss 階段管理器（可選）
+     * @returns {void}
+     */
     draw(ctx, core, behaviors, phaseManager = null) {
         ctx.save();
         
@@ -32,6 +47,12 @@ export class EnemyRenderer {
         ctx.restore();
     }
     
+    /**
+     * 繪製隱身效果
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawStealthEffect(ctx, core) {
         if (core.isStealth) {
             if (core.revealTime > 0) {
@@ -43,6 +64,14 @@ export class EnemyRenderer {
         }
     }
     
+    /**
+     * 繪製敵人類型特定裝飾
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @param {object} behaviors - 敵人行為控制器
+     * @param {object|null} phaseManager - Boss 階段管理器（可選）
+     * @returns {void}
+     */
     drawTypeSpecificDecorations(ctx, core, behaviors, phaseManager) {
         if (this.type.isBoss) {
             this.drawBossDecorations(ctx, core, phaseManager);
@@ -73,6 +102,13 @@ export class EnemyRenderer {
         }
     }
     
+    /**
+     * 繪製 Boss 裝飾
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @param {object|null} phaseManager - Boss 階段管理器
+     * @returns {void}
+     */
     drawBossDecorations(ctx, core, phaseManager) {
         const rageMode = phaseManager ? phaseManager.rageMode : false;
         
@@ -88,6 +124,12 @@ export class EnemyRenderer {
         this.drawBossCrown(ctx, core, rageMode);
     }
     
+    /**
+     * 繪製 Boss 狂怒火焰
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawRageFlames(ctx, core) {
         ctx.beginPath();
         ctx.arc(core.x, core.y, core.radius + 20, 0, Math.PI * 2);
@@ -106,6 +148,13 @@ export class EnemyRenderer {
         }
     }
     
+    /**
+     * 繪製 Boss 皇冠
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @param {boolean} rageMode - 是否為狂怒模式
+     * @returns {void}
+     */
     drawBossCrown(ctx, core, rageMode) {
         ctx.beginPath();
         ctx.moveTo(core.x - 15, core.y - core.radius - 25);
@@ -122,6 +171,12 @@ export class EnemyRenderer {
         ctx.stroke();
     }
     
+    /**
+     * 繪製精英敵人裝飾
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawEliteDecorations(ctx, core) {
         ctx.beginPath();
         ctx.arc(core.x, core.y, core.radius + 8, 0, Math.PI * 2);
@@ -134,6 +189,12 @@ export class EnemyRenderer {
         }
     }
     
+    /**
+     * 繪製護盾
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawShield(ctx, core) {
         const shieldAlpha = 0.4 + (core.shieldHp / core.shieldMaxHp) * 0.3;
         ctx.beginPath();
@@ -147,6 +208,12 @@ export class EnemyRenderer {
         this.drawShieldBar(ctx, core);
     }
     
+    /**
+     * 繪製護盾血條
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawShieldBar(ctx, core) {
         const barWidth = core.radius * 1.5;
         const barHeight = 4;
@@ -159,6 +226,12 @@ export class EnemyRenderer {
         ctx.fillRect(core.x - barWidth / 2, barY, barWidth * (core.shieldHp / core.shieldMaxHp), barHeight);
     }
     
+    /**
+     * 繪製分裂敵人裝飾
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawSplitterDecoration(ctx, core) {
         ctx.beginPath();
         ctx.moveTo(core.x - core.radius * 0.3, core.y - core.radius * 1.2);
@@ -169,6 +242,12 @@ export class EnemyRenderer {
         ctx.fill();
     }
     
+    /**
+     * 繪製爆炸敵人裝飾
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawExplosiveDecoration(ctx, core) {
         ctx.beginPath();
         ctx.arc(core.x, core.y, core.radius + 6, 0, Math.PI * 2);
@@ -177,6 +256,12 @@ export class EnemyRenderer {
         ctx.stroke();
     }
     
+    /**
+     * 繪製坦克敵人裝飾
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawTankDecoration(ctx, core) {
         ctx.beginPath();
         ctx.arc(core.x, core.y, core.radius + 4, 0, Math.PI * 2);
@@ -184,6 +269,12 @@ export class EnemyRenderer {
         ctx.fill();
     }
     
+    /**
+     * 繪製快速敵人裝飾
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawFastDecoration(ctx, core) {
         ctx.beginPath();
         ctx.moveTo(core.x - core.radius * 0.5, core.y - core.radius * 0.8);
@@ -193,6 +284,12 @@ export class EnemyRenderer {
         ctx.fill();
     }
     
+    /**
+     * 繪製遠程敵人裝飾
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawRangedDecoration(ctx, core) {
         ctx.beginPath();
         ctx.arc(core.x, core.y - core.radius * 0.5, core.radius * 0.4, 0, Math.PI * 2);
@@ -203,6 +300,12 @@ export class EnemyRenderer {
         ctx.stroke();
     }
     
+    /**
+     * 繪製敵人身體
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawBody(ctx, core) {
         ctx.beginPath();
         ctx.arc(core.x, core.y, core.radius, 0, Math.PI * 2);
@@ -213,6 +316,12 @@ export class EnemyRenderer {
         ctx.stroke();
     }
     
+    /**
+     * 繪製敵人眼睛
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawEyes(ctx, core) {
         ctx.beginPath();
         ctx.arc(core.x - core.radius * 0.3, core.y - core.radius * 0.2, core.radius * 0.2, 0, Math.PI * 2);
@@ -221,6 +330,12 @@ export class EnemyRenderer {
         ctx.fill();
     }
     
+    /**
+     * 繪製敵人嘴巴
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawMouth(ctx, core) {
         ctx.beginPath();
         
@@ -271,6 +386,12 @@ export class EnemyRenderer {
         }
     }
     
+    /**
+     * 繪製敵人血條
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     drawHealthBar(ctx, core) {
         if (core.maxHp > 1) {
             const hpPercentage = core.hp / core.maxHp;

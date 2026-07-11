@@ -1,3 +1,9 @@
+// @ts-check
+
+/**
+ * 成就定義清單 — 每項包含 id, name, description, icon, condition 回呼函式
+ * @type {Array<{id: string, name: string, description: string, icon: string, condition: function(object): boolean}>}
+ */
 export const ACHIEVEMENTS = [
     { id: 'first_kill', name: '初戰告捷', description: '首次擊殺敵人', icon: '⚔️', condition: (stats) => stats.totalKills >= 1 },
     { id: 'kill_50', name: '戰場老兵', description: '擊殺 50 名敵人', icon: '🎯', condition: (stats) => stats.totalKills >= 50 },
@@ -20,13 +26,23 @@ export const ACHIEVEMENTS = [
     { id: 'hell_mode', name: '地狱征服者', description: '在地狱模式存活 5 分鐘', icon: '😈', condition: (stats) => stats.hellSurvive >= 300 },
 ];
 
+/**
+ * 成就管理器 — 負責成就的解鎖判定、持久化儲存與進度查詢
+ */
 export class AchievementManager {
+    /**
+     * @param {string} [storageKey='survivor_js_achievements'] - localStorage 儲存鍵名
+     */
     constructor() {
         this.storageKey = 'survivor_js_achievements';
         this.unlocked = this.load();
         this.newAchievements = [];
     }
     
+    /**
+     * 從 localStorage 載入已解鎖成就 ID 清單
+     * @returns {string[]} 已解鎖的成就 ID 陣列
+     */
     load() {
         try {
             const data = localStorage.getItem(this.storageKey);
@@ -36,6 +52,9 @@ export class AchievementManager {
         }
     }
     
+    /**
+     * 將已解鎖成就 ID 清單持久化至 localStorage
+     */
     save() {
         try {
             localStorage.setItem(this.storageKey, JSON.stringify(this.unlocked));
@@ -44,6 +63,12 @@ export class AchievementManager {
         }
     }
     
+    /**
+     * 檢查是否解鎖新成就(比對 stats 與所有成就條件)
+     * @param {object} stats - 遊戲統計資料(含 totalKills, longestTime, bossesKilled, highestWave, highestLevel, totalGames, time)
+     * @param {string} [difficulty='normal'] - 遊戲難度
+     * @returns {Array<object>} 本次新解鎖的成就陣列
+     */
     check(stats, difficulty = 'normal') {
         const statsWithHell = { ...stats };
         if (difficulty === 'hell' && stats.time >= 300) {
@@ -68,6 +93,10 @@ export class AchievementManager {
         return this.newAchievements;
     }
     
+    /**
+     * 取得地獄模式最高存活時間
+     * @returns {number} 存活秒數
+     */
     getHellSurviveTime() {
         try {
             const data = localStorage.getItem('survivor_js_hell_survive');
@@ -77,6 +106,11 @@ export class AchievementManager {
         }
     }
     
+    /**
+     * 儲存地獄模式存活時間(僅在打破紀錄時更新)
+     * @param {number} time - 本次存活秒數
+     * @param {string} difficulty - 遊戲難度
+     */
     saveHellSurviveTime(time, difficulty) {
         if (difficulty === 'hell') {
             const current = this.getHellSurviveTime();
@@ -90,10 +124,18 @@ export class AchievementManager {
         }
     }
     
+    /**
+     * 取得已解鎖的成就完整物件陣列
+     * @returns {Array<object>} 已解鎖成就陣列
+     */
     getUnlockedAchievements() {
         return ACHIEVEMENTS.filter(a => this.unlocked.includes(a.id));
     }
     
+    /**
+     * 取得所有成就並標記解鎖狀態
+     * @returns {Array<object & {unlocked: boolean}>} 含 unlocked 欄位的成就陣列
+     */
     getAllAchievements() {
         return ACHIEVEMENTS.map(a => ({
             ...a,
@@ -101,6 +143,10 @@ export class AchievementManager {
         }));
     }
     
+    /**
+     * 取得成就進度統計
+     * @returns {{unlocked: number, total: number, percentage: number}} 已解鎖數、總數、完成百分比
+     */
     getProgress() {
         return {
             unlocked: this.unlocked.length,

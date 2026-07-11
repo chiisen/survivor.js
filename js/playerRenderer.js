@@ -1,4 +1,13 @@
+// @ts-check
+
 export class PlayerRenderer {
+    /**
+     * 繪製玩家角色
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 玩家核心屬性
+     * @param {object} combat - 玩家戰鬥屬性
+     * @returns {void}
+     */
     draw(ctx, core, combat) {
         ctx.save();
         
@@ -40,6 +49,12 @@ export class PlayerRenderer {
         ctx.restore();
     }
     
+    /**
+     * 繪製攻擊範圍指示器
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 玩家核心屬性
+     * @returns {void}
+     */
     drawAttackRange(ctx, core) {
         ctx.beginPath();
         ctx.arc(core.x, core.y, core.baseAttackRange, 0, Math.PI * 2);
@@ -63,6 +78,12 @@ export class PlayerRenderer {
         }
     }
     
+    /**
+     * 繪製玩家頭盔
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 玩家核心屬性
+     * @returns {void}
+     */
     drawHelmet(ctx, core) {
         ctx.beginPath();
         ctx.arc(core.x, core.y - 5, core.radius * 0.9, 0, Math.PI * 2);
@@ -115,6 +136,12 @@ export class PlayerRenderer {
         ctx.stroke();
     }
     
+    /**
+     * 繪製玩家身體
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 玩家核心屬性
+     * @returns {void}
+     */
     drawBody(ctx, core) {
         ctx.beginPath();
         ctx.arc(core.x, core.y + 8, core.radius * 1.1, 0, Math.PI * 2);
@@ -132,6 +159,12 @@ export class PlayerRenderer {
         ctx.stroke();
     }
     
+    /**
+     * 繪製玩家腿部
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 玩家核心屬性
+     * @returns {void}
+     */
     drawLegs(ctx, core) {
         ctx.beginPath();
         ctx.moveTo(core.x - 2, core.y + 3);
@@ -143,6 +176,12 @@ export class PlayerRenderer {
         ctx.stroke();
     }
     
+    /**
+     * 繪製玩家手臂
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 玩家核心屬性
+     * @returns {void}
+     */
     drawArms(ctx, core) {
         ctx.beginPath();
         ctx.moveTo(core.x - core.radius * 0.8, core.y + 5);
@@ -161,6 +200,13 @@ export class PlayerRenderer {
         ctx.stroke();
     }
     
+    /**
+     * 繪製玩家劍
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 玩家核心屬性
+     * @param {object} combat - 玩家戰鬥屬性
+     * @returns {void}
+     */
     drawSword(ctx, core, combat) {
         const swordBaseAngle = -Math.PI / 4;
         const swordSwingRange = Math.PI / 2;

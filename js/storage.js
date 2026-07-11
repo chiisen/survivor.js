@@ -1,13 +1,21 @@
+// @ts-check
 const STORAGE_KEY = 'survivor_js_stats';
 const LEADERBOARD_KEY = 'survivor_js_leaderboard';
 const MAX_LEADERBOARD_ENTRIES = 10;
 
 export class StorageManager {
+    /**
+     * 建立儲存管理器實例，載入既有統計資料與排行榜
+     */
     constructor() {
         this.stats = this.load();
         this.leaderboard = this.loadLeaderboard();
     }
 
+    /**
+     * 從 localStorage 載入遊戲統計資料
+     * @returns {{ highestLevel: number, longestTime: number, totalKills: number, highestWave: number, totalGames: number, bossesKilled: number }} 遊戲統計資料
+     */
     load() {
         try {
             const data = localStorage.getItem(STORAGE_KEY);
@@ -28,6 +36,10 @@ export class StorageManager {
         };
     }
 
+    /**
+     * 從 localStorage 載入排行榜資料
+     * @returns {Array<{ level: number, kills: number, time: number, wave: number, bossesKilled: number, date: string }>} 排行榜陣列
+     */
     loadLeaderboard() {
         try {
             const data = localStorage.getItem(LEADERBOARD_KEY);
@@ -40,6 +52,10 @@ export class StorageManager {
         return [];
     }
 
+    /**
+     * 將遊戲統計資料存入 localStorage
+     * @param {{ highestLevel: number, longestTime: number, totalKills: number, highestWave: number, totalGames: number, bossesKilled: number }} stats - 要儲存的統計資料
+     */
     save(stats) {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
@@ -48,6 +64,10 @@ export class StorageManager {
         }
     }
 
+    /**
+     * 將排行榜資料存入 localStorage
+     * @param {Array} leaderboard - 排行榜陣列
+     */
     saveLeaderboard(leaderboard) {
         try {
             localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(leaderboard));
@@ -56,6 +76,11 @@ export class StorageManager {
         }
     }
 
+    /**
+     * 用本次遊戲結果更新統計資料與排行榜
+     * @param {{ level: number, time: number, kills: number, wave: number, bossesKilled?: number }} gameStats - 本次遊戲統計
+     * @returns {Array<{ type: string, value: number, isNew: boolean }>} 新紀錄列表
+     */
     update(gameStats) {
         const newStats = {
             highestLevel: Math.max(this.stats.highestLevel, gameStats.level),
@@ -74,6 +99,10 @@ export class StorageManager {
         return this.checkNewRecords(gameStats);
     }
 
+    /**
+     * 將本次遊戲結果加入排行榜並排序（依等級 > 擊殺 > 時間）
+     * @param {{ level: number, kills: number, time: number, wave: number, bossesKilled?: number }} gameStats - 本次遊戲統計
+     */
     addToLeaderboard(gameStats) {
         const entry = {
             level: gameStats.level,
@@ -97,6 +126,10 @@ export class StorageManager {
         this.saveLeaderboard(this.leaderboard);
     }
 
+    /**
+     * 取得排行榜資料（含格式化時間）
+     * @returns {Array<{ level: number, kills: number, time: number, wave: number, bossesKilled: number, date: string, formattedTime: string }>} 排行榜陣列
+     */
     getLeaderboard() {
         return this.leaderboard.map(entry => ({
             ...entry,
@@ -104,6 +137,11 @@ export class StorageManager {
         }));
     }
 
+    /**
+     * 檢查本次遊戲是否創下新紀錄
+     * @param {{ level: number, time: number, wave: number }} gameStats - 本次遊戲統計
+     * @returns {Array<{ type: string, value: number, isNew: boolean }>} 新紀錄列表
+     */
     checkNewRecords(gameStats) {
         const records = [];
         
@@ -122,16 +160,29 @@ export class StorageManager {
         return records;
     }
 
+    /**
+     * 取得原始遊戲統計資料
+     * @returns {{ highestLevel: number, longestTime: number, totalKills: number, highestWave: number, totalGames: number, bossesKilled: number }} 統計資料
+     */
     getStats() {
         return this.stats;
     }
 
+    /**
+     * 將秒數格式化為「X分Y秒」字串
+     * @param {number} seconds - 秒數
+     * @returns {string} 格式化的時間字串
+     */
     formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}分${secs}秒`;
     }
 
+    /**
+     * 取得格式化後的遊戲統計資料（時間已轉為字串）
+     * @returns {{ highestLevel: number, longestTime: string, longestTimeSec: number, totalKills: number, highestWave: number, totalGames: number, bossesKilled: number }} 格式化統計資料
+     */
     getFormattedStats() {
         return {
             highestLevel: this.stats.highestLevel,
@@ -144,6 +195,9 @@ export class StorageManager {
         };
     }
 
+    /**
+     * 重置所有統計資料與排行榜為初始狀態
+     */
     reset() {
         this.stats = {
             highestLevel: 0,

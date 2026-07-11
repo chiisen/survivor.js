@@ -1,6 +1,10 @@
+// @ts-check
 import { normalize, distance } from './utils.js';
 
 export class Projectile {
+    /**
+     * 建立一個投射物實例（物件池用）
+     */
     constructor() {
         this.x = 0;
         this.y = 0;
@@ -15,6 +19,15 @@ export class Projectile {
         this.isCrit = false;
     }
 
+    /**
+     * 初始化投射物的位置、方向、速度與傷害
+     * @param {number} x - 起始 X 座標
+     * @param {number} y - 起始 Y 座標
+     * @param {number} targetX - 目標 X 座標
+     * @param {number} targetY - 目標 Y 座標
+     * @param {number} speed - 移動速度（像素/秒）
+     * @param {number} damage - 造成的傷害值
+     */
     init(x, y, targetX, targetY, speed, damage) {
         this.x = x;
         this.y = y;
@@ -27,6 +40,9 @@ export class Projectile {
         this.isCrit = false;
     }
 
+    /**
+     * 重置投射物為初始狀態（物件池回收用）
+     */
     reset() {
         this.x = 0;
         this.y = 0;
@@ -38,6 +54,10 @@ export class Projectile {
         this.isCrit = false;
     }
 
+    /**
+     * 更新投射物位置與軌跡
+     * @param {number} dt - 與上一幀的時間差（秒）
+     */
     update(dt) {
         this.trail.unshift({ x: this.x, y: this.y });
         if (this.trail.length > this.maxTrailLength) {
@@ -48,6 +68,10 @@ export class Projectile {
         this.y += this.vy * dt;
     }
 
+    /**
+     * 繪製投射物及其軌跡
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     draw(ctx) {
         ctx.save();
         
@@ -89,6 +113,12 @@ export class Projectile {
         ctx.restore();
     }
 
+    /**
+     * 判斷投射物是否超出畫布邊界
+     * @param {number} canvasWidth - 畫布寬度
+     * @param {number} canvasHeight - 畫布高度
+     * @returns {boolean} 是否超出邊界（含 100px 邊距）
+     */
     isOutOfBounds(canvasWidth, canvasHeight) {
         const margin = 100;
         return (

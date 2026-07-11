@@ -1,4 +1,14 @@
+// @ts-check
+
+/**
+ * 地面裝飾物 — 草、花、蘑菇、岩石等場景裝飾
+ */
 export class GroundDecoration {
+    /**
+     * @param {number} x - 裝飾物 X 座標
+     * @param {number} y - 裝飾物 Y 座標
+     * @param {string} type - 裝飾物類型('rock'|'grass'|'bush'|'crack'|'flower'|'mushroom'|'tree_stump'|'crystal')
+     */
     constructor(x, y, type) {
         this.x = x;
         this.y = y;
@@ -66,6 +76,11 @@ export class GroundDecoration {
         }
     }
 
+    /**
+     * 更新裝飾物動畫(搖曳、發光)
+     * @param {number} dt - 幀間隔時間(秒)
+     * @param {number} gameTime - 遊戲經過時間(秒)
+     */
     update(dt, gameTime) {
         if (this.type === 'grass' || this.type === 'flower') {
             this.swayOffset += dt * 2;
@@ -75,6 +90,10 @@ export class GroundDecoration {
         }
     }
 
+    /**
+     * 繪製裝飾物到畫布
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     draw(ctx) {
         ctx.save();
         ctx.globalAlpha = this.alpha;
@@ -111,6 +130,10 @@ export class GroundDecoration {
         ctx.restore();
     }
 
+    /**
+     * 繪製岩石裝飾(優先使用圖片,否則繪製多邊形)
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     drawRock(ctx) {
         if (this.rockImageLoaded && this.rockProcessedCanvas) {
             const width = this.rockProcessedCanvas.width * 1.5;
@@ -132,6 +155,10 @@ export class GroundDecoration {
         }
     }
 
+    /**
+     * 繪製草叢裝飾(優先使用圖片,否則繪製搖曳草葉)
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     drawGrass(ctx) {
         if (this.grassImageLoaded && this.grassProcessedCanvas) {
             const width = this.grassProcessedCanvas.width * 1.5;
@@ -158,6 +185,10 @@ export class GroundDecoration {
         }
     }
 
+    /**
+     * 繪製灌木叢裝飾
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     drawBush(ctx) {
         const circles = 3;
         for (let i = 0; i < circles; i++) {
@@ -172,6 +203,10 @@ export class GroundDecoration {
         }
     }
 
+    /**
+     * 繪製地面裂縫裝飾
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     drawCrack(ctx) {
         ctx.beginPath();
         ctx.moveTo(this.x - this.width / 2, this.y);
@@ -184,6 +219,10 @@ export class GroundDecoration {
         ctx.stroke();
     }
     
+    /**
+     * 繪製花朵裝飾(優先使用圖片,否則繪製花瓣)
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     drawFlower(ctx) {
         if (this.flowerImageLoaded && this.flowerProcessedCanvas) {
             const width = this.flowerProcessedCanvas.width * 1.5;
@@ -222,6 +261,10 @@ export class GroundDecoration {
         }
     }
     
+    /**
+     * 繪製蘑菇裝飾(優先使用圖片,否則繪製蘑菇造型)
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     drawMushroom(ctx) {
         if (this.mushroomImageLoaded && this.mushroomProcessedCanvas) {
             const width = this.mushroomProcessedCanvas.width * 1.5;
@@ -253,6 +296,10 @@ export class GroundDecoration {
         }
     }
     
+    /**
+     * 繪製樹樁裝飾
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     drawTreeStump(ctx) {
         ctx.beginPath();
         ctx.moveTo(this.x - this.width / 2, this.y);
@@ -277,6 +324,10 @@ export class GroundDecoration {
         }
     }
     
+    /**
+     * 繪製水晶裝飾(含發光脈衝效果)
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     drawCrystal(ctx) {
         const glow = Math.sin(this.glowTime) * 0.3 + 0.7;
         
@@ -300,7 +351,15 @@ export class GroundDecoration {
     }
 }
 
+/**
+ * 環境粒子 — 灰塵、螢火蟲、落葉、閃光等氛圍效果
+ */
 export class EnvironmentParticle {
+    /**
+     * @param {number} canvasWidth - 畫布寬度
+     * @param {number} canvasHeight - 畫布高度
+     * @param {string} [type='dust'] - 粒子類型('dust'|'firefly'|'leaf'|'sparkle')
+     */
     constructor(canvasWidth, canvasHeight, type = 'dust') {
         this.x = Math.random() * canvasWidth;
         this.y = Math.random() * canvasHeight;
@@ -342,6 +401,10 @@ export class EnvironmentParticle {
         }
     }
 
+    /**
+     * 更新粒子位置與生命週期
+     * @param {number} dt - 幀間隔時間(秒)
+     */
     update(dt) {
         switch (this.type) {
             case 'dust':
@@ -404,6 +467,10 @@ export class EnvironmentParticle {
         }
     }
 
+    /**
+     * 繪製粒子到畫布
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     draw(ctx) {
         ctx.save();
         ctx.globalAlpha = this.alpha;
@@ -452,7 +519,14 @@ export class EnvironmentParticle {
     }
 }
 
+/**
+ * 裝飾物管理器 — 管理所有地面裝飾與環境粒子的生成、更新、繪製
+ */
 export class DecorationManager {
+    /**
+     * @param {number} canvasWidth - 畫布寬度
+     * @param {number} canvasHeight - 畫布高度
+     */
     constructor(canvasWidth, canvasHeight) {
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
@@ -531,6 +605,11 @@ export class DecorationManager {
         this.generateParticles();
     }
 
+    /**
+     * 移除圖片的黑色背景(透明化處理)
+     * @param {HTMLImageElement} image - 原始圖片
+     * @returns {HTMLCanvasElement} 處理後的 Canvas
+     */
     removeBlackBackground(image) {
         const canvas = document.createElement('canvas');
         canvas.width = image.width;
@@ -564,6 +643,9 @@ export class DecorationManager {
         return canvas;
     }
 
+    /**
+     * 按權重隨機生成地面裝飾物
+     */
     generateDecorations() {
         const decorationCount = 50;
         const types = ['grass', 'flower', 'mushroom', 'rock'];
@@ -610,6 +692,9 @@ export class DecorationManager {
         }
     }
 
+    /**
+     * 按權重隨機生成環境粒子
+     */
     generateParticles() {
         const particleCount = 40;
         const types = ['dust', 'firefly', 'leaf', 'sparkle'];
@@ -622,6 +707,11 @@ export class DecorationManager {
         }
     }
 
+    /**
+     * 更新所有裝飾物與粒子
+     * @param {number} dt - 幀間隔時間(秒)
+     * @param {number} gameTime - 遊戲經過時間(秒)
+     */
     update(dt, gameTime) {
         for (const decoration of this.decorations) {
             decoration.update(dt, gameTime);
@@ -632,6 +722,10 @@ export class DecorationManager {
         }
     }
 
+    /**
+     * 繪製所有裝飾物與粒子
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     draw(ctx) {
         for (const decoration of this.decorations) {
             decoration.draw(ctx);
@@ -642,6 +736,11 @@ export class DecorationManager {
         }
     }
 
+    /**
+     * 畫布尺寸變更時重新生成所有裝飾物與粒子
+     * @param {number} width - 新畫布寬度
+     * @param {number} height - 新畫布高度
+     */
     resize(width, height) {
         this.canvasWidth = width;
         this.canvasHeight = height;

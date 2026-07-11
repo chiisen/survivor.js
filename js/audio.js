@@ -1,4 +1,9 @@
+// @ts-check
+
 export class AudioManager {
+    /**
+     * 建立音效管理器實例，初始化 Web Audio API
+     */
     constructor() {
         this.audioContext = null;
         this.masterVolume = 0.5;
@@ -15,6 +20,9 @@ export class AudioManager {
         this.init();
     }
 
+    /**
+     * 初始化 AudioContext 與音效定義
+     */
     init() {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -25,6 +33,9 @@ export class AudioManager {
         }
     }
 
+    /**
+     * 建立所有音效的參數定義（頻率、時長、波形、音量）
+     */
     createSounds() {
         this.sounds = {
             swing: { frequency: 200, duration: 0.15, type: 'square', volume: 0.3 },
@@ -38,12 +49,19 @@ export class AudioManager {
         };
     }
 
+    /**
+     * 若 AudioContext 處於暫停狀態則恢復播放
+     */
     resumeContext() {
         if (this.audioContext && this.audioContext.state === 'suspended' && this.audioStarted) {
             this.audioContext.resume();
         }
     }
 
+    /**
+     * 播放指定名稱的音效
+     * @param {string} soundName - 音效名稱（如 'swing', 'hit', 'kill' 等）
+     */
     play(soundName) {
         if (!this.enabled || !this.audioContext || !this.audioStarted) return;
         
@@ -93,38 +111,49 @@ export class AudioManager {
         oscillator.stop(this.audioContext.currentTime + sound.duration);
     }
 
+    /** 播放揮擊音效 */
     playSwing() {
         this.play('swing');
     }
 
+    /** 播放命中音效 */
     playHit() {
         this.play('hit');
     }
 
+    /** 播放擊殺音效 */
     playKill() {
         this.play('kill');
     }
 
+    /** 播放連殺音效 */
     playChainKill() {
         this.play('chainKill');
     }
 
+    /** 播放升級音效 */
     playLevelUp() {
         this.play('levelUp');
     }
 
+    /** 播放受傷音效 */
     playDamage() {
         this.play('damage');
     }
 
+    /** 播放拾取音效 */
     playPickup() {
         this.play('pickup');
     }
 
+    /** 播放遊戲結束音效 */
     playGameOver() {
         this.play('gameOver');
     }
 
+    /**
+     * 啟動背景音樂（使用 LFO 調變的三角波合成）
+     */
     startBGM() {
         if (!this.enabled || !this.bgmEnabled || !this.audioContext || !this.audioStarted) return;
         
@@ -161,6 +190,7 @@ export class AudioManager {
         this.bgmSource = { oscillator, lfo, gainNode };
     }
 
+    /** 停止背景音樂 */
     stopBGM() {
         if (this.bgmSource) {
             this.bgmSource.oscillator.stop();
@@ -169,14 +199,26 @@ export class AudioManager {
         }
     }
 
+    /**
+     * 設定主音量
+     * @param {number} value - 音量值（0 ~ 1）
+     */
     setMasterVolume(value) {
         this.masterVolume = Math.max(0, Math.min(1, value));
     }
 
+    /**
+     * 設定音效音量
+     * @param {number} value - 音量值（0 ~ 1）
+     */
     setSfxVolume(value) {
         this.sfxVolume = Math.max(0, Math.min(1, value));
     }
 
+    /**
+     * 設定背景音樂音量
+     * @param {number} value - 音量值（0 ~ 1）
+     */
     setBgmVolume(value) {
         this.bgmVolume = Math.max(0, Math.min(1, value));
         if (this.bgmSource) {
@@ -185,10 +227,12 @@ export class AudioManager {
         }
     }
 
+    /** 切換音效開關 */
     toggleSfx() {
         this.enabled = !this.enabled;
     }
 
+    /** 切換背景音樂開關 */
     toggleBgm() {
         this.bgmEnabled = !this.bgmEnabled;
         if (this.bgmEnabled) {
@@ -198,6 +242,7 @@ export class AudioManager {
         }
     }
 
+    /** 釋放所有音效資源並關閉 AudioContext */
     dispose() {
         this.stopBGM();
         if (this.audioContext) {

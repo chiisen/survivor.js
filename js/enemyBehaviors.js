@@ -1,6 +1,14 @@
+// @ts-check
+
 import { normalize } from './utils.js';
 
 export class EnemyBehaviors {
+    /**
+     * 敵人行為控制器
+     * @param {object} type - 敵人類型配置
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
     constructor(type, core) {
         this.core = core;
         this.type = type;
@@ -13,6 +21,13 @@ export class EnemyBehaviors {
         this.revealTime = 0;
     }
     
+    /**
+     * 更新敵人行為
+     * @param {number} dt - 時間差（秒）
+     * @param {number} playerX - 玩家 X 座標
+     * @param {number} playerY - 玩家 Y 座標
+     * @returns {Array|null} 執行的動作列表，若無則回傳 null
+     */
     update(dt, playerX, playerY) {
         const actions = [];
         
@@ -39,6 +54,12 @@ export class EnemyBehaviors {
         return actions.length > 0 ? actions : null;
     }
     
+    /**
+     * 發射投射物
+     * @param {number} targetX - 目標 X 座標
+     * @param {number} targetY - 目標 Y 座標
+     * @returns {object} 投射物資料
+     */
     shoot(targetX, targetY) {
         const dx = targetX - this.core.x;
         const dy = targetY - this.core.y;
@@ -59,6 +80,10 @@ export class EnemyBehaviors {
         return projectileData;
     }
     
+    /**
+     * 顯露隱身敵人
+     * @returns {void}
+     */
     reveal() {
         if (this.isStealth) {
             this.core.revealTime = 2;

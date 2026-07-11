@@ -1,4 +1,12 @@
+// @ts-check
+
+/**
+ * 除錯覆蓋層 — 顯示 FPS、記憶體、實體數量、管線狀態等除錯資訊
+ */
 export class DebugOverlay {
+    /**
+     * @param {object} game - 遊戲主物件(含 player, canvas, projectilePool, enemies, expOrbs 等)
+     */
     constructor(game) {
         this.game = game;
         this.enabled = false;
@@ -12,10 +20,16 @@ export class DebugOverlay {
         this.currentFPS = 0;
     }
     
+    /**
+     * 切換除錯覆蓋層的顯示/隱藏
+     */
     toggle() {
         this.enabled = !this.enabled;
     }
     
+    /**
+     * 收集最新遊戲狀態數據供繪製使用
+     */
     update() {
         this.lastFireCooldown = this.game.player.fireCooldown;
         this.projectilePositions = this.game.projectilePool.getActiveObjects()
@@ -25,6 +39,9 @@ export class DebugOverlay {
         this.updateFPS();
     }
     
+    /**
+     * 計算並記錄每秒幀數
+     */
     updateFPS() {
         this.frameCount++;
         const currentTime = performance.now();
@@ -43,6 +60,10 @@ export class DebugOverlay {
         }
     }
     
+    /**
+     * 繪製除錯覆蓋層(若已啟用)
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     */
     draw(ctx) {
         if (!this.enabled) return;
         
@@ -70,6 +91,12 @@ export class DebugOverlay {
         ctx.restore();
     }
     
+    /**
+     * 繪製 FPS 資訊
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     * @param {number} y - 繪製 Y 座標
+     * @param {number} x - 繪製 X 座標
+     */
     drawFPS(ctx, y, x) {
         const avgFPS = this.fpsHistory.length > 0 
             ? Math.round(this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length)
@@ -88,6 +115,12 @@ export class DebugOverlay {
         }
     }
     
+    /**
+     * 繪製記憶體使用量
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     * @param {number} y - 繪製 Y 座標
+     * @param {number} x - 繪製 X 座標
+     */
     drawMemory(ctx, y, x) {
         if (performance.memory) {
             const usedMB = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
@@ -107,6 +140,12 @@ export class DebugOverlay {
         }
     }
     
+    /**
+     * 繪製實體數量統計
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     * @param {number} y - 繪製 Y 座標
+     * @param {number} x - 繪製 X 座標
+     */
     drawEntityCounts(ctx, y, x) {
         const projectiles = this.game.projectilePool.getActiveObjects().filter(p => p.active).length;
         const enemies = this.game.enemies.length;
@@ -118,17 +157,12 @@ export class DebugOverlay {
         ctx.fillText(`Entities: P:${projectiles} E:${enemies} Exp:${expOrbs} EP:${enemyProjectiles} DN:${damageNumbers}`, x + 10, y);
     }
     
-    drawEntityCounts(ctx, y, x) {
-        const projectiles = this.game.projectilePool.getActiveObjects().filter(p => p.active).length;
-        const enemies = this.game.enemies.length;
-        const expOrbs = this.game.expOrbs.length;
-        const enemyProjectiles = this.game.enemyProjectiles.length;
-        const damageNumbers = this.game.damageNumbers.length;
-        
-        ctx.fillStyle = '#3498db';
-        ctx.fillText(`Entities: P:${projectiles} E:${enemies} Exp:${expOrbs} EP:${enemyProjectiles} DN:${damageNumbers}`, x + 10, y);
-    }
-    
+    /**
+     * 繪製空間格網同步狀態
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     * @param {number} y - 繪製 Y 座標
+     * @param {number} x - 繪製 X 座標
+     */
     drawGridStatus(ctx, y, x) {
         const gridEntities = this.game.enemyGrid.getTotalEntities();
         const enemies = this.game.enemies.length;
@@ -143,6 +177,12 @@ export class DebugOverlay {
         }
     }
     
+    /**
+     * 繪製 Update Loop 管線四階段執行狀態
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     * @param {number} y - 繪製 Y 座標
+     * @param {number} x - 繪製 X 座標
+     */
     drawUpdatePipeline(ctx, y, x) {
         const phases = [
             { name: 'Phase1', executed: this.game.logger.phaseExecuted.phase1, label: 'Grid' },
@@ -161,6 +201,12 @@ export class DebugOverlay {
         ctx.fillText(`Pipeline: ${statusLine}`, x + 10, y);
     }
     
+    /**
+     * 繪製玩家射擊冷卻狀態
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     * @param {number} y - 繪製 Y 座標
+     * @param {number} x - 繪製 X 座標
+     */
     drawPlayerStatus(ctx, y, x) {
         const fireCooldown = this.game.player.fireCooldown.toFixed(2);
         const canFire = this.game.player.canFire();
@@ -180,6 +226,12 @@ export class DebugOverlay {
         }
     }
     
+    /**
+     * 繪製實體數量統計(簡化版)
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     * @param {number} y - 繪製 Y 座標
+     * @param {number} x - 繪製 X 座標
+     */
     drawEntityCounts(ctx, y, x) {
         const projectiles = this.game.projectilePool.getActiveObjects().filter(p => p.active).length;
         const enemies = this.game.enemies.length;
@@ -189,6 +241,12 @@ export class DebugOverlay {
         ctx.fillText(`Projectiles: ${projectiles}, Enemies: ${enemies}, ExpOrbs: ${expOrbs}`, x + 10, y);
     }
     
+    /**
+     * 繪製系統警告訊息
+     * @param {CanvasRenderingContext2D} ctx - Canvas 繪圖上下文
+     * @param {number} y - 繪製 Y 座標
+     * @param {number} x - 繪製 X 座標
+     */
     drawWarnings(ctx, y, x) {
         this.detectWarnings();
         
@@ -201,6 +259,9 @@ export class DebugOverlay {
         }
     }
     
+    /**
+     * 偵測並收集系統警告(FPS、記憶體、格網、冷卻、子彈、敵人數量)
+     */
     detectWarnings() {
         this.warnings = [];
         
