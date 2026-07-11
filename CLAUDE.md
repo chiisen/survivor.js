@@ -88,91 +88,72 @@ DebugOverlay 會自動顯示 ⚠ 警告 (Grid 空、冷卻未更新、FPS 過低
 - **Git Commit**：`<type>(<scope>): <subject>` 格式，主旨與內容皆繁體中文。變更需同步更新 `CHANGELOG.md` (Keep a Changelog 格式)。提交流程須先詢問使用者核准。
 - **任務狀態**：`.agent_task_state.md` 為跨對話記憶快照 (≤50 行)，啟動時靜默讀取；被詢問時以 3-bullet 閃電報回報 (🚩目標 / ✅進展 / 🚀下一步)。
 
-## 工作模式：Claude Code (監督) + Pi (實作)
+## 工作模式：Claude Code (主架構師) + Pi (敏捷工兵)
 
-採雙 harness 分工。Claude Code 擔任監督者，不做實際 coding；Pi (pi.dev) 透過 `pi -p "..."` 接收任務並執行實作。
+本專案同時使用 Claude Code 與 pi-mono (`@earendil-works/pi-coding-agent`) 進行協作,嚴格遵守以下分工。
 
-### 核心原則：省 token 第一
+### 🤖 角色分工
 
-**所有 Pi 派發決策 (旗標、prompt 長度、進度觀察方式) 以最小化 token 為最高權重**,体驗/可觀測性次之。Pi 是「黑箱執行者」,Claude Code 只看**結果** (檔案 diff + 測試),不讀 Pi 過程。
+| 角色 | 職責 |
+|------|------|
+| **Claude Code (主架構師)** | 跨多檔大型功能重構、複雜核心演算法與商業邏輯、深層語意理解與 codebase 檢視 |
+| **Pi (敏捷工兵)** | 單檔單元測試撰寫與執行、修復 Linter/TypeScript 型別錯誤、微小 Bug 修復、本機 Bash 指令、套件安裝、簡單自動化指令碼 |
 
-### 派發流程 (省 token 版)
+### 🔄 協作工作流 (強制紀律)
 
-1. Claude Code 寫最短可行 Pi prompt (規範封裝在 `AGENTS.md`,prompt 不重複)
-2. 派發指令 (核心:用 `--append-system-prompt` 強制 Pi 寫進度檔,**不靠 AGENTS.md 軟性規範**):
-   ```
-   pi -p -ns --approve \
-     --append-system-prompt "每個工具呼叫(讀檔/寫檔/bash)完成後,立即執行 echo '<step 繁中簡短>' >> pi-progress.log" \
-     "<prompt>" > pi.log 2>&1
-   ```
-   背景跑,stdout 丟 log,**Claude Code 不主動讀**。
-3. Claude Code 用 `tail -5 pi-progress.log` 掌握進度 (~30 token/次)
-4. Pi 結束後 → `git status --short` + `git diff <target>` + `npm test` 由 Claude Code 自跑驗證
-5. 通過後由 Claude Code 撰寫繁中 commit (依上一節 Git Commit 規範)
+1. **無論是誰修改了代碼,完成後必須自動執行 `git status` 與 `git diff`** — 確認變更範圍
+2. **進行下一個任務前,必須確認前一個工具已經將變更 commit**,或在環境中留下明確的修改紀錄 (Context)
+3. **跨工具交接時,Context 必須完整** — 含任務範圍、規範要求、驗證標準
 
-### 進度觀察 (不花大量 token 的機制) — 已實測驗證 2026-07-11
+### Pi 派發指令 (pi-mono)
 
-Pi stdout (含 minimax-m3 內建 thinking block) 是最大 token 黑洞,**Claude Code 不讀**。改用檔案信號機制:
+```bash
+npx @earendil-works/pi-coding-agent --task "<任務描述>"
+```
 
-**機制 — 檔案信號 + `--append-system-prompt` 強制 (實測有效)**
+執行完畢後 Claude Code 必須檢查 `git status` + `git diff` 並向使用者匯報 Pi 的修改結果。
 
-Pi 透過 `--append-system-prompt` 被強制要求「每個工具呼叫後 echo 進度到 `pi-progress.log`」。
-Claude Code 定期 `tail -5 pi-progress.log` 看進度,**每次 ~30 token**。
-Pi 端每步驟成本 ~20 token (一行 echo),比完整 stdout 報告 (~幾千 token) 省 97%+。
+### Pi 適用任務 (敏捷工兵角色)
 
-**⚠️ 實測結論 (2026-07-11 五輪驗證)**:
+- ✅ 單一檔案的單元測試撰寫
+- ✅ Linter / TypeScript 型別錯誤修復
+- ✅ 微小 Bug 修復 (單檔範圍)
+- ✅ 本機 Bash 指令、套件安裝、簡單自動化
+
+### 不適用 Pi 的情境 (交回 Claude Code)
+
+- **跨檔重構 / 新增依賴 / 修改建構設定**
+- **Update Loop 四階段邏輯** (`js/game.js` 的 `update(dt)`)
+- **核心演算法與商業邏輯**
+- **需要技能紀律的任務** (TDD / systematic-debugging / verification-before-completion)
+- **影響組合模式介面** (`Player.js` / `Enemy.js` 對外 getter/setter)
+
+### Pi 設定檔
+
+- 根目錄 `AGENTS.md` 為 pi-mono 與其他相容工具預設讀取的專案指令檔
+- `.agents/AGENTS.md` 為其他 AI 工具 (Codex/Cursor) 用,內容為 superpowers 技能導覽,與 pi-mono 不衝突
+
+### 附錄:pi.dev 舊版實測經驗 (非 pi-mono)
+
+> ⚠️ 本節為 2026-07-11 使用 **pi.dev** (`pi` CLI, obra 開發,`bailian` provider + `minimax-m3` model) 的實測經驗。**pi-mono (`@earendil-works/pi-coding-agent`) 是不同工具**,以下結論不一定適用,僅供參考。
+
+5 輪測試 (v1~v5) 結果:
 
 | 測試 | 任務 | echo 進度 | 主任務 |
 |------|------|----------|--------|
 | v1 (只寫 AGENTS.md) | 4 步純讀 | ❌ 失敗 | N/A |
 | v2 (`--append-system-prompt`) | 4 步純讀 | ✅ 4 步齊全 | ✅ |
-| v3 (system-prompt) | objectPool.js 169 行 JSDoc | ❌ 未建立 | ✅ (中止時剛好完成) |
-| v4 (system-prompt + `@typedef`) | talent.js 24 行 JSDoc | ❌ 未建立 | ❌ timeout 130s 完全沒產出 |
-| v5 (system-prompt 簡化) | talent.js 24 行 JSDoc | ❌ 未建立 | ❌ timeout 200s 完全沒產出 |
+| v3 | objectPool.js 169 行 JSDoc | ❌ | ✅ (中止時剛好完成) |
+| v4 + `@typedef` | talent.js 24 行 | ❌ | ❌ timeout 130s |
+| v5 簡化 | talent.js 24 行 | ❌ | ❌ timeout 200s |
 
-**四個關鍵教訓**:
+**pi.dev 結論**:在本機 minimax-m3 model 下,JSDoc 補註任務成功率 20% (1/5),不適合穩定生產。**pi-mono 是否更穩定需另行實測**。
 
-1. **AGENTS.md 對 Pi 是「參考用」**,強制行為必須靠 `--append-system-prompt`
-2. **`--append-system-prompt` 在複雜任務下也不可靠** — pi-progress.log 機制僅供參考,**最終仍以 `git diff` 為真相**
-3. **Pi 處理時間預估要保守**:169 行 JSDoc 約需 2-3 分鐘,1.5 分鐘中止剛好錯過完成點。**預估公式 = 任務行數 × 1 秒 + 60 秒緩衝,timeout 設預估的 1.5 倍**
-4. **Pi 處理 JSDoc 補註任務不穩定** (5 次測試僅 1 次完全成功 = 20%) — 簡化 prompt 與延長 timeout 都無效,根因在 minimax-m3 model 端 (API 不穩 / 限流 / regional latency),**正式 JSDoc 工程建議由 Claude Code 自己做**
+通用教訓 (跨工具適用):
 
-**pi.log / stdout 不可信**:
-
-- Pi 把 stdout 緩衝到整個任務結束才一次輸出
-- 中止 Pi = stdout 全部遺失 (`pi.log` 0 bytes **不代表** Pi 沒產出)
-- **唯一可靠進度來源是檔案系統**:`git status --short` + `git diff <target>`
-- 結論:**派發後耐心等 timeout,不要中途看 log 判斷 Pi 是否卡住**
-
-**失敗才 debug**:
-
-Pi 跑完後先 `git status --short` 看有沒有改動:
-- **有改動** → 直接驗證,log 不讀 (省)
-- **沒改動** → `cat pi.log` 付 debug token 看卡在哪
-
-### Pi 指令必加旗標
-
-| 旗標 | 作用 |
-|------|------|
-| `-ns` / `--no-skills` | 停用 superpowers 套件載入 (跟 Claude Code 技能重疊,且拖慢) |
-| `--approve` | 跳過專案本地檔案信任確認 |
-| `-p` / `--print` | Print mode,非互動 (不加會進 TUI) |
-
-### 已知 Pi 環境限制 (本機設定)
-
-- **Provider/Model**: `bailian` (直打 `api.minimax.io/v1`) / `minimax-m3`
-- **minimax-m3 內建 thinking block**:`--thinking off` 無效,輸出含 `<think>...</think>`,屬正常非卡住
-- **superpowers 全域套件** (`~/.pi/agent/git/github.com/obra/superpowers/`):必加 `-ns` 停用
-
-### 不適用 Pi 的情境
-- **Update Loop 四階段邏輯** (`js/game.js` 的 `update(dt)`)
-- **跨檔重構 / 新增依賴 / 修改建構設定**
-- **需要技能紀律的任務** (TDD / systematic-debugging / verification-before-completion)
-- **影響組合模式介面** (`Player.js` / `Enemy.js` 對外 getter/setter)
-
-### Pi 設定檔
-- 根目錄 `AGENTS.md` 為 Pi 預設讀取的專案指令檔 (摘自本檔的最小子集)
-- `.agents/AGENTS.md` 為其他 AI 工具 (Codex/Cursor) 用,內容為 superpowers 技能導覽,與 Pi 不衝突
+- **stdout/log 不可信** — 無論 pi.dev 或 pi-mono,agent stdout 可能被緩衝,中止即遺失。**唯一可靠進度來源是檔案系統** (`git status` + `git diff`)
+- **派發後耐心等 timeout,不中途判斷卡住**
+- **`AGENTS.md` 是軟性規範,不能依賴 agent 自動遵守進度回報**
 
 ## graphify
 

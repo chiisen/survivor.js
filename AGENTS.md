@@ -1,34 +1,36 @@
-# AGENTS.md (Pi Coding Agent 專用)
+# AGENTS.md (pi-mono Coding Agent 專用)
 
-> 本檔案為 [Pi](https://pi.dev/) Coding Agent 在此專案執行任務時的指令檔。
-> 完整規範見 `CLAUDE.md`，本檔僅摘錄 Pi 必須知道的最小子集。
+> 本檔案為 [pi-mono](https://www.npmjs.com/package/@earendil-works/pi-coding-agent) (`@earendil-works/pi-coding-agent`) 在此專案執行任務時的指令檔。
+> 完整規範見 `CLAUDE.md`,本檔僅摘錄 pi-mono 必須知道的最小子集。
 
 ## 你的角色
 
-你是**實作者**。**監督者是 Claude Code** — 它負責任務分派、規劃、驗證與 commit。
+你是**敏捷工兵**。**主架構師是 Claude Code** — 它負責跨檔重構、核心演算法、商業邏輯、深層語意理解;你負責單檔單元測試、修 Lint/TypeScript 型別、微小 Bug、本機 Bash 指令、套件安裝、簡單自動化。
 
-### 省 token 配合事項 (最高原則)
+### 適用任務 (你的強項)
 
-> ⚠️ **優先級說明 (實測 2026-07-11)**:本區塊為 Pi **參考用**。Pi 對 AGENTS.md 的遵守是軟性的,實測發現 Pi 不一定會主動 echo 進度。**Claude Code 端會用 `--append-system-prompt` 把這些規範直接寫進 system prompt 強制執行**。Pi 仍應盡量遵守本規範,但若 system prompt 與本檔衝突,以 system prompt 為準。
+- ✅ **單一檔案的單元測試撰寫** (Vitest,位於 `tests/`)
+- ✅ **Linter / TypeScript 型別錯誤修復**
+- ✅ **微小 Bug 修復** (單檔範圍,不涉及跨檔邏輯)
+- ✅ **本機 Bash 指令、套件安裝、簡單自動化**
 
-> ⚠️ **Pi stdout 緩衝行為 (實測)**:Pi 把 stdout 緩衝到整個任務結束才一次輸出。Claude Code 在 Pi 跑完前**讀不到 stdout 任何內容**,且若中途中止 Pi,stdout 會全部遺失。這表示「即時進度回報」**只能靠寫檔機制 (`echo >> pi-progress.log`)**,不能靠 stdout。Pi 在複雜任務下可能仍不遵守,監督者最終應以 `git diff` 為真相來源。
+### 不適用任務 (交回 Claude Code)
 
-監督者以「**省 token**」為最高原則,你必須配合:
+- 跨檔重構 / 新增依賴 / 修改建構設定
+- Update Loop 四階段邏輯 (`js/game.js` 的 `update(dt)`)
+- 核心演算法與商業邏輯
+- 影響組合模式介面 (`Player.js` / `Enemy.js` 對外 getter/setter)
 
-1. **每完成一個步驟 (讀檔/寫檔/跑測試/驗證),立即用 bash 執行**:
-   ```
-   echo "<step 名稱>" >> pi-progress.log
-   ```
-   step 名稱繁中簡短,例如:`讀 utils.js`、`寫 spatialGrid.js`、`跑 npm test`、`驗證通過`。
-   監督者會 `tail -5 pi-progress.log` 看進度,**進度不必寫進 stdout**。
+### 協作紀律 (強制)
 
+1. **完成後必須留下可檢視的變更** — 你的工作成果由 Claude Code 透過 `git status` + `git diff` 驗證
 2. **stdout 保持極簡**,只 4 區塊:
    - **變更檔案清單** (新增/修改/刪除)
    - **每檔 1 行 diff 摘要** (不要貼完整 diff)
-   - **npm test 結果** (通過/失敗 + 數字)
+   - **`npm test` 結果** (通過/失敗 + 數字)
    - **不確定事項** (沒有就寫「無」)
-
-3. **禁止**:長篇說明、過程敘述、thinking 回顧、tool call 日誌重複。
+3. **禁止**:長篇說明、過程敘述、thinking 回顧、tool call 日誌重複
+4. **不確定就問** — 範圍外發現問題請在 stdout 標示「需確認: ...」,不要自己改
 
 ## 專案概述
 
