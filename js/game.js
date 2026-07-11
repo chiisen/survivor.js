@@ -1114,8 +1114,23 @@ this.autoFire();
     showUpgradeModal() {
         this.isPaused = true;
         const upgrades = getRandomUpgrades(3);
-        
+
+        // 5 秒內未選擇則自動隨機選一個
+        clearTimeout(this._upgradeTimer);
+        this._upgradeTimer = setTimeout(() => {
+            if (this.ui.isUpgradeModalOpen()) {
+                const randomIndex = Math.floor(Math.random() * upgrades.length);
+                this.ui.hideUpgradeModal();
+                this.player.applyUpgrade(upgrades[randomIndex]);
+                this.ui.updateHp(this.player.hp, this.player.maxHp);
+                this.ui.updateShield(this.player.shield, this.player.maxShield);
+                this.updateSkillStats();
+                this.isPaused = false;
+            }
+        }, 5000);
+
         this.ui.showUpgradeModal(upgrades, (selectedUpgrade) => {
+            clearTimeout(this._upgradeTimer);
             this.player.applyUpgrade(selectedUpgrade);
             this.ui.updateHp(this.player.hp, this.player.maxHp);
             this.ui.updateShield(this.player.shield, this.player.maxShield);

@@ -33,7 +33,12 @@ describe('StorageManager', () => {
     beforeEach(() => {
         localStorageMock.clear();
         vi.clearAllMocks();
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         mgr = new StorageManager();
+    });
+
+    afterEach(() => {
+        console.warn.mockRestore();
     });
 
     describe('constructor', () => {
