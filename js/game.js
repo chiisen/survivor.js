@@ -1115,9 +1115,17 @@ this.autoFire();
         this.isPaused = true;
         const upgrades = getRandomUpgrades(3);
 
-        // 5 秒內未選擇則自動隨機選一個
+        // 5 秒倒數 + 自動隨機選
+        clearInterval(this._upgradeInterval);
         clearTimeout(this._upgradeTimer);
+        let remaining = 5;
+        this.ui.updateUpgradeTimer(remaining);
+        this._upgradeInterval = setInterval(() => {
+            remaining--;
+            this.ui.updateUpgradeTimer(remaining);
+        }, 1000);
         this._upgradeTimer = setTimeout(() => {
+            clearInterval(this._upgradeInterval);
             if (this.ui.isUpgradeModalOpen()) {
                 const randomIndex = Math.floor(Math.random() * upgrades.length);
                 this.ui.hideUpgradeModal();
@@ -1130,6 +1138,7 @@ this.autoFire();
         }, 5000);
 
         this.ui.showUpgradeModal(upgrades, (selectedUpgrade) => {
+            clearInterval(this._upgradeInterval);
             clearTimeout(this._upgradeTimer);
             this.player.applyUpgrade(selectedUpgrade);
             this.ui.updateHp(this.player.hp, this.player.maxHp);

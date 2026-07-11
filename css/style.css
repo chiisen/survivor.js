@@ -36,7 +36,8 @@ body {
     align-items: center;
 }
 
-#hp-bar, #exp-bar {
+#hp-bar,
+#exp-bar {
     position: relative;
     width: 300px;
     height: 48px;
@@ -92,7 +93,8 @@ body {
     transition: width 0.3s ease;
 }
 
-#hp-text, #exp-text {
+#hp-text,
+#exp-text {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -113,7 +115,7 @@ body {
 #timer {
     position: absolute;
     top: 20px;
-    right: 33.33%;
+    right: 255px;
     color: white;
     font-size: 48px;
     font-weight: bold;
@@ -148,7 +150,8 @@ body {
     border: 2px solid rgba(46, 204, 113, 0.5);
 }
 
-#upgrade-modal, #game-over {
+#upgrade-modal,
+#game-over {
     position: absolute;
     top: 0;
     left: 0;
@@ -161,7 +164,8 @@ body {
     z-index: 100;
 }
 
-#upgrade-content, #game-over-content {
+#upgrade-content,
+#game-over-content {
     background: linear-gradient(135deg, #2c3e50, #34495e);
     padding: 40px;
     border-radius: 20px;
@@ -175,11 +179,20 @@ body {
     max-width: 600px;
 }
 
-#upgrade-content h2, #game-over-content h1 {
+#upgrade-content h2,
+#game-over-content h1 {
     color: #f1c40f;
     margin-bottom: 30px;
     font-size: 55px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#upgrade-timer {
+    color: #e74c3c;
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 #upgrade-options {
@@ -394,6 +407,7 @@ body {
         transform: translateY(-20px);
         opacity: 0;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;
@@ -405,6 +419,7 @@ body {
         transform: translateY(0);
         opacity: 1;
     }
+
     to {
         transform: translateY(-20px);
         opacity: 0;

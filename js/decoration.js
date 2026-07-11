@@ -637,8 +637,6 @@ export class DecorationManager {
             }
         }
         
-        console.log(`[Mushroom] Total pixels: ${data.length / 4}, Black pixels: ${blackPixels}, Processed: ${processedPixels}`);
-        
         ctx.putImageData(imageData, 0, 0);
         return canvas;
     }

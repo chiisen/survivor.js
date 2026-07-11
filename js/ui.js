@@ -175,6 +175,8 @@ export class UI {
     showUpgradeModal(upgrades, onSelect) {
         this.upgradeModal.classList.remove('hidden');
         this.upgradeOptions.innerHTML = '';
+        this.upgradeTimer = document.getElementById('upgrade-timer');
+        if (this.upgradeTimer) this.upgradeTimer.textContent = '5';
 
         upgrades.forEach(upgrade => {
             const option = document.createElement('div');
@@ -189,6 +191,16 @@ export class UI {
             });
             this.upgradeOptions.appendChild(option);
         });
+    }
+
+    /**
+     * 更新升級倒數計時顯示
+     * @param {number} seconds - 剩餘秒數
+     */
+    updateUpgradeTimer(seconds) {
+        if (this.upgradeTimer) {
+            this.upgradeTimer.textContent = seconds;
+        }
     }
 
     /**
