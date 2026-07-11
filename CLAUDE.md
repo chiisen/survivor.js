@@ -88,6 +88,77 @@ DebugOverlay 會自動顯示 ⚠ 警告 (Grid 空、冷卻未更新、FPS 過低
 - **Git Commit**：`<type>(<scope>): <subject>` 格式，主旨與內容皆繁體中文。變更需同步更新 `CHANGELOG.md` (Keep a Changelog 格式)。提交流程須先詢問使用者核准。
 - **任務狀態**：`.agent_task_state.md` 為跨對話記憶快照 (≤50 行)，啟動時靜默讀取；被詢問時以 3-bullet 閃電報回報 (🚩目標 / ✅進展 / 🚀下一步)。
 
+## 工作模式：Claude Code (監督) + Pi (實作)
+
+採雙 harness 分工。Claude Code 擔任監督者，不做實際 coding；Pi (pi.dev) 透過 `pi -p "..."` 接收任務並執行實作。
+
+### 核心原則：省 token 第一
+
+**所有 Pi 派發決策 (旗標、prompt 長度、進度觀察方式) 以最小化 token 為最高權重**,体驗/可觀測性次之。Pi 是「黑箱執行者」,Claude Code 只看**結果** (檔案 diff + 測試),不讀 Pi 過程。
+
+### 派發流程 (省 token 版)
+
+1. Claude Code 寫最短可行 Pi prompt (規範封裝在 `AGENTS.md`,prompt 不重複)
+2. 派發指令 (核心:用 `--append-system-prompt` 強制 Pi 寫進度檔,**不靠 AGENTS.md 軟性規範**):
+   ```
+   pi -p -ns --approve \
+     --append-system-prompt "每個工具呼叫(讀檔/寫檔/bash)完成後,立即執行 echo '<step 繁中簡短>' >> pi-progress.log" \
+     "<prompt>" > pi.log 2>&1
+   ```
+   背景跑,stdout 丟 log,**Claude Code 不主動讀**。
+3. Claude Code 用 `tail -5 pi-progress.log` 掌握進度 (~30 token/次)
+4. Pi 結束後 → `git status --short` + `git diff <target>` + `npm test` 由 Claude Code 自跑驗證
+5. 通過後由 Claude Code 撰寫繁中 commit (依上一節 Git Commit 規範)
+
+### 進度觀察 (不花大量 token 的機制) — 已實測驗證 2026-07-11
+
+Pi stdout (含 minimax-m3 內建 thinking block) 是最大 token 黑洞,**Claude Code 不讀**。改用檔案信號機制:
+
+**機制 — 檔案信號 + `--append-system-prompt` 強制 (實測有效)**
+
+Pi 透過 `--append-system-prompt` 被強制要求「每個工具呼叫後 echo 進度到 `pi-progress.log`」。
+Claude Code 定期 `tail -5 pi-progress.log` 看進度,**每次 ~30 token**。
+Pi 端每步驟成本 ~20 token (一行 echo),比完整 stdout 報告 (~幾千 token) 省 97%+。
+
+**⚠️ 實測結論 (2026-07-11 驗證)**:
+
+| 派發方式 | Pi 是否遵守 echo 進度 |
+|---------|----------------------|
+| 只寫 AGENTS.md (軟性規範) | ❌ **失敗** — Pi 連 step 1 都沒 echo,跑 2 分鐘無產出 |
+| `--append-system-prompt` 強制 | ✅ **成功** — Pi 完美執行 4 步,進度檔 90 bytes 齊全 |
+
+→ AGENTS.md 對 Pi 是「參考用」(專案規範/Update Loop 不變量等背景知識),**「強制行為」必須靠 `--append-system-prompt`**。
+
+**失敗才 debug**:
+
+Pi 跑完後先 `git status --short` 看有沒有改動:
+- **有改動** → 直接驗證,log 不讀 (省)
+- **沒改動** → `cat pi.log` 付 debug token 看卡在哪
+
+### Pi 指令必加旗標
+
+| 旗標 | 作用 |
+|------|------|
+| `-ns` / `--no-skills` | 停用 superpowers 套件載入 (跟 Claude Code 技能重疊,且拖慢) |
+| `--approve` | 跳過專案本地檔案信任確認 |
+| `-p` / `--print` | Print mode,非互動 (不加會進 TUI) |
+
+### 已知 Pi 環境限制 (本機設定)
+
+- **Provider/Model**: `bailian` (直打 `api.minimax.io/v1`) / `minimax-m3`
+- **minimax-m3 內建 thinking block**:`--thinking off` 無效,輸出含 `<think>...</think>`,屬正常非卡住
+- **superpowers 全域套件** (`~/.pi/agent/git/github.com/obra/superpowers/`):必加 `-ns` 停用
+
+### 不適用 Pi 的情境
+- **Update Loop 四階段邏輯** (`js/game.js` 的 `update(dt)`)
+- **跨檔重構 / 新增依賴 / 修改建構設定**
+- **需要技能紀律的任務** (TDD / systematic-debugging / verification-before-completion)
+- **影響組合模式介面** (`Player.js` / `Enemy.js` 對外 getter/setter)
+
+### Pi 設定檔
+- 根目錄 `AGENTS.md` 為 Pi 預設讀取的專案指令檔 (摘自本檔的最小子集)
+- `.agents/AGENTS.md` 為其他 AI 工具 (Codex/Cursor) 用,內容為 superpowers 技能導覽,與 Pi 不衝突
+
 ## graphify
 
 This project has a graphify knowledge graph at graphify-out/.

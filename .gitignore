@@ -16,3 +16,4 @@ node_modules/
 .claude/
 graphify-out/cache/
 graphify-out/cost.json
+*.log
