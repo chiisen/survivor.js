@@ -90,7 +90,9 @@ DebugOverlay 會自動顯示 ⚠ 警告 (Grid 空、冷卻未更新、FPS 過低
 
 ## 工作模式：Claude Code (主架構師) + Pi (敏捷工兵)
 
-本專案同時使用 Claude Code 與 pi-mono (`@earendil-works/pi-coding-agent`) 進行協作,嚴格遵守以下分工。
+本專案同時使用 Claude Code 與 [pi](https://pi.dev/) (`@earendil-works/pi-coding-agent`,npm 套件名 `pi-mono`) 進行協作,嚴格遵守以下分工。
+
+> 📌 **工具版本提醒**:`pi-mono` 就是 pi 的 npm 套件版,**不是不同工具**。本機 `pi` 全域安裝是 0.80.3 (有稳定性 bug,JSDoc 任務成功率 20%),**建議用 `npx` 跑最新版 (0.80.6+)**。
 
 ### 🤖 角色分工
 
@@ -105,11 +107,15 @@ DebugOverlay 會自動顯示 ⚠ 警告 (Grid 空、冷卻未更新、FPS 過低
 2. **進行下一個任務前,必須確認前一個工具已經將變更 commit**,或在環境中留下明確的修改紀錄 (Context)
 3. **跨工具交接時,Context 必須完整** — 含任務範圍、規範要求、驗證標準
 
-### Pi 派發指令 (pi-mono)
+### Pi 派發指令 (用 npx 跑最新版)
 
 ```bash
-npx @earendil-works/pi-coding-agent --task "<任務描述>"
+npx @earendil-works/pi-coding-agent -p --approve "<任務描述>"
 ```
+
+- `-p` / `--print` — Print mode,非互動 (必要)
+- `--approve` — 跳過專案本地檔案信任確認
+- 不必加 `-ns`、`--append-system-prompt` (0.80.6 在簡潔指令下就穩定)
 
 執行完畢後 Claude Code 必須檢查 `git status` + `git diff` 並向使用者匯報 Pi 的修改結果。
 
@@ -133,9 +139,9 @@ npx @earendil-works/pi-coding-agent --task "<任務描述>"
 - 根目錄 `AGENTS.md` 為 pi-mono 與其他相容工具預設讀取的專案指令檔
 - `.agents/AGENTS.md` 為其他 AI 工具 (Codex/Cursor) 用,內容為 superpowers 技能導覽,與 pi-mono 不衝突
 
-### 附錄:pi.dev 舊版實測經驗 (非 pi-mono)
+### 附錄:pi 0.80.3 (本機舊版) 實測經驗
 
-> ⚠️ 本節為 2026-07-11 使用 **pi.dev** (`pi` CLI, obra 開發,`bailian` provider + `minimax-m3` model) 的實測經驗。**pi-mono (`@earendil-works/pi-coding-agent`) 是不同工具**,以下結論不一定適用,僅供參考。
+> ⚠️ 本節為 2026-07-11 使用**本機全域安裝** `pi` 0.80.3 (`bailian` provider + `minimax-m3` model) 的實測經驗。**改用 `npx @earendil-works/pi-coding-agent` (0.80.6+) 後穩定性大幅提升**,以下結論主要適用舊版。
 
 5 輪測試 (v1~v5) 結果:
 
@@ -147,11 +153,11 @@ npx @earendil-works/pi-coding-agent --task "<任務描述>"
 | v4 + `@typedef` | talent.js 24 行 | ❌ | ❌ timeout 130s |
 | v5 簡化 | talent.js 24 行 | ❌ | ❌ timeout 200s |
 
-**pi.dev 結論**:在本機 minimax-m3 model 下,JSDoc 補註任務成功率 20% (1/5),不適合穩定生產。**pi-mono 是否更穩定需另行實測**。
+**v6 (npx 0.80.6)**:同樣 talent.js + `@typedef` 任務,**一發成功** → 證實舊版 bug,改用 `npx` 跑最新版即可。
 
-通用教訓 (跨工具適用):
+通用教訓 (跨版本適用):
 
-- **stdout/log 不可信** — 無論 pi.dev 或 pi-mono,agent stdout 可能被緩衝,中止即遺失。**唯一可靠進度來源是檔案系統** (`git status` + `git diff`)
+- **stdout/log 不可信** — agent stdout 可能被緩衝,中止即遺失。**唯一可靠進度來源是檔案系統** (`git status` + `git diff`)
 - **派發後耐心等 timeout,不中途判斷卡住**
 - **`AGENTS.md` 是軟性規範,不能依賴 agent 自動遵守進度回報**
 
