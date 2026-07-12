@@ -312,8 +312,10 @@ start() {
         
         this.player = new Player(this.canvas.width / 2, this.canvas.height / 2);
         this.player.setAngleConfig(this.dirToAngle, this.defaultAngle);
-        
-        this.player.maxHp = Math.floor(100 * difficultySettings.playerHpMultiplier);
+
+        // 玩家 HP = 100 + (level-1) × 20，再乘以難度倍率
+        const levelHpBonus = 100 + (this.level - 1) * 20;
+        this.player.maxHp = Math.floor(levelHpBonus * difficultySettings.playerHpMultiplier);
         this.player.hp = this.player.maxHp;
         
         this.enemies = [];
@@ -1134,11 +1136,10 @@ this.autoFire();
             this.exp -= this.expToLevel;
             this.level++;
             this.expToLevel = Math.floor(this.expToLevel * this.expGrowthRate);
-            
-            // 升級獎勵：攻擊力 +1, HP +10%, HP 全滿
+
+            // 升級獎勵：攻擊力 +1, HP +20, HP 全滿
             this.player.damage += 1;
-            const hpBonus = Math.floor(this.player.maxHp * 0.1);
-            this.player.maxHp += hpBonus;
+            this.player.maxHp += 20;
             this.player.hp = this.player.maxHp;
             
             this.audio.playLevelUp();

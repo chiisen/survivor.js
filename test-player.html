@@ -66,6 +66,17 @@
             color: #f39c12;
             font-size: 14px;
         }
+
+        .formula-box { background: #16213e; border: 2px solid #34495e; border-radius: 8px; margin-bottom: 10px; }
+        .formula-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; cursor: pointer; }
+        .formula-header:hover { background: rgba(255,255,255,0.05); }
+        .formula-title { color: #f39c12; font-size: 13px; font-weight: bold; margin: 0; }
+        .formula-toggle { color: #95a5a6; font-size: 11px; }
+        .formula-content { padding: 0 12px 12px 12px; display: block; }
+        .formula-box.collapsed .formula-content { display: none; }
+        .formula-box.collapsed .formula-toggle::after { content: '展開'; }
+        .formula-box:not(.collapsed) .formula-toggle::after { content: '收合'; }
+        .formula { color: #ecf0f1; font-size: 12px; line-height: 1.6; }
     </style>
 </head>
 
@@ -83,7 +94,23 @@
             <div></div>
         </div>
         <div class="right">
-            <canvas id="main" width="400" height="400"></canvas>
+            <div class="formula-box collapsed" style="max-width: 350px; width: 100%; margin-bottom: 10px;">
+                <div class="formula-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                    <div class="formula-title">等級影響</div>
+                    <div class="formula-toggle"></div>
+                </div>
+                <div class="formula-content">
+                    <div class="formula">
+                        玩家等級：<input type="number" id="level-input" value="1" min="1" max="100" style="width: 50px; padding: 3px; border-radius: 4px; border: 1px solid #3498db; background: #0d1117; color: white; font-size: 12px;"><br><br>
+                        <span style="color:#2ecc71;">玩家 HP</span>：100 + (Lv-1) × 20 = <span id="f-player-hp">100</span><br>
+                        <span style="color:#2ecc71;">玩家攻擊</span>：1 + (Lv-1) × 1 = <span id="f-player-dmg">1</span><br>
+                        <span style="color:#f39c12;">怪物 HP 倍率</span>：1 + (Lv-1) × 0.8 = <span id="f-enemy-hp">1.0</span>x<br>
+                        <span style="color:#e74c3c;">怪物傷害倍率</span>：1 + (Lv-1) × 0.3 = <span id="f-enemy-dmg">1.0</span>x<br>
+                        <span style="color:#5dade2;">玩家</span>：速度:200 | 攻擊範圍:300 | 拾取:80
+                    </div>
+                </div>
+            </div>
+            <canvas id="main" width="300" height="300"></canvas>
             <div id="info">按 <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> 旋轉，<kbd>Space</kbd> 攻擊</div>
             <div id="debug"></div>
             <div style="margin-top: 15px;"><a href="index.html" style="color: #5dade2; font-size: 14px;">← 返回首頁</a>
@@ -131,8 +158,30 @@
             buildPreviews();
         });
 
+        // 等級影響公式
+        const levelInput = document.getElementById('level-input');
+        const fPlayerHp = document.getElementById('f-player-hp');
+        const fPlayerDmg = document.getElementById('f-player-dmg');
+        const fEnemyHp = document.getElementById('f-enemy-hp');
+        const fEnemyDmg = document.getElementById('f-enemy-dmg');
+
+        function updateLevelStats() {
+            const level = parseInt(levelInput.value) || 1;
+            const playerHp = 100 + (level - 1) * 20;
+            const playerDmg = 1 + (level - 1) * 1;
+            const enemyHpMult = 1 + (level - 1) * 0.8;
+            const enemyDmgMult = 1 + (level - 1) * 0.3;
+            fPlayerHp.textContent = playerHp;
+            fPlayerDmg.textContent = playerDmg;
+            fEnemyHp.textContent = enemyHpMult.toFixed(1);
+            fEnemyDmg.textContent = enemyDmgMult.toFixed(1);
+        }
+
+        levelInput.addEventListener('input', updateLevelStats);
+        updateLevelStats();
+
         const core = {
-            x: 200, y: 200, radius: 20,
+            x: 150, y: 150, radius: 20,
             facingAngle: 0, flashTime: 0, magnetTimer: 0,
             baseAttackRange: 300, attackRange: 300
         };
@@ -186,12 +235,12 @@
             if (combat.attackAnimationTime > 0) combat.attackAnimationTime -= 1 / 60;
             if (keys[' ']) combat.attackAnimationTime = combat.attackDuration;
 
-            ctx.clearRect(0, 0, 400, 400);
+            ctx.clearRect(0, 0, 300, 300);
 
             ctx.strokeStyle = 'rgba(255,255,255,0.08)';
             ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(200, 0); ctx.lineTo(200, 400); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, 200); ctx.lineTo(400, 200); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(150, 0); ctx.lineTo(150, 300); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, 150); ctx.lineTo(300, 150); ctx.stroke();
 
             renderer.draw(ctx, core, combat);
 
