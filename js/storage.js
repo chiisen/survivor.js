@@ -1,6 +1,8 @@
 // @ts-check
 const STORAGE_KEY = 'survivor_js_stats';
 const LEADERBOARD_KEY = 'survivor_js_leaderboard';
+const SAVE_KEY = 'survivor_js_save';
+const SAVE_VERSION = 1;
 const MAX_LEADERBOARD_ENTRIES = 10;
 
 export class StorageManager {
@@ -210,5 +212,85 @@ export class StorageManager {
         this.leaderboard = [];
         this.save(this.stats);
         this.saveLeaderboard(this.leaderboard);
+    }
+
+    /**
+     * 儲存遊戲狀態到 localStorage
+     * @param {object} gameState - 完整遊戲狀態物件
+     * @returns {boolean} 儲存是否成功
+     */
+    saveGame(gameState) {
+        try {
+            const saveData = {
+                version: SAVE_VERSION,
+                timestamp: Date.now(),
+                state: gameState
+            };
+            localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+            return true;
+        } catch (e) {
+            console.warn('Failed to save game:', e);
+            return false;
+        }
+    }
+
+    /**
+     * 從 localStorage 載入遊戲狀態
+     * @returns {object|null} 遊戲狀態物件，無存檔時回傳 null
+     */
+    loadGame() {
+        try {
+            const data = localStorage.getItem(SAVE_KEY);
+            if (data) {
+                const saveData = JSON.parse(data);
+                if (saveData.version === SAVE_VERSION) {
+                    return saveData.state;
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to load game:', e);
+        }
+        return null;
+    }
+
+    /**
+     * 檢查是否有遊戲存檔
+     * @returns {boolean} 是否存在存檔
+     */
+    hasSave() {
+        return localStorage.getItem(SAVE_KEY) !== null;
+    }
+
+    /**
+     * 清除遊戲存檔
+     */
+    clearSave() {
+        localStorage.removeItem(SAVE_KEY);
+    }
+
+    /**
+     * 取得存檔的摘要資訊（用於顯示）
+     * @returns {{ level: number, wave: number, time: string, timestamp: string }|null} 存檔摘要
+     */
+    getSaveInfo() {
+        try {
+            const data = localStorage.getItem(SAVE_KEY);
+            if (data) {
+                const saveData = JSON.parse(data);
+                const state = saveData.state;
+                const mins = Math.floor(state.gameTime / 60);
+                const secs = Math.floor(state.gameTime % 60);
+                const date = new Date(saveData.timestamp);
+                return {
+                    level: state.level,
+                    wave: state.waveManager.currentWave,
+                    time: `${mins}分${secs}秒`,
+                    timestamp: date.toLocaleString('zh-TW')
+                };
+            }
+        } catch (e) {
+            console.warn('Failed to get save info:', e);
+        }
+        return null;
     }
 }

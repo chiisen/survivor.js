@@ -31,8 +31,10 @@
             </div>
             <div id="start-buttons">
                 <button id="start-btn">開始遊戲</button>
+                <button id="continue-btn" class="hidden">繼續遊戲</button>
                 <button id="settings-btn">⚙️ 設定</button>
             </div>
+            <div id="continue-info" class="hidden" style="margin-top: 10px; font-size: 13px; color: #95a5a6;"></div>
         </div>
     </div>
     
@@ -175,6 +177,10 @@
             <div id="pause-content">
                 <h1>遊戲暫停</h1>
                 <p>按 <kbd>ESC</kbd> 或 <kbd>P</kbd> 繼續遊戲</p>
+                <div id="pause-buttons" style="margin-top: 15px;">
+                    <button id="save-btn" class="pause-btn">💾 儲存遊戲</button>
+                </div>
+                <div id="save-message" class="hidden" style="color: #2ecc71; margin-top: 8px; font-size: 14px;">已儲存！</div>
                 <div id="pause-volume-controls" style="margin-top: 20px;">
                     <div class="pause-volume-control">
                         <label>主音量</label>

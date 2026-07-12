@@ -144,6 +144,7 @@ export class Game {
         
         this.setupInput();
         this.setupRestart();
+        this.setupSaveButton();
     }
 
     resize() {
@@ -265,6 +266,24 @@ export class Game {
         this.ui.onRestart(() => {
             this.restart();
         });
+    }
+
+    setupSaveButton() {
+        const saveBtn = document.getElementById('save-btn');
+        const saveMessage = document.getElementById('save-message');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                if (this.isRunning && this.isPaused) {
+                    const success = this.saveGame();
+                    if (success && saveMessage) {
+                        saveMessage.classList.remove('hidden');
+                        setTimeout(() => {
+                            saveMessage.classList.add('hidden');
+                        }, 2000);
+                    }
+                }
+            });
+        }
     }
 
 start() {
@@ -1225,6 +1244,7 @@ this.autoFire();
         this.isRunning = false;
         this.audio.stopBGM();
         this.audio.playGameOver();
+        this.storageManager.clearSave();
         
         const gameStats = {
             level: this.level,
@@ -1253,6 +1273,230 @@ this.autoFire();
         const leaderboard = this.storageManager.getLeaderboard();
         
         this.ui.showGameOver(gameStats, updatedHistoricalStats, newRecords, newAchievements, leaderboard);
+    }
+
+    /**
+     * 將目前遊戲狀態序列化為可儲存的物件
+     * @returns {object} 遊戲狀態物件
+     */
+    serializeState() {
+        return {
+            gameTime: this.gameTime,
+            level: this.level,
+            exp: this.exp,
+            expToLevel: this.expToLevel,
+            kills: this.kills,
+            difficulty: this.difficulty,
+            spawnTimer: this.spawnTimer,
+            bossesKilled: this.bossesKilled,
+            player: {
+                x: this.player.x,
+                y: this.player.y,
+                hp: this.player.hp,
+                maxHp: this.player.maxHp,
+                shield: this.player.shield,
+                maxShield: this.player.maxShield,
+                armor: this.player.armor,
+                speed: this.player.speed,
+                baseAttackRange: this.player.baseAttackRange,
+                attackRange: this.player.attackRange,
+                facingAngle: this.player.facingAngle,
+                pickupRange: this.player.pickupRange,
+                magnetTimer: this.player.magnetTimer,
+                baseFireRate: this.player.baseFireRate,
+                fireRate: this.player.fireRate,
+                fireCooldown: this.player.fireCooldown,
+                damage: this.player.damage,
+                projectileSpeed: this.player.projectileSpeed,
+                projectileCount: this.player.projectileCount,
+                critChance: this.player.critChance,
+                critDamage: this.player.critDamage,
+                lifesteal: this.player.lifesteal,
+                expBonus: this.player.expBonus,
+                skillCooldown: this.player.skillCooldown,
+                skillCooldownDuration: this.player.skillCooldownDuration,
+                upgradeStats: { ...this.player.upgradeStats }
+            },
+            enemies: this.enemies.map(enemy => ({
+                x: enemy.x,
+                y: enemy.y,
+                hp: enemy.hp,
+                maxHp: enemy.maxHp,
+                type: enemy.type.name,
+                speed: enemy.speed,
+                damage: enemy.damage,
+                expValue: enemy.expValue,
+                shieldHp: enemy.shieldHp,
+                shieldMaxHp: enemy.shieldMaxHp,
+                isElite: enemy.isElite,
+                canSplit: enemy.canSplit,
+                splitTriggered: enemy.splitTriggered,
+                explosive: enemy.explosive,
+                explosionRadius: enemy.explosionRadius,
+                explosionDamage: enemy.explosionDamage,
+                isStealth: enemy.isStealth,
+                baseAlpha: enemy.baseAlpha,
+                phase: enemy.phase,
+                rageMode: enemy.rageMode
+            })),
+            waveManager: {
+                currentWave: this.waveManager.currentWave,
+                waveTimer: this.waveManager.waveTimer,
+                isBreak: this.waveManager.isBreak,
+                isBossWave: this.waveManager.isBossWave,
+                bossSpawned: this.waveManager.bossSpawned,
+                enemiesSpawned: this.waveManager.enemiesSpawned
+            }
+        };
+    }
+
+    /**
+     * 從存檔狀態恢復遊戲
+     * @param {object} state - 序列化的遊戲狀態
+     */
+    loadState(state) {
+        this.gameTime = state.gameTime;
+        this.level = state.level;
+        this.exp = state.exp;
+        this.expToLevel = state.expToLevel;
+        this.kills = state.kills;
+        this.difficulty = state.difficulty;
+        this.spawnTimer = state.spawnTimer;
+        this.bossesKilled = state.bossesKilled;
+
+        const ps = state.player;
+        this.player = new Player(ps.x, ps.y);
+        this.player.hp = ps.hp;
+        this.player.maxHp = ps.maxHp;
+        this.player.shield = ps.shield;
+        this.player.maxShield = ps.maxShield;
+        this.player.armor = ps.armor;
+        this.player.speed = ps.speed;
+        this.player.core.baseAttackRange = ps.baseAttackRange;
+        this.player.attackRange = ps.attackRange;
+        this.player.facingAngle = ps.facingAngle;
+        this.player.pickupRange = ps.pickupRange;
+        this.player.magnetTimer = ps.magnetTimer;
+        this.player.combat.baseFireRate = ps.baseFireRate;
+        this.player.fireRate = ps.fireRate;
+        this.player.fireCooldown = ps.fireCooldown;
+        this.player.damage = ps.damage;
+        this.player.projectileSpeed = ps.projectileSpeed;
+        this.player.projectileCount = ps.projectileCount;
+        this.player.critChance = ps.critChance;
+        this.player.critDamage = ps.critDamage;
+        this.player.lifesteal = ps.lifesteal;
+        this.player.expBonus = ps.expBonus;
+        this.player.skillCooldown = ps.skillCooldown;
+        this.player.combat.skillCooldownDuration = ps.skillCooldownDuration;
+        this.player.core.upgradeStats = { ...ps.upgradeStats };
+        this.player.combat.upgradeStats = {
+            fireRate: ps.upgradeStats.fireRate || 0,
+            damage: ps.upgradeStats.damage || 0,
+            projectileSpeed: ps.upgradeStats.projectileSpeed || 0,
+            projectileCount: ps.upgradeStats.projectileCount || 0,
+            critChance: ps.upgradeStats.critChance || 0,
+            critDamage: ps.upgradeStats.critDamage || 0,
+            lifesteal: ps.upgradeStats.lifesteal || 0,
+            expBonus: ps.upgradeStats.expBonus || 0
+        };
+
+        this.enemies = [];
+        for (const ed of state.enemies) {
+            const enemy = Enemy.spawn(
+                this.canvas.width,
+                this.canvas.height,
+                this.player.x,
+                this.player.y,
+                this.gameTime,
+                ed.type === 'boss',
+                1
+            );
+            enemy.x = ed.x;
+            enemy.y = ed.y;
+            enemy.hp = ed.hp;
+            enemy.core.maxHp = ed.maxHp;
+            enemy.core.speed = ed.speed;
+            enemy.damage = ed.damage;
+            enemy.expValue = ed.expValue;
+            enemy.shieldHp = ed.shieldHp;
+            enemy.shieldMaxHp = ed.shieldMaxHp;
+            enemy.hasShield = ed.shieldHp > 0;
+            enemy.core.isElite = ed.isElite;
+            enemy.core.canSplit = ed.canSplit;
+            enemy.splitTriggered = ed.splitTriggered;
+            enemy.core.explosive = ed.explosive;
+            enemy.core.explosionRadius = ed.explosionRadius;
+            enemy.core.explosionDamage = ed.explosionDamage;
+            enemy.core.isStealth = ed.isStealth;
+            enemy.core.baseAlpha = ed.baseAlpha;
+            enemy.core.currentAlpha = ed.baseAlpha;
+            if (enemy.phaseManager) {
+                enemy.phaseManager.phase = ed.phase;
+                enemy.phaseManager.rageMode = ed.rageMode;
+            }
+            this.enemies.push(enemy);
+        }
+
+        const wm = state.waveManager;
+        this.waveManager.currentWave = wm.currentWave;
+        this.waveManager.waveTimer = wm.waveTimer;
+        this.waveManager.isBreak = wm.isBreak;
+        this.waveManager.isBossWave = wm.isBossWave;
+        this.waveManager.bossSpawned = wm.bossSpawned;
+        this.waveManager.enemiesSpawned = wm.enemiesSpawned;
+    }
+
+    /**
+     * 儲存目前遊戲狀態
+     * @returns {boolean} 儲存是否成功
+     */
+    saveGame() {
+        const state = this.serializeState();
+        return this.storageManager.saveGame(state);
+    }
+
+    /**
+     * 從存檔恢復並開始遊戲
+     * @returns {boolean} 載入是否成功
+     */
+    loadFromSave() {
+        const state = this.storageManager.loadGame();
+        if (!state) return false;
+
+        this.loadState(state);
+        this.projectilePool.releaseAll();
+        this.explosionPool.releaseAll();
+        this.bossSpawnPool.releaseAll();
+        this.shieldBreakPool.releaseAll();
+        this.bossDeathPool.releaseAll();
+        this.splitEffectPool.releaseAll();
+        this.enemyProjectiles = [];
+        this.expOrbs = [];
+        this.magnetItems = [];
+        this.damageNumbers = [];
+        this.chainKillDisplay.clear();
+
+        this.isRunning = true;
+        this.isPaused = false;
+        this.pauseScreen.classList.add('hidden');
+        this.ui.hideGameOver();
+        this.ui.clearBuffNotifications();
+        this.audioStarted = false;
+        this.screenShake = { x: 0, y: 0 };
+        this.ui.updateHp(this.player.hp, this.player.maxHp);
+        this.ui.updateShield(this.player.shield, this.player.maxShield);
+        this.ui.updateExp(this.exp, this.expToLevel);
+        this.ui.updateLevel(this.level);
+        this.updateSkillStats();
+
+        this.audio.audioStarted = true;
+        this.audio.resumeContext();
+        this.audio.startBGM();
+
+        this.lastTime = performance.now();
+        this.loop();
+        return true;
     }
 
     render() {

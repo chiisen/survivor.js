@@ -9,6 +9,8 @@ const startScreen = document.getElementById('start-screen');
 const settingsScreen = document.getElementById('settings-screen');
 const gameContainer = document.getElementById('game-container');
 const startBtn = document.getElementById('start-btn');
+const continueBtn = document.getElementById('continue-btn');
+const continueInfo = document.getElementById('continue-info');
 const settingsBtn = document.getElementById('settings-btn');
 const settingsBackBtn = document.getElementById('settings-back-btn');
 const backToMenuBtn = document.getElementById('back-to-menu-btn');
@@ -29,10 +31,24 @@ function applyVolumeSettings() {
     const masterVolume = masterVolumeSlider.value / 100;
     const sfxVolume = sfxVolumeSlider.value / 100;
     const bgmVolume = bgmVolumeSlider.value / 100;
-    
+
     game.audio.setMasterVolume(masterVolume);
     game.audio.setSfxVolume(sfxVolume);
     game.audio.setBgmVolume(bgmVolume);
+}
+
+function updateContinueButton() {
+    if (game.storageManager.hasSave()) {
+        continueBtn.classList.remove('hidden');
+        const info = game.storageManager.getSaveInfo();
+        if (info) {
+            continueInfo.classList.remove('hidden');
+            continueInfo.textContent = `存檔：Lv.${info.level} 波次${info.wave} ${info.time} (${info.timestamp})`;
+        }
+    } else {
+        continueBtn.classList.add('hidden');
+        continueInfo.classList.add('hidden');
+    }
 }
 
 difficultyBtns.forEach(btn => {
@@ -44,11 +60,19 @@ difficultyBtns.forEach(btn => {
 });
 
 startBtn.addEventListener('click', () => {
+    game.storageManager.clearSave();
     startScreen.classList.add('hidden');
     gameContainer.classList.remove('hidden');
     game.setDifficulty(selectedDifficulty);
     applyVolumeSettings();
     game.start();
+});
+
+continueBtn.addEventListener('click', () => {
+    startScreen.classList.add('hidden');
+    gameContainer.classList.remove('hidden');
+    applyVolumeSettings();
+    game.loadFromSave();
 });
 
 settingsBtn.addEventListener('click', () => {
@@ -64,6 +88,7 @@ backToMenuBtn.addEventListener('click', () => {
     game.isRunning = false;
     gameContainer.classList.add('hidden');
     startScreen.classList.remove('hidden');
+    updateContinueButton();
 });
 
 masterVolumeSlider.addEventListener('input', updateVolumeDisplays);
@@ -72,3 +97,4 @@ bgmVolumeSlider.addEventListener('input', updateVolumeDisplays);
 
 updateVolumeDisplays();
 applyVolumeSettings();
+updateContinueButton();

@@ -766,3 +766,37 @@ body {
     font-weight: bold;
     margin-left: auto;
 }
+
+.pause-btn {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border: 2px solid #5dade2;
+    padding: 12px 30px;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.pause-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.5);
+}
+
+#continue-btn {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border: 2px solid #5dade2;
+    padding: 25px 50px;
+    font-size: 28px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+#continue-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(52, 152, 219, 0.5);
+}
