@@ -101,9 +101,9 @@
                 <div class="skill-name">${skill.name}</div>
                 <div class="skill-desc">${skill.desc}</div>
                 <div class="skill-level">
-                    <button onclick="changeLevel('${skill.type}', -1)">-</button>
+                    <button onmousedown="startRepeat('${skill.type}', -1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()">-</button>
                     <span id="level-${skill.type}">0</span>
-                    <button onclick="changeLevel('${skill.type}', 1)">+</button>
+                    <button onmousedown="startRepeat('${skill.type}', 1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()">+</button>
                 </div>
                 <div class="skill-effect">每級：${skill.desc}</div>
                 <div class="skill-total" id="total-${skill.type}"></div>
@@ -113,10 +113,24 @@
         });
 
         // 調整技能等級
+        let repeatTimer = null;
+
         window.changeLevel = (type, delta) => {
             skillLevels[type] = Math.max(0, Math.min(20, skillLevels[type] + delta));
             document.getElementById(`level-${type}`).textContent = skillLevels[type];
             updateTotals();
+        };
+
+        window.startRepeat = (type, delta) => {
+            changeLevel(type, delta);
+            repeatTimer = setInterval(() => changeLevel(type, delta), 200);
+        };
+
+        window.stopRepeat = () => {
+            if (repeatTimer) {
+                clearInterval(repeatTimer);
+                repeatTimer = null;
+            }
         };
 
         // 更新所有技能總計
