@@ -186,8 +186,12 @@ export class UI {
                 <p>${upgrade.description}</p>
             `;
             option.addEventListener('click', () => {
-                this.hideUpgradeModal();
-                onSelect(upgrade);
+                const index = [...this.upgradeOptions.children].indexOf(option);
+                this.highlightUpgradeOption(index);
+                setTimeout(() => {
+                    this.hideUpgradeModal();
+                    onSelect(upgrade);
+                }, 500);
             });
             this.upgradeOptions.appendChild(option);
         });
@@ -204,10 +208,30 @@ export class UI {
     }
 
     /**
+     * 高亮指定的升級選項
+     * @param {number} index - 要高亮的選項索引
+     */
+    highlightUpgradeOption(index) {
+        const options = this.upgradeOptions.querySelectorAll('.upgrade-option');
+        options.forEach((opt, i) => {
+            opt.style.pointerEvents = 'none';
+            if (i === index) {
+                opt.classList.add('selected');
+            } else {
+                opt.classList.add('fading');
+            }
+        });
+    }
+
+    /**
      * 隱藏升級選擇模態框
      */
     hideUpgradeModal() {
         this.upgradeModal.classList.add('hidden');
+        const options = this.upgradeOptions.querySelectorAll('.upgrade-option');
+        options.forEach(opt => {
+            opt.classList.remove('selected', 'fading');
+        });
     }
 
     /**

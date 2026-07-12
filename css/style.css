@@ -223,6 +223,20 @@ body {
     border-color: #f1c40f;
 }
 
+.upgrade-option.selected {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(241, 196, 15, 0.8);
+    border-color: #f1c40f;
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    transition: all 0.3s ease;
+}
+
+.upgrade-option.fading {
+    opacity: 0.3;
+    transform: scale(0.95);
+    transition: all 0.3s ease;
+}
+
 .upgrade-option h3 {
     color: white;
     font-size: 25px;

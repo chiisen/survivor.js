@@ -1153,12 +1153,15 @@ this.autoFire();
             clearInterval(this._upgradeInterval);
             if (this.ui.isUpgradeModalOpen()) {
                 const randomIndex = Math.floor(Math.random() * upgrades.length);
-                this.ui.hideUpgradeModal();
-                this.player.applyUpgrade(upgrades[randomIndex]);
-                this.ui.updateHp(this.player.hp, this.player.maxHp);
-                this.ui.updateShield(this.player.shield, this.player.maxShield);
-                this.updateSkillStats();
-                this.isPaused = false;
+                this.ui.highlightUpgradeOption(randomIndex);
+                setTimeout(() => {
+                    this.ui.hideUpgradeModal();
+                    this.player.applyUpgrade(upgrades[randomIndex]);
+                    this.ui.updateHp(this.player.hp, this.player.maxHp);
+                    this.ui.updateShield(this.player.shield, this.player.maxShield);
+                    this.updateSkillStats();
+                    this.isPaused = false;
+                }, 500);
             }
         }, 5000);
 
