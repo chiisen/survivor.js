@@ -7,6 +7,7 @@
     "start": "npx serve .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "angles": "node -e \"const c=JSON.parse(require('fs').readFileSync('./config/angles.json','utf8'));console.log('↑上='+c.directions.up.angle+'°  ←左='+c.directions.left.angle+'°  ↓下='+c.directions.down.angle+'°  →右='+c.directions.right.angle+'°  預設='+c.defaultAngle+'°')\"",
     "typecheck": "tsc --noEmit -p jsconfig.json",
     "typecheck:watch": "tsc --noEmit -p jsconfig.json --watch"
   },

@@ -474,9 +474,9 @@ body {
 
 #game-title {
     color: #f1c40f;
-    font-size: 67px;
+    font-size: 36px;
     font-weight: bold;
-    text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     margin-bottom: 10px;
 }
 
@@ -553,34 +553,34 @@ body {
 
 #instructions {
     background: rgba(0, 0, 0, 0.3);
-    padding: 35px;
-    border-radius: 15px;
-    margin-bottom: 30px;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 25px;
     border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 #instructions h3 {
     color: #3498db;
-    font-size: 25px;
-    margin-bottom: 15px;
+    font-size: 14px;
+    margin-bottom: 8px;
 }
 
 #instructions ul {
     list-style: none;
     color: #ecf0f1;
-    font-size: 20px;
-    line-height: 2;
+    font-size: 12px;
+    line-height: 1.6;
 }
 
 #instructions kbd {
     background: #5dade2;
-    padding: 6px 14px;
-    border-radius: 5px;
+    padding: 2px 6px;
+    border-radius: 3px;
     font-family: monospace;
     font-weight: bold;
     color: white;
-    margin-right: 7px;
-    font-size: 20px;
+    margin-right: 4px;
+    font-size: 11px;
 }
 
 #start-buttons {
@@ -593,9 +593,9 @@ body {
     background: linear-gradient(135deg, #27ae60, #229954);
     color: white;
     border: 2px solid #2ecc71;
-    padding: 25px 70px;
-    font-size: 28px;
-    border-radius: 12px;
+    padding: 15px 40px;
+    font-size: 20px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: bold;
@@ -610,8 +610,8 @@ body {
     background: linear-gradient(135deg, #95a5a6, #7f8c8d);
     color: white;
     border: 2px solid #bdc3c7;
-    padding: 25px 42px;
-    font-size: 28px;
+    padding: 15px 30px;
+    font-size: 20px;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -802,9 +802,9 @@ body {
     background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
     border: 2px solid #5dade2;
-    padding: 25px 50px;
-    font-size: 28px;
-    border-radius: 12px;
+    padding: 15px 40px;
+    font-size: 20px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: bold;
