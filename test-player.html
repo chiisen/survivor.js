@@ -102,11 +102,11 @@
                 <div class="formula-content">
                     <div class="formula">
                         玩家等級：<input type="number" id="level-input" value="1" min="1" max="100" style="width: 50px; padding: 3px; border-radius: 4px; border: 1px solid #3498db; background: #0d1117; color: white; font-size: 12px;"><br><br>
-                        <span style="color:#2ecc71;">玩家 HP</span>：100 + (Lv-1) × 20 = <span id="f-player-hp">100</span><br>
-                        <span style="color:#2ecc71;">玩家攻擊</span>：1 + (Lv-1) × 1 = <span id="f-player-dmg">1</span><br>
+                        <span style="color:#2ecc71;">玩家 HP</span>：<span id="f-player-hp-base">100</span> + (Lv-1) × <span id="f-player-hp-growth">20</span> = <span id="f-player-hp">100</span><br>
+                        <span style="color:#2ecc71;">玩家攻擊</span>：<span id="f-player-dmg-base">1</span> + (Lv-1) × <span id="f-player-dmg-growth">1</span> = <span id="f-player-dmg">1</span><br>
                         <span style="color:#f39c12;">怪物 HP 倍率</span>：1 + (Lv-1) × 0.8 = <span id="f-enemy-hp">1.0</span>x<br>
                         <span style="color:#e74c3c;">怪物傷害倍率</span>：1 + (Lv-1) × 0.3 = <span id="f-enemy-dmg">1.0</span>x<br>
-                        <span style="color:#5dade2;">玩家</span>：速度:200 | 攻擊範圍:300 | 拾取:80
+                        <span style="color:#5dade2;">玩家</span>：速度:<span id="f-player-speed">200</span> | 攻擊範圍:<span id="f-player-range">300</span> | 拾取:<span id="f-player-pickup">80</span>
                     </div>
                 </div>
             </div>
@@ -158,6 +158,20 @@
             buildPreviews();
         });
 
+        // 從 JSON 載入玩家設定
+        let playerConfig = { base: {}, growth: {} };
+        loadConfig('./config/player.json').then(config => {
+            playerConfig = config;
+            document.getElementById('f-player-hp-base').textContent = config.base.maxHp;
+            document.getElementById('f-player-hp-growth').textContent = config.growth.hpPerLevel;
+            document.getElementById('f-player-dmg-base').textContent = config.base.damage;
+            document.getElementById('f-player-dmg-growth').textContent = config.growth.damagePerLevel;
+            document.getElementById('f-player-speed').textContent = config.base.speed;
+            document.getElementById('f-player-range').textContent = config.base.attackRange;
+            document.getElementById('f-player-pickup').textContent = config.base.pickupRange;
+            updateLevelStats();
+        });
+
         // 等級影響公式
         const levelInput = document.getElementById('level-input');
         const fPlayerHp = document.getElementById('f-player-hp');
@@ -167,8 +181,10 @@
 
         function updateLevelStats() {
             const level = parseInt(levelInput.value) || 1;
-            const playerHp = 100 + (level - 1) * 20;
-            const playerDmg = 1 + (level - 1) * 1;
+            const base = playerConfig.base;
+            const growth = playerConfig.growth;
+            const playerHp = base.maxHp + (level - 1) * growth.hpPerLevel;
+            const playerDmg = base.damage + (level - 1) * growth.damagePerLevel;
             const enemyHpMult = 1 + (level - 1) * 0.8;
             const enemyDmgMult = 1 + (level - 1) * 0.3;
             fPlayerHp.textContent = playerHp;

@@ -1,0 +1,22 @@
+{
+  "base": {
+    "maxHp": 100,
+    "speed": 200,
+    "pickupRange": 80,
+    "attackRange": 300,
+    "fireRate": 0.5,
+    "damage": 1,
+    "projectileSpeed": 400,
+    "projectileCount": 3,
+    "critChance": 0,
+    "critDamage": 1.5,
+    "lifesteal": 0,
+    "shield": 0,
+    "expBonus": 0,
+    "armor": 0
+  },
+  "growth": {
+    "hpPerLevel": 20,
+    "damagePerLevel": 1
+  }
+}
