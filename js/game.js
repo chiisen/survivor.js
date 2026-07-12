@@ -145,6 +145,7 @@ export class Game {
         this.setupInput();
         this.setupRestart();
         this.setupSaveButton();
+        this.setupToggleMaxSkills();
 
         this.dirToAngle = new Map();
         this.defaultAngle = 0;
@@ -163,6 +164,13 @@ export class Game {
         this.canvas.height = window.innerHeight;
         if (this.decorationManager) {
             this.decorationManager.resize(this.canvas.width, this.canvas.height);
+        }
+    }
+
+    setArmorColor(color) {
+        this.armorColor = color;
+        if (this.player && this.player.renderer) {
+            this.player.renderer.setArmorColor(color);
         }
     }
 
@@ -293,6 +301,17 @@ export class Game {
                         }, 2000);
                     }
                 }
+            });
+        }
+    }
+
+    setupToggleMaxSkills() {
+        const toggleBtn = document.getElementById('toggle-max-skills');
+        const skillStats = document.getElementById('skill-stats');
+        if (toggleBtn && skillStats) {
+            toggleBtn.addEventListener('click', () => {
+                const hidden = skillStats.classList.toggle('hide-max');
+                toggleBtn.textContent = hidden ? '▶ 顯示 MAX 技能' : '▼ 隱藏 MAX 技能';
             });
         }
     }
@@ -1210,12 +1229,15 @@ this.autoFire();
 
         const stats = this.player.upgradeStats;
         const skillItems = document.querySelectorAll('.skill-item');
+        const toggleBtn = document.getElementById('toggle-max-skills');
+        let hasMaxed = false;
 
         skillItems.forEach(item => {
             const skillType = item.dataset.skill;
             const valueSpan = item.querySelector('.skill-value');
             const level = stats[skillType] || 0;
             const isMaxed = level >= 20;
+            if (isMaxed) hasMaxed = true;
 
             item.classList.remove('active', 'maxed');
 
@@ -1269,7 +1291,8 @@ this.autoFire();
                 item.classList.add('active');
                 if (isMaxed) item.classList.add('maxed');
             } else if (skillType === 'maxHp') {
-                valueSpan.textContent = isMaxed ? `MAX (${this.player.maxHp})` : `${this.player.maxHp}`;
+                const hp = Math.floor(this.player.maxHp);
+                valueSpan.textContent = isMaxed ? `MAX (${hp})` : `${hp}`;
                 item.classList.add('active');
                 if (isMaxed) item.classList.add('maxed');
             } else {
@@ -1279,6 +1302,12 @@ this.autoFire();
                 }
             }
         });
+
+        // 顯示/隱藏 MAX 技能切換按鈕
+        if (toggleBtn) {
+            toggleBtn.style.display = hasMaxed ? 'block' : 'none';
+            toggleBtn.textContent = document.getElementById('skill-stats').classList.contains('hide-max') ? '▶ 顯示 MAX 技能' : '▼ 隱藏 MAX 技能';
+        }
     }
 
     gameOver() {

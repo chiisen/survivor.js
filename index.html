@@ -64,6 +64,18 @@
                     <span class="volume-value">30%</span>
                 </div>
             </div>
+            <div id="armor-color-controls">
+                <div class="volume-control">
+                    <label>盔甲顏色</label>
+                    <div id="armor-color-options">
+                        <button class="armor-color-btn selected" data-color="default" style="background: linear-gradient(135deg, #78909c, #546e7a);">灰</button>
+                        <button class="armor-color-btn" data-color="gold" style="background: linear-gradient(135deg, #f1c40f, #f39c12);">金</button>
+                        <button class="armor-color-btn" data-color="blue" style="background: linear-gradient(135deg, #3498db, #2980b9);">藍</button>
+                        <button class="armor-color-btn" data-color="red" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">紅</button>
+                        <button class="armor-color-btn" data-color="pink" style="background: linear-gradient(135deg, #e91e63, #c2185b);">粉</button>
+                    </div>
+                </div>
+            </div>
             <button id="settings-back-btn">返回</button>
         </div>
     </div>
@@ -92,6 +104,7 @@
             <div id="difficulty-display">普通</div>
             <div id="skill-cooldown">技能: 就绪 (Q)</div>
             <div id="skill-stats">
+                <div id="toggle-max-skills" style="display: none; cursor: pointer; color: #f1c40f; font-size: 14px; margin-bottom: 5px;">▼ 隱藏 MAX 技能</div>
                 <div class="skill-item" data-skill="maxHp">
                     <span class="skill-icon">❤️</span>
                     <span class="skill-name">生命強化</span>

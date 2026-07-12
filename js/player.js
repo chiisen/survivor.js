@@ -112,6 +112,10 @@ export class Player {
     setAngleConfig(dirToAngle, defaultAngle) {
         this.core.setAngleConfig(dirToAngle, defaultAngle);
     }
+
+    setArmorColor(color) {
+        this.renderer.setArmorColor(color);
+    }
     
     draw(ctx) {
         this.renderer.draw(ctx, this.core, this.combat);

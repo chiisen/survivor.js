@@ -1,6 +1,35 @@
 // @ts-check
 
+// 盔甲顏色設定
+const ARMOR_COLORS = {
+    default: { main: '#78909c', dark: '#546e7a', light: '#b0bec5' },
+    gold: { main: '#f1c40f', dark: '#f39c12', light: '#f9e547' },
+    blue: { main: '#3498db', dark: '#2980b9', light: '#5dade2' },
+    red: { main: '#e74c3c', dark: '#c0392b', light: '#ec7063' },
+    pink: { main: '#e91e63', dark: '#c2185b', light: '#f06292' }
+};
+
 export class PlayerRenderer {
+    constructor() {
+        this.armorColor = 'default';
+    }
+
+    /**
+     * 設定盔甲顏色
+     * @param {string} color - 顏色名稱
+     */
+    setArmorColor(color) {
+        this.armorColor = color;
+    }
+
+    /**
+     * 取得目前盔甲顏色設定
+     * @returns {object} 顏色設定
+     */
+    getColors() {
+        return ARMOR_COLORS[this.armorColor] || ARMOR_COLORS.default;
+    }
+
     /**
      * 繪製玩家角色
      * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
@@ -84,6 +113,7 @@ export class PlayerRenderer {
      */
     drawHelmet(ctx, core) {
         const r = core.radius * 0.95;
+        const colors = this.getColors();
 
         // 頭盔本體
         ctx.beginPath();
@@ -92,9 +122,9 @@ export class PlayerRenderer {
             core.x - 4, core.y - 10, 0,
             core.x, core.y - 4, r
         );
-        helmGrad.addColorStop(0, '#b0bec5');
-        helmGrad.addColorStop(0.3, '#78909c');
-        helmGrad.addColorStop(0.7, '#546e7a');
+        helmGrad.addColorStop(0, colors.light);
+        helmGrad.addColorStop(0.3, colors.main);
+        helmGrad.addColorStop(0.7, colors.dark);
         helmGrad.addColorStop(1, '#37474f');
         ctx.fillStyle = helmGrad;
         ctx.fill();
@@ -121,8 +151,8 @@ export class PlayerRenderer {
         ctx.lineTo(core.x + r * 0.25, core.y - r * 0.85);
         ctx.closePath();
         const hornGrad = ctx.createLinearGradient(core.x, core.y - r * 1.45, core.x, core.y - r * 0.85);
-        hornGrad.addColorStop(0, '#78909c');
-        hornGrad.addColorStop(1, '#455a64');
+        hornGrad.addColorStop(0, colors.main);
+        hornGrad.addColorStop(1, colors.dark);
         ctx.fillStyle = hornGrad;
         ctx.fill();
         ctx.strokeStyle = '#263238';
@@ -187,12 +217,13 @@ export class PlayerRenderer {
         // 身體本體
         ctx.beginPath();
         ctx.ellipse(core.x, core.y + 8, bw, bh, 0, 0, Math.PI * 2);
+        const colors = this.getColors();
         const bodyGrad = ctx.createLinearGradient(core.x - bw, core.y, core.x + bw, core.y);
-        bodyGrad.addColorStop(0, '#546e7a');
-        bodyGrad.addColorStop(0.3, '#78909c');
-        bodyGrad.addColorStop(0.5, '#90a4ae');
-        bodyGrad.addColorStop(0.7, '#78909c');
-        bodyGrad.addColorStop(1, '#455a64');
+        bodyGrad.addColorStop(0, colors.dark);
+        bodyGrad.addColorStop(0.3, colors.main);
+        bodyGrad.addColorStop(0.5, colors.light);
+        bodyGrad.addColorStop(0.7, colors.main);
+        bodyGrad.addColorStop(1, colors.dark);
         ctx.fillStyle = bodyGrad;
         ctx.fill();
         ctx.strokeStyle = '#37474f';
@@ -252,9 +283,9 @@ export class PlayerRenderer {
             ctx.beginPath();
             ctx.ellipse(sx, sy, core.radius * 0.55, core.radius * 0.4, 0, 0, Math.PI * 2);
             const spGrad = ctx.createRadialGradient(sx - 2, sy - 3, 0, sx, sy, core.radius * 0.55);
-            spGrad.addColorStop(0, '#90a4ae');
-            spGrad.addColorStop(0.5, '#607d8b');
-            spGrad.addColorStop(1, '#37474f');
+            spGrad.addColorStop(0, colors.light);
+            spGrad.addColorStop(0.5, colors.main);
+            spGrad.addColorStop(1, colors.dark);
             ctx.fillStyle = spGrad;
             ctx.fill();
             ctx.strokeStyle = '#263238';
