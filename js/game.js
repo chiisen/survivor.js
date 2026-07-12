@@ -799,7 +799,12 @@ this.autoFire();
         const playerLevelMultiplier = 1 + (this.level - 1) * 0.8; // 每級增加 80% HP 以對抗玩家攻擊力提升
         const hpMultiplier = waveHpMultiplier * difficultySettings.enemyHpMultiplier * playerLevelMultiplier;
         const bossHpMultiplier = waveHpMultiplier * difficultySettings.bossHpMultiplier * playerLevelMultiplier;
-        
+
+        // 傷害加成：波次每波 +5%，等級每級 +30%
+        const waveDamageBonus = 1 + (this.waveManager.currentWave - 1) * 0.05;
+        const levelDamageBonus = 1 + (this.level - 1) * 0.3;
+        const damageMultiplier = waveDamageBonus * levelDamageBonus;
+
         const enemy = Enemy.spawn(
             this.canvas.width,
             this.canvas.height,
@@ -809,13 +814,13 @@ this.autoFire();
             isBoss,
             isBoss ? bossHpMultiplier : hpMultiplier
         );
-        
+
         if (!isBoss) {
-            enemy.damage = Math.floor(enemy.damage * difficultySettings.enemyDamageMultiplier);
+            enemy.damage = Math.floor(enemy.damage * difficultySettings.enemyDamageMultiplier * damageMultiplier);
         } else {
-            enemy.damage = Math.floor(enemy.damage * difficultySettings.enemyDamageMultiplier * 1.5);
+            enemy.damage = Math.floor(enemy.damage * difficultySettings.enemyDamageMultiplier * 1.5 * damageMultiplier);
         }
-        
+
         this.enemies.push(enemy);
         return enemy;
     }

@@ -5,7 +5,23 @@
     <title>怪物測試</title>
     <style>
         body { margin: 0; background: #1a1a2e; display: flex; flex-direction: column; align-items: center; min-height: 100vh; font-family: sans-serif; color: #ecf0f1; padding: 20px; }
-        h1 { color: #f1c40f; font-size: 24px; margin-bottom: 20px; }
+        h1 { color: #f1c40f; font-size: 24px; margin-bottom: 15px; }
+        .formula-box { background: #16213e; border: 2px solid #34495e; border-radius: 8px; max-width: 600px; width: 100%; margin-bottom: 10px; }
+        .formula-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; cursor: pointer; }
+        .formula-header:hover { background: rgba(255,255,255,0.05); }
+        .formula-title { color: #f39c12; font-size: 14px; font-weight: bold; margin: 0; }
+        .formula-toggle { color: #95a5a6; font-size: 12px; }
+        .formula-content { padding: 0 15px 15px 15px; display: block; }
+        .formula-box.collapsed .formula-content { display: none; }
+        .formula-box.collapsed .formula-toggle::after { content: '展開'; }
+        .formula-box:not(.collapsed) .formula-toggle::after { content: '收合'; }
+        .formula { color: #ecf0f1; font-size: 13px; line-height: 1.8; }
+        .formula span { color: #5dade2; }
+        .controls { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 15px; }
+        .control-group { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #95a5a6; }
+        .control-group input { width: 60px; padding: 5px; border-radius: 4px; border: 1px solid #3498db; background: #0d1117; color: white; font-size: 13px; text-align: center; }
+        .control-group select { padding: 5px; border-radius: 4px; border: 1px solid #3498db; background: #0d1117; color: white; font-size: 13px; }
+        .result { color: #f39c12; font-size: 13px; margin-top: 8px; }
         #grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 600px; }
         .enemy-card { background: #16213e; border: 2px solid #34495e; border-radius: 8px; padding: 15px; text-align: center; }
         .enemy-card canvas { border-radius: 4px; }
@@ -17,6 +33,56 @@
 </head>
 <body>
     <h1>怪物圖鑑</h1>
+
+    <div class="formula-box collapsed">
+        <div class="formula-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            <div class="formula-title">HP 計算公式</div>
+            <div class="formula-toggle"></div>
+        </div>
+        <div class="formula-content">
+            <div class="formula">
+                最終 HP = 基礎 HP × <span>波次倍率</span> × <span>難度倍率</span> × <span>等級倍率</span><br>
+                波次倍率 = 1 + floor(<span id="f-wave">1</span>/3) × 0.5 = <span id="f-wave-mult">1.0</span><br>
+                <span style="color:#7f8c8d; font-size:11px;">　└ floor() 取整數：floor(1/3)=0, floor(3/3)=1, floor(6/3)=2</span><br>
+                難度倍率 = <span id="f-diff">1</span><br>
+                等級倍率 = 1 + (<span id="f-level">1</span>-1) × 0.8 = <span id="f-level-mult">1.0</span><br>
+                <span style="color:#f1c40f;">最終 HP 倍率 = <span id="f-total">1.0</span>x</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="formula-box collapsed">
+        <div class="formula-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            <div class="formula-title">傷害計算公式</div>
+            <div class="formula-toggle"></div>
+        </div>
+        <div class="formula-content">
+            <div class="formula">
+                最終傷害 = 基礎傷害 × <span>難度倍率</span> × <span>波次加成</span> × <span>等級加成</span><br>
+                波次加成 = 1 + (<span id="f-wave2">1</span>-1) × 0.05 = <span id="f-wave-dmg">1.0</span><br>
+                等級加成 = 1 + (<span id="f-level2">1</span>-1) × 0.3 = <span id="f-level-dmg">1.0</span><br>
+                <span style="color:#e74c3c;">最終傷害倍率 = <span id="f-dmg-total">1.0</span>x</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            波次：<input type="number" id="wave-input" value="1" min="1" max="100">
+        </div>
+        <div class="control-group">
+            難度：<select id="diff-input">
+                <option value="1">普通 (1x)</option>
+                <option value="1.5">困難 (1.5x)</option>
+                <option value="3">地獄 (3x)</option>
+            </select>
+        </div>
+        <div class="control-group">
+            等級：<input type="number" id="level-input" value="1" min="1" max="100">
+        </div>
+    </div>
+    <div class="result">最終 HP 倍率：<span id="hp-mult" style="color:#f1c40f; font-weight:bold;">1.0</span>x</div>
+
     <div id="grid"></div>
     <div id="debug"></div>
     <div style="margin-top: 15px;"><a href="index.html" style="color: #5dade2; font-size: 14px;">← 返回首頁</a></div>
@@ -24,7 +90,6 @@
     <script type="module">
         import { EnemyRenderer } from './js/enemyRenderer.js';
 
-        // 敵人類型定義
         const enemyTypes = [
             { key: 'NORMAL', name: '普通', radius: 15, hp: 1, dmg: 10, speed: 60, color: '#e74c3c', strokeColor: '#c0392b', eyeColor: '#fff', mouthStyle: 'angry' },
             { key: 'FAST', name: '快速', radius: 12, hp: 1, dmg: 8, speed: 100, color: '#27ae60', strokeColor: '#229954', eyeColor: '#fff', mouthStyle: 'neutral' },
@@ -39,6 +104,11 @@
 
         const grid = document.getElementById('grid');
         const debug = document.getElementById('debug');
+        const waveInput = document.getElementById('wave-input');
+        const diffInput = document.getElementById('diff-input');
+        const levelInput = document.getElementById('level-input');
+
+        const cardStats = [];
 
         enemyTypes.forEach(type => {
             const card = document.createElement('div');
@@ -56,39 +126,77 @@
 
             const stats = document.createElement('div');
             stats.className = 'enemy-stats';
-            stats.innerHTML = `HP: ${type.hp} | 傷害: ${type.dmg}<br>速度: ${type.speed} | 半徑: ${type.radius}`;
             card.appendChild(stats);
+            cardStats.push({ element: stats, type });
 
             grid.appendChild(card);
 
-            // 繪製敵人
             const ctx = canvas.getContext('2d');
             const renderer = new EnemyRenderer(type);
 
-            const core = {
-                x: 50,
-                y: 50,
+            renderer.draw(ctx, {
+                x: 50, y: 50,
                 radius: type.radius > 30 ? 25 : type.radius,
-                hp: type.hp,
-                maxHp: type.hp,
-                type: type,
-                shieldHp: type.isElite ? 5 : 0,
-                shieldMaxHp: type.isElite ? 5 : 0,
-                hasShield: type.isElite || false,
-                isElite: type.isElite || false,
+                hp: type.hp, maxHp: type.hp, type,
+                shieldHp: type.isElite ? 5 : 0, shieldMaxHp: type.isElite ? 5 : 0,
+                hasShield: type.isElite || false, isElite: type.isElite || false,
                 isStealth: type.isStealth || false,
-                baseAlpha: type.isStealth ? 0.3 : 1,
-                currentAlpha: type.isStealth ? 0.3 : 1,
-                revealTime: 0
-            };
-
-            const behaviors = {
-                shootCooldown: 0,
-                canShoot: type.canShoot || false
-            };
-
-            renderer.draw(ctx, core, behaviors, null);
+                baseAlpha: type.isStealth ? 0.3 : 1, currentAlpha: type.isStealth ? 0.3 : 1, revealTime: 0
+            }, { shootCooldown: 0, canShoot: type.canShoot || false }, null);
         });
+
+        function updateStats() {
+            const wave = parseInt(waveInput.value) || 1;
+            const diff = parseFloat(diffInput.value) || 1;
+            const level = parseInt(levelInput.value) || 1;
+
+            // HP 倍率
+            const waveMult = 1 + Math.floor(wave / 3) * 0.5;
+            const levelMult = 1 + (level - 1) * 0.8;
+            const totalMult = waveMult * diff * levelMult;
+
+            // 傷害倍率
+            const waveDmgBonus = 1 + (wave - 1) * 0.05;
+            const levelDmgBonus = 1 + (level - 1) * 0.3;
+            const totalDmgMult = diff * waveDmgBonus * levelDmgBonus;
+
+            // 更新 HP 公式
+            document.getElementById('f-wave').textContent = wave;
+            document.getElementById('f-wave-mult').textContent = waveMult.toFixed(1);
+            document.getElementById('f-diff').textContent = diff;
+            document.getElementById('f-level').textContent = level;
+            document.getElementById('f-level-mult').textContent = levelMult.toFixed(1);
+            document.getElementById('f-total').textContent = totalMult.toFixed(1);
+            document.getElementById('hp-mult').textContent = totalMult.toFixed(1);
+
+            // 更新傷害公式
+            document.getElementById('f-wave2').textContent = wave;
+            document.getElementById('f-wave-dmg').textContent = waveDmgBonus.toFixed(2);
+            document.getElementById('f-level2').textContent = level;
+            document.getElementById('f-level-dmg').textContent = levelDmgBonus.toFixed(2);
+            document.getElementById('f-dmg-total').textContent = totalDmgMult.toFixed(2);
+
+            let hpColor = '#2ecc71';
+            if (totalMult > 10) hpColor = '#e74c3c';
+            else if (totalMult > 5) hpColor = '#e67e22';
+            else if (totalMult > 2) hpColor = '#f1c40f';
+
+            let dmgColor = '#2ecc71';
+            if (totalDmgMult > 5) dmgColor = '#e74c3c';
+            else if (totalDmgMult > 3) dmgColor = '#e67e22';
+            else if (totalDmgMult > 1.5) dmgColor = '#f1c40f';
+
+            cardStats.forEach(({ element, type }) => {
+                const scaledHp = Math.ceil(type.hp * totalMult);
+                const scaledDmg = Math.floor(type.dmg * totalDmgMult);
+                element.innerHTML = `<span style="color:${hpColor}">HP: ${scaledHp}</span> (基礎${type.hp})<br><span style="color:${dmgColor}">傷害: ${scaledDmg}</span> (基礎${type.dmg})<br>速度: ${type.speed} | 半徑: ${type.radius}`;
+            });
+        }
+
+        waveInput.addEventListener('input', updateStats);
+        diffInput.addEventListener('change', updateStats);
+        levelInput.addEventListener('input', updateStats);
+        updateStats();
 
         debug.textContent = `共 ${enemyTypes.length} 種怪物`;
     </script>
