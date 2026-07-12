@@ -11,7 +11,7 @@ import { AudioManager } from './audio.js';
 import { DecorationManager } from './decoration.js';
 import { WaveManager } from './waveManager.js';
 import { StorageManager } from './storage.js';
-import { getRandomUpgrades, UPGRADES } from './talent.js';
+import { getRandomUpgrades, UPGRADES, MAX_LEVEL } from './talent.js';
 import { UI } from './ui.js';
 import { distance, distanceSquared, getExpLevelMultiplier } from './utils.js';
 import { BossSpawnEffect } from './bossSpawnEffect.js';
@@ -1180,7 +1180,7 @@ this.autoFire();
         this.isPaused = true;
 
         // 檢查是否所有技能都滿級
-        const allMaxed = UPGRADES.every(u => (this.player.upgradeStats[u.type] || 0) >= 20);
+        const allMaxed = UPGRADES.every(u => (this.player.upgradeStats[u.type] || 0) >= MAX_LEVEL);
         if (allMaxed) {
             this.ui.showMaxLevelMessage();
             setTimeout(() => {
@@ -1239,7 +1239,7 @@ this.autoFire();
             const skillType = item.dataset.skill;
             const valueSpan = item.querySelector('.skill-value');
             const level = stats[skillType] || 0;
-            const isMaxed = level >= 20;
+            const isMaxed = level >= MAX_LEVEL;
             if (isMaxed) hasMaxed = true;
 
             item.classList.remove('active', 'maxed');

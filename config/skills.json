@@ -1,0 +1,103 @@
+{
+  "maxLevel": 20,
+  "skills": [
+    {
+      "type": "maxHp",
+      "name": "生命強化",
+      "description": "最大生命值 +20",
+      "value": 20,
+      "icon": "❤️"
+    },
+    {
+      "type": "speed",
+      "name": "疾風步",
+      "description": "移動速度 +30",
+      "value": 30,
+      "icon": "💨"
+    },
+    {
+      "type": "pickupRange",
+      "name": "磁力手套",
+      "description": "拾取範圍 +30",
+      "value": 30,
+      "icon": "🧲"
+    },
+    {
+      "type": "attackRange",
+      "name": "鷹眼",
+      "description": "攻擊範圍 +50",
+      "value": 50,
+      "icon": "👁️"
+    },
+    {
+      "type": "fireRate",
+      "name": "急速射擊",
+      "description": "射擊間隔 -0.08秒",
+      "value": 0.08,
+      "icon": "⚡"
+    },
+    {
+      "type": "damage",
+      "name": "魔力增幅",
+      "description": "傷害 +1",
+      "value": 1,
+      "icon": "✨"
+    },
+    {
+      "type": "projectileSpeed",
+      "name": "子彈加速",
+      "description": "子彈速度 +100",
+      "value": 100,
+      "icon": "🚀"
+    },
+    {
+      "type": "projectileCount",
+      "name": "多重射擊",
+      "description": "同時發射 +2 顆子彈",
+      "value": 2,
+      "icon": "🎯"
+    },
+    {
+      "type": "critChance",
+      "name": "暴擊大師",
+      "description": "暴擊率 +10%",
+      "value": 0.1,
+      "icon": "💥"
+    },
+    {
+      "type": "critDamage",
+      "name": "暴擊增幅",
+      "description": "暴擊傷害 +50%",
+      "value": 0.5,
+      "icon": "🔥"
+    },
+    {
+      "type": "lifesteal",
+      "name": "吸血鬼",
+      "description": "擊殺回覆 +5 HP",
+      "value": 5,
+      "icon": "🩸"
+    },
+    {
+      "type": "shield",
+      "name": "護盾大師",
+      "description": "獲得 +15 護盾",
+      "value": 15,
+      "icon": "🛡️"
+    },
+    {
+      "type": "expBonus",
+      "name": "經驗達人",
+      "description": "經驗值獲取 +20%",
+      "value": 0.2,
+      "icon": "📚"
+    },
+    {
+      "type": "armor",
+      "name": "鐵壁",
+      "description": "受到傷害 -5",
+      "value": 5,
+      "icon": "🧱"
+    }
+  ]
+}

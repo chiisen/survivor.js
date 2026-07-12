@@ -1,6 +1,6 @@
 // @ts-check
 
-import { randomInt } from './utils.js';
+import { loadConfig } from './configLoader.js';
 
 /**
  * 天賦升級項目結構
@@ -12,8 +12,8 @@ import { randomInt } from './utils.js';
  * @property {string} icon - 顯示圖示字元
  */
 
-/** @type {Upgrade[]} 所有可用天賦清單 */
-const UPGRADES = [
+/** @type {Upgrade[]} 所有可用天賦清單（預設值，JSON 載入後會覆蓋） */
+let UPGRADES = [
     { type: 'maxHp', name: '生命強化', description: '最大生命值 +20', value: 20, icon: '❤️' },
     { type: 'speed', name: '疾風步', description: '移動速度 +30', value: 30, icon: '💨' },
     { type: 'pickupRange', name: '磁力手套', description: '拾取範圍 +30', value: 30, icon: '🧲' },
@@ -27,8 +27,16 @@ const UPGRADES = [
     { type: 'lifesteal', name: '吸血鬼', description: '击杀回复 +5 HP', value: 5, icon: '🩸' },
     { type: 'shield', name: '护盾大师', description: '获得 +15 护盾', value: 15, icon: '🛡️' },
     { type: 'expBonus', name: '经验达人', description: '经验值获取 +20%', value: 0.2, icon: '📚' },
-    { type: 'armor', name: '铁壁', description: '受到伤害 -5', value: 5, icon: '🧱' },
+    { type: 'armor', name: '鐵壁', description: '受到傷害 -5', value: 5, icon: '🧱' }
 ];
+
+let MAX_LEVEL = 20;
+
+// 從 JSON 載入技能設定（覆蓋預設值）
+loadConfig('./config/skills.json').then(config => {
+    UPGRADES = config.skills;
+    MAX_LEVEL = config.maxLevel || 20;
+});
 
 /**
  * 從天賦清單中隨機抽取指定數量的升級選項（排除已滿級的技能）
@@ -37,9 +45,9 @@ const UPGRADES = [
  * @returns {Upgrade[]} 隨機排序的天賦陣列 (長度為 min(count, 可用技能數))
  */
 export function getRandomUpgrades(count = 3, upgradeStats = {}) {
-    const available = UPGRADES.filter(u => (upgradeStats[u.type] || 0) < 20);
+    const available = UPGRADES.filter(u => (upgradeStats[u.type] || 0) < MAX_LEVEL);
     const shuffled = [...available].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, count);
 }
 
-export { UPGRADES };
+export { UPGRADES, MAX_LEVEL };

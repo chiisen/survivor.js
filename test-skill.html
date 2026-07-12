@@ -48,23 +48,11 @@
     <div style="margin-top: 15px;"><a href="index.html" style="color: #5dade2; font-size: 14px;">← 返回首頁</a></div>
 
     <script type="module">
-        // 技能定義
-        const skills = [
-            { type: 'maxHp', name: '生命強化', desc: '最大生命值 +20', value: 20, icon: '❤️' },
-            { type: 'speed', name: '疾風步', desc: '移動速度 +30', value: 30, icon: '💨' },
-            { type: 'pickupRange', name: '磁力手套', desc: '拾取範圍 +30', value: 30, icon: '🧲' },
-            { type: 'attackRange', name: '鹰眼', desc: '攻擊範圍 +50', value: 50, icon: '👁️' },
-            { type: 'fireRate', name: '急速射擊', desc: '射擊間隔 -0.08秒', value: -0.08, icon: '⚡' },
-            { type: 'damage', name: '魔力增幅', desc: '傷害 +1', value: 1, icon: '✨' },
-            { type: 'projectileSpeed', name: '子彈加速', desc: '子彈速度 +100', value: 100, icon: '🚀' },
-            { type: 'projectileCount', name: '多重射擊', desc: '同時發射 +2 顆子彈', value: 2, icon: '🎯' },
-            { type: 'critChance', name: '暴击大师', desc: '暴击率 +10%', value: 0.1, icon: '💥' },
-            { type: 'critDamage', name: '暴击增幅', desc: '暴击伤害 +50%', value: 0.5, icon: '🔥' },
-            { type: 'lifesteal', name: '吸血鬼', desc: '击杀回复 +5 HP', value: 5, icon: '🩸' },
-            { type: 'shield', name: '护盾大师', desc: '获得 +15 护盾', value: 15, icon: '🛡️' },
-            { type: 'expBonus', name: '经验达人', desc: '经验值获取 +20%', value: 0.2, icon: '📚' },
-            { type: 'armor', name: '铁壁', desc: '受到伤害 -5', value: 5, icon: '🧱' }
-        ];
+        import { loadConfig } from './js/configLoader.js';
+
+        // 從 JSON 載入技能設定
+        let skills = [];
+        let maxLevel = 20;
 
         // 玩家基礎值
         const baseStats = {
@@ -80,7 +68,16 @@
 
         // 儲存每個技能的等級
         const skillLevels = {};
-        skills.forEach(s => skillLevels[s.type] = 0);
+
+        // 從 JSON 載入技能並建立卡片
+        loadConfig('./config/skills.json').then(config => {
+            skills = config.skills;
+            maxLevel = config.maxLevel || 20;
+            skills.forEach(s => skillLevels[s.type] = 0);
+            buildSkillCards();
+            updateTotals();
+            debug.textContent = `共 ${skills.length} 種技能，每種最高 ${maxLevel} 級`;
+        });
 
         // 技能格式化
         const formatValue = (type, value) => {
@@ -92,31 +89,34 @@
         };
 
         // 建立技能卡片
-        skills.forEach(skill => {
-            const card = document.createElement('div');
-            card.className = 'skill-card';
+        function buildSkillCards() {
+            grid.innerHTML = '';
+            skills.forEach(skill => {
+                const card = document.createElement('div');
+                card.className = 'skill-card';
 
-            card.innerHTML = `
-                <div class="skill-icon">${skill.icon}</div>
-                <div class="skill-name">${skill.name}</div>
-                <div class="skill-desc">${skill.desc}</div>
-                <div class="skill-level">
-                    <button onmousedown="startRepeat('${skill.type}', -1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()">-</button>
-                    <span id="level-${skill.type}">0</span>
-                    <button onmousedown="startRepeat('${skill.type}', 1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()">+</button>
-                </div>
-                <div class="skill-effect">每級：${skill.desc}</div>
-                <div class="skill-total" id="total-${skill.type}"></div>
-            `;
+                card.innerHTML = `
+                    <div class="skill-icon">${skill.icon}</div>
+                    <div class="skill-name">${skill.name}</div>
+                    <div class="skill-desc">${skill.description}</div>
+                    <div class="skill-level">
+                        <button onmousedown="startRepeat('${skill.type}', -1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()">-</button>
+                        <span id="level-${skill.type}">0</span>
+                        <button onmousedown="startRepeat('${skill.type}', 1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()">+</button>
+                    </div>
+                    <div class="skill-effect">每級：${skill.description}</div>
+                    <div class="skill-total" id="total-${skill.type}"></div>
+                `;
 
-            grid.appendChild(card);
-        });
+                grid.appendChild(card);
+            });
+        }
 
         // 調整技能等級
         let repeatTimer = null;
 
         window.changeLevel = (type, delta) => {
-            skillLevels[type] = Math.max(0, Math.min(20, skillLevels[type] + delta));
+            skillLevels[type] = Math.max(0, Math.min(maxLevel, skillLevels[type] + delta));
             document.getElementById(`level-${type}`).textContent = skillLevels[type];
             updateTotals();
         };
@@ -183,9 +183,6 @@
                 <span style="color:#e74c3c;">經驗</span>：${(totals.expBonus * 100).toFixed(0)}%
             `;
         }
-
-        updateTotals();
-        debug.textContent = `共 ${skills.length} 種技能，每種最高 20 級`;
     </script>
 </body>
 </html>
