@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>怪物測試</title>
+    <style>
+        body { margin: 0; background: #1a1a2e; display: flex; flex-direction: column; align-items: center; min-height: 100vh; font-family: sans-serif; color: #ecf0f1; padding: 20px; }
+        h1 { color: #f1c40f; font-size: 24px; margin-bottom: 20px; }
+        #grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 600px; }
+        .enemy-card { background: #16213e; border: 2px solid #34495e; border-radius: 8px; padding: 15px; text-align: center; }
+        .enemy-card canvas { border-radius: 4px; }
+        .enemy-name { color: #f39c12; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        .enemy-stats { color: #95a5a6; font-size: 12px; margin-top: 5px; line-height: 1.6; }
+        #debug { margin-top: 20px; color: #f39c12; font-size: 14px; }
+        a { color: #5dade2; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>怪物圖鑑</h1>
+    <div id="grid"></div>
+    <div id="debug"></div>
+    <div style="margin-top: 15px;"><a href="index.html" style="color: #5dade2; font-size: 14px;">← 返回首頁</a></div>
+
+    <script type="module">
+        import { EnemyRenderer } from './js/enemyRenderer.js';
+
+        // 敵人類型定義
+        const enemyTypes = [
+            { key: 'NORMAL', name: '普通', radius: 15, hp: 1, dmg: 10, speed: 60, color: '#e74c3c', strokeColor: '#c0392b', eyeColor: '#fff', mouthStyle: 'angry' },
+            { key: 'FAST', name: '快速', radius: 12, hp: 1, dmg: 8, speed: 100, color: '#27ae60', strokeColor: '#229954', eyeColor: '#fff', mouthStyle: 'neutral' },
+            { key: 'TANK', name: '坦克', radius: 22, hp: 3, dmg: 20, speed: 35, color: '#7f8c8d', strokeColor: '#5d6d7e', eyeColor: '#e74c3c', mouthStyle: 'wide' },
+            { key: 'RANGED', name: '遠程', radius: 14, hp: 2, dmg: 10, speed: 40, color: '#9b59b6', strokeColor: '#8e44ad', eyeColor: '#f1c40f', mouthStyle: 'shooter' },
+            { key: 'ELITE', name: '精英', radius: 25, hp: 8, dmg: 25, speed: 45, color: '#e67e22', strokeColor: '#d35400', eyeColor: '#fff', mouthStyle: 'elite', isElite: true },
+            { key: 'SPLITTER', name: '分裂', radius: 18, hp: 2, dmg: 10, speed: 50, color: '#16a085', strokeColor: '#138d75', eyeColor: '#fff', mouthStyle: 'split' },
+            { key: 'EXPLOSIVE', name: '爆炸', radius: 16, hp: 2, dmg: 15, speed: 55, color: '#d35400', strokeColor: '#bf4a1a', eyeColor: '#f39c12', mouthStyle: 'explosive' },
+            { key: 'STEALTH', name: '隱身', radius: 13, hp: 1, dmg: 15, speed: 80, color: '#5d6d7e', strokeColor: '#4a5a6a', eyeColor: '#3498db', mouthStyle: 'stealth', isStealth: true },
+            { key: 'BOSS', name: 'BOSS', radius: 40, hp: 200, dmg: 50, speed: 18, color: '#c0392b', strokeColor: '#922b21', eyeColor: '#f1c40f', mouthStyle: 'boss', isBoss: true }
+        ];
+
+        const grid = document.getElementById('grid');
+        const debug = document.getElementById('debug');
+
+        enemyTypes.forEach(type => {
+            const card = document.createElement('div');
+            card.className = 'enemy-card';
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            card.appendChild(canvas);
+
+            const name = document.createElement('div');
+            name.className = 'enemy-name';
+            name.textContent = type.name;
+            card.appendChild(name);
+
+            const stats = document.createElement('div');
+            stats.className = 'enemy-stats';
+            stats.innerHTML = `HP: ${type.hp} | 傷害: ${type.dmg}<br>速度: ${type.speed} | 半徑: ${type.radius}`;
+            card.appendChild(stats);
+
+            grid.appendChild(card);
+
+            // 繪製敵人
+            const ctx = canvas.getContext('2d');
+            const renderer = new EnemyRenderer(type);
+
+            const core = {
+                x: 50,
+                y: 50,
+                radius: type.radius > 30 ? 25 : type.radius,
+                hp: type.hp,
+                maxHp: type.hp,
+                type: type,
+                shieldHp: type.isElite ? 5 : 0,
+                shieldMaxHp: type.isElite ? 5 : 0,
+                hasShield: type.isElite || false,
+                isElite: type.isElite || false,
+                isStealth: type.isStealth || false,
+                baseAlpha: type.isStealth ? 0.3 : 1,
+                currentAlpha: type.isStealth ? 0.3 : 1,
+                revealTime: 0
+            };
+
+            const behaviors = {
+                shootCooldown: 0,
+                canShoot: type.canShoot || false
+            };
+
+            renderer.draw(ctx, core, behaviors, null);
+        });
+
+        debug.textContent = `共 ${enemyTypes.length} 種怪物`;
+    </script>
+</body>
+</html>

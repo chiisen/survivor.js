@@ -1,20 +1,74 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <title>角色測試</title>
     <style>
-        body { margin: 0; background: #1a1a2e; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; color: #ecf0f1; }
-        .container { display: flex; gap: 30px; align-items: center; }
-        #preview { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 6px; }
-        .preview-cell { width: 100px; height: 100px; background: #16213e; border: 2px solid #34495e; border-radius: 6px; }
-        .right { display: flex; flex-direction: column; align-items: center; }
-        canvas#main { background: #16213e; border: 2px solid #3498db; border-radius: 8px; }
-        #info { margin-top: 15px; font-size: 18px; }
-        kbd { background: #34495e; padding: 4px 10px; border-radius: 4px; font-size: 16px; }
-        #debug { margin-top: 10px; color: #f39c12; font-size: 14px; }
+        body {
+            margin: 0;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: sans-serif;
+            color: #ecf0f1;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        #preview {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 6px;
+        }
+
+        .preview-cell {
+            width: 100px;
+            height: 100px;
+            background: #16213e;
+            border: 2px solid #34495e;
+            border-radius: 6px;
+        }
+
+        .right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        canvas#main {
+            background: #16213e;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+        }
+
+        #info {
+            margin-top: 15px;
+            font-size: 18px;
+        }
+
+        kbd {
+            background: #34495e;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        #debug {
+            margin-top: 10px;
+            color: #f39c12;
+            font-size: 14px;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div id="preview">
@@ -32,6 +86,8 @@
             <canvas id="main" width="400" height="400"></canvas>
             <div id="info">按 <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> 旋轉，<kbd>Space</kbd> 攻擊</div>
             <div id="debug"></div>
+            <div style="margin-top: 15px;"><a href="index.html" style="color: #5dade2; font-size: 14px;">← 返回首頁</a>
+            </div>
         </div>
     </div>
 
@@ -147,4 +203,5 @@
         loop();
     </script>
 </body>
+
 </html>
