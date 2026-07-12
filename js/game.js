@@ -56,6 +56,7 @@ export class Game {
         this.decorationManager = new DecorationManager(this.canvas.width, this.canvas.height);
         this.waveManager = new WaveManager();
         this.storageManager = new StorageManager();
+        this.skipCountdown = false;
         this.bossesKilled = 0;
         this.enemyGrid = new SpatialGrid(100);
         this.projectileGrid = new SpatialGrid(100);
@@ -172,6 +173,10 @@ export class Game {
         if (this.player && this.player.renderer) {
             this.player.renderer.setArmorColor(color);
         }
+    }
+
+    setSkipCountdown(value) {
+        this.skipCountdown = value;
     }
 
     setupInput() {
@@ -1190,6 +1195,30 @@ this.autoFire();
         }
 
         const upgrades = getRandomUpgrades(3, this.player.upgradeStats);
+
+        // 如果設定跳過倒數，直接隨機選一個
+        if (this.skipCountdown) {
+            const randomIndex = Math.floor(Math.random() * upgrades.length);
+            this.ui.showUpgradeModal(upgrades, (selectedUpgrade) => {
+                this.player.applyUpgrade(selectedUpgrade);
+                this.ui.updateHp(this.player.hp, this.player.maxHp);
+                this.ui.updateShield(this.player.shield, this.player.maxShield);
+                this.updateSkillStats();
+                this.isPaused = false;
+            });
+            setTimeout(() => {
+                this.ui.highlightUpgradeOption(randomIndex);
+                setTimeout(() => {
+                    this.ui.hideUpgradeModal();
+                    this.player.applyUpgrade(upgrades[randomIndex]);
+                    this.ui.updateHp(this.player.hp, this.player.maxHp);
+                    this.ui.updateShield(this.player.shield, this.player.maxShield);
+                    this.updateSkillStats();
+                    this.isPaused = false;
+                }, 200);
+            }, 100);
+            return;
+        }
 
         // 5 秒倒數 + 自動隨機選
         clearInterval(this._upgradeInterval);

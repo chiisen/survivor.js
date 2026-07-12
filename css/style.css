@@ -689,6 +689,13 @@ body {
     margin-top: 20px;
 }
 
+#skip-countdown-setting {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #3498db;
+}
+
 #armor-color-options {
     display: flex;
     gap: 10px;

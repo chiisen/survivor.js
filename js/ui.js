@@ -178,6 +178,12 @@ export class UI {
         this.upgradeTimer = document.getElementById('upgrade-timer');
         if (this.upgradeTimer) this.upgradeTimer.textContent = '5';
 
+        // 快速選擇 checkbox
+        const skipDiv = document.createElement('div');
+        skipDiv.style.cssText = 'margin-bottom: 10px; font-size: 14px;';
+        skipDiv.innerHTML = `<label style="cursor: pointer; color: #95a5a6;"><input type="checkbox" id="skip-countdown"> 跳過倒數，直接選擇</label>`;
+        this.upgradeOptions.appendChild(skipDiv);
+
         upgrades.forEach(upgrade => {
             const option = document.createElement('div');
             option.className = 'upgrade-option';
@@ -186,12 +192,14 @@ export class UI {
                 <p>${upgrade.description}</p>
             `;
             option.addEventListener('click', () => {
-                const index = [...this.upgradeOptions.children].indexOf(option);
+                const skipCountdown = document.getElementById('skip-countdown')?.checked;
+                const index = [...this.upgradeOptions.children].indexOf(option) - 1;
                 this.highlightUpgradeOption(index);
+                const delay = skipCountdown ? 100 : 500;
                 setTimeout(() => {
                     this.hideUpgradeModal();
                     onSelect(upgrade);
-                }, 500);
+                }, delay);
             });
             this.upgradeOptions.appendChild(option);
         });
