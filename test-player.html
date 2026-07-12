@@ -77,6 +77,19 @@
         .formula-box.collapsed .formula-toggle::after { content: '展開'; }
         .formula-box:not(.collapsed) .formula-toggle::after { content: '收合'; }
         .formula { color: #ecf0f1; font-size: 12px; line-height: 1.6; }
+        .armor-color-btn {
+            width: 36px;
+            height: 36px;
+            border: 2px solid #5d6d7e;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .armor-color-btn:hover { transform: scale(1.1); }
+        .armor-color-btn.selected { border-color: #f1c40f; box-shadow: 0 0 10px rgba(241, 196, 15, 0.5); }
     </style>
 </head>
 
@@ -107,6 +120,21 @@
                         <span style="color:#f39c12;">怪物 HP 倍率</span>：1 + (Lv-1) × 0.8 = <span id="f-enemy-hp">1.0</span>x<br>
                         <span style="color:#e74c3c;">怪物傷害倍率</span>：1 + (Lv-1) × 0.3 = <span id="f-enemy-dmg">1.0</span>x<br>
                         <span style="color:#5dade2;">玩家</span>：速度:<span id="f-player-speed">200</span> | 攻擊範圍:<span id="f-player-range">300</span> | 拾取:<span id="f-player-pickup">80</span>
+                    </div>
+                </div>
+            </div>
+            <div class="formula-box collapsed" style="max-width: 350px; width: 100%; margin-bottom: 10px;">
+                <div class="formula-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                    <div class="formula-title">盔甲顏色</div>
+                    <div class="formula-toggle"></div>
+                </div>
+                <div class="formula-content">
+                    <div id="armor-color-options" style="display: flex; gap: 8px; justify-content: center;">
+                        <button class="armor-color-btn selected" data-color="default" style="background: linear-gradient(135deg, #78909c, #546e7a);">灰</button>
+                        <button class="armor-color-btn" data-color="gold" style="background: linear-gradient(135deg, #f1c40f, #f39c12);">金</button>
+                        <button class="armor-color-btn" data-color="blue" style="background: linear-gradient(135deg, #3498db, #2980b9);">藍</button>
+                        <button class="armor-color-btn" data-color="red" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">紅</button>
+                        <button class="armor-color-btn" data-color="pink" style="background: linear-gradient(135deg, #e91e63, #c2185b);">粉</button>
                     </div>
                 </div>
             </div>
@@ -195,6 +223,18 @@
 
         levelInput.addEventListener('input', updateLevelStats);
         updateLevelStats();
+
+        // 盔甲顏色設定
+        const armorColorBtns = document.querySelectorAll('.armor-color-btn');
+        armorColorBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                armorColorBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                renderer.setArmorColor(btn.dataset.color);
+                // 重繪所有預覽
+                previews.forEach(drawPreview);
+            });
+        });
 
         const core = {
             x: 150, y: 150, radius: 20,

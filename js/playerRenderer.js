@@ -268,6 +268,7 @@ export class PlayerRenderer {
      * @param {object} core
      */
     drawShoulderPads(ctx, core) {
+        const colors = this.getColors();
         const side = [-1, 1];
         for (const s of side) {
             const sx = core.x + s * core.radius * 1.15;

@@ -106,3 +106,29 @@ bgmVolumeSlider.addEventListener('input', updateVolumeDisplays);
 updateVolumeDisplays();
 applyVolumeSettings();
 updateContinueButton();
+
+// 盔甲顏色設定
+const armorColorBtns = document.querySelectorAll('.armor-color-btn');
+const STORAGE_KEY_ARMOR_COLOR = 'survivor_js_armor_color';
+
+// 載入儲存的盔甲顏色
+const savedColor = localStorage.getItem(STORAGE_KEY_ARMOR_COLOR) || 'default';
+game.setArmorColor(savedColor);
+armorColorBtns.forEach(btn => {
+    if (btn.dataset.color === savedColor) {
+        btn.classList.add('selected');
+    } else {
+        btn.classList.remove('selected');
+    }
+});
+
+// 設定盔甲顏色按鈕事件
+armorColorBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        armorColorBtns.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        const color = btn.dataset.color;
+        localStorage.setItem(STORAGE_KEY_ARMOR_COLOR, color);
+        game.setArmorColor(color);
+    });
+});

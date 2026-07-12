@@ -111,7 +111,7 @@ export class UI {
     updateHp(current, max) {
         const percentage = (current / max) * 100;
         this.hpFill.style.width = `${percentage}%`;
-        this.hpText.textContent = `${Math.ceil(current)} / ${max}`;
+        this.hpText.textContent = `${Math.floor(current)} / ${Math.floor(max)}`;
     }
     
     /**
@@ -129,7 +129,7 @@ export class UI {
         
         const percentage = (current / max) * 100;
         this.shieldFill.style.width = `${percentage}%`;
-        this.shieldText.textContent = `${Math.ceil(current)} / ${max}`;
+        this.shieldText.textContent = `${Math.floor(current)} / ${Math.floor(max)}`;
         
         if (current <= 0) {
             this.shieldFill.parentElement.style.opacity = '0.3';

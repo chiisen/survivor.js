@@ -331,6 +331,9 @@ start() {
         
         this.player = new Player(this.canvas.width / 2, this.canvas.height / 2);
         this.player.setAngleConfig(this.dirToAngle, this.defaultAngle);
+        if (this.armorColor) {
+            this.player.setArmorColor(this.armorColor);
+        }
 
         // 玩家 HP = 100 + (level-1) × 20，再乘以難度倍率
         const levelHpBonus = 100 + (this.level - 1) * 20;
@@ -1437,6 +1440,9 @@ this.autoFire();
         const ps = state.player;
         this.player = new Player(ps.x, ps.y);
         this.player.setAngleConfig(this.dirToAngle, this.defaultAngle);
+        if (this.armorColor) {
+            this.player.setArmorColor(this.armorColor);
+        }
         this.player.hp = ps.hp;
         this.player.maxHp = ps.maxHp;
         this.player.shield = ps.shield;
