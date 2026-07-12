@@ -31,12 +31,14 @@ const UPGRADES = [
 ];
 
 /**
- * 從天賦清單中隨機抽取指定數量的升級選項
+ * 從天賦清單中隨機抽取指定數量的升級選項（排除已滿級的技能）
  * @param {number} [count=3] - 欲抽取的天賦數量
- * @returns {Upgrade[]} 隨機排序的天賦陣列 (長度為 min(count, UPGRADES.length))
+ * @param {object} [upgradeStats={}] - 目前各技能的等級
+ * @returns {Upgrade[]} 隨機排序的天賦陣列 (長度為 min(count, 可用技能數))
  */
-export function getRandomUpgrades(count = 3) {
-    const shuffled = [...UPGRADES].sort(() => Math.random() - 0.5);
+export function getRandomUpgrades(count = 3, upgradeStats = {}) {
+    const available = UPGRADES.filter(u => (upgradeStats[u.type] || 0) < 20);
+    const shuffled = [...available].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, count);
 }
 

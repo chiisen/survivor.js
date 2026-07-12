@@ -235,6 +235,21 @@ export class UI {
     }
 
     /**
+     * 顯示所有技能滿級訊息
+     */
+    showMaxLevelMessage() {
+        this.upgradeModal.classList.remove('hidden');
+        this.upgradeOptions.innerHTML = `
+            <div style="text-align: center; padding: 30px;">
+                <div style="font-size: 36px; margin-bottom: 15px;">⭐</div>
+                <div style="color: #f1c40f; font-size: 24px; font-weight: bold;">所有技能已滿級！</div>
+                <div style="color: #95a5a6; font-size: 16px; margin-top: 10px;">無法再選擇技能</div>
+            </div>
+        `;
+        if (this.upgradeTimer) this.upgradeTimer.textContent = '';
+    }
+
+    /**
      * 檢查升級模態框是否開啟
      * @returns {boolean} 模態框是否可見
      */

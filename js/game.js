@@ -11,7 +11,7 @@ import { AudioManager } from './audio.js';
 import { DecorationManager } from './decoration.js';
 import { WaveManager } from './waveManager.js';
 import { StorageManager } from './storage.js';
-import { getRandomUpgrades } from './talent.js';
+import { getRandomUpgrades, UPGRADES } from './talent.js';
 import { UI } from './ui.js';
 import { distance, distanceSquared, getExpLevelMultiplier } from './utils.js';
 import { BossSpawnEffect } from './bossSpawnEffect.js';
@@ -1156,7 +1156,18 @@ this.autoFire();
 
     showUpgradeModal() {
         this.isPaused = true;
-        const upgrades = getRandomUpgrades(3);
+
+        // 檢查是否所有技能都滿級
+        const allMaxed = UPGRADES.every(u => (this.player.upgradeStats[u.type] || 0) >= 20);
+        if (allMaxed) {
+            this.ui.showMaxLevelMessage();
+            setTimeout(() => {
+                this.isPaused = false;
+            }, 2000);
+            return;
+        }
+
+        const upgrades = getRandomUpgrades(3, this.player.upgradeStats);
 
         // 5 秒倒數 + 自動隨機選
         clearInterval(this._upgradeInterval);
@@ -1196,64 +1207,73 @@ this.autoFire();
     
     updateSkillStats() {
         if (!this.player) return;
-        
+
         const stats = this.player.upgradeStats;
         const skillItems = document.querySelectorAll('.skill-item');
-        
+
         skillItems.forEach(item => {
             const skillType = item.dataset.skill;
             const valueSpan = item.querySelector('.skill-value');
-            
-            item.classList.remove('active');
-            
+            const level = stats[skillType] || 0;
+            const isMaxed = level >= 20;
+
+            item.classList.remove('active', 'maxed');
+
             if (skillType === 'projectileCount') {
                 valueSpan.textContent = this.player.projectileCount;
                 if (this.player.projectileCount > 3) {
                     item.classList.add('active');
                 }
+                if (isMaxed) item.classList.add('maxed');
             } else if (skillType === 'critChance') {
                 const chance = Math.floor(this.player.critChance * 100);
                 valueSpan.textContent = `${chance}%`;
-                if (stats[skillType] > 0) {
-                    item.classList.add('active');
-                }
-            } else if (skillType === 'critDamage') {
-                const damage = Math.floor(this.player.critDamage * 100);
-                valueSpan.textContent = `${damage}%`;
-                if (stats[skillType] > 0) {
-                    item.classList.add('active');
-                }
-            } else if (skillType === 'shield') {
-                const level = stats[skillType] || 0;
-                valueSpan.textContent = `Lv.${level} (${this.player.shield}/${this.player.maxShield})`;
                 if (level > 0) {
                     item.classList.add('active');
                 }
+                if (isMaxed) item.classList.add('maxed');
+            } else if (skillType === 'critDamage') {
+                const damage = Math.floor(this.player.critDamage * 100);
+                valueSpan.textContent = `${damage}%`;
+                if (level > 0) {
+                    item.classList.add('active');
+                }
+                if (isMaxed) item.classList.add('maxed');
+            } else if (skillType === 'shield') {
+                valueSpan.textContent = isMaxed ? `MAX (${this.player.shield}/${this.player.maxShield})` : `Lv.${level} (${this.player.shield}/${this.player.maxShield})`;
+                if (level > 0) {
+                    item.classList.add('active');
+                }
+                if (isMaxed) item.classList.add('maxed');
             } else if (skillType === 'expBonus') {
                 const bonus = Math.floor(this.player.expBonus * 100);
                 valueSpan.textContent = `+${bonus}%`;
-                if (stats[skillType] > 0) {
+                if (level > 0) {
                     item.classList.add('active');
                 }
+                if (isMaxed) item.classList.add('maxed');
             } else if (skillType === 'lifesteal') {
                 valueSpan.textContent = `${this.player.lifesteal}HP`;
-                if (stats[skillType] > 0) {
+                if (level > 0) {
                     item.classList.add('active');
                 }
+                if (isMaxed) item.classList.add('maxed');
             } else if (skillType === 'armor') {
                 valueSpan.textContent = `${this.player.armor}`;
-                if (stats[skillType] > 0) {
+                if (level > 0) {
                     item.classList.add('active');
                 }
+                if (isMaxed) item.classList.add('maxed');
             } else if (skillType === 'damage') {
-                valueSpan.textContent = `${this.player.damage}`;
+                valueSpan.textContent = isMaxed ? `MAX (${this.player.damage})` : `${this.player.damage}`;
                 item.classList.add('active');
+                if (isMaxed) item.classList.add('maxed');
             } else if (skillType === 'maxHp') {
-                valueSpan.textContent = `${this.player.maxHp}`;
+                valueSpan.textContent = isMaxed ? `MAX (${this.player.maxHp})` : `${this.player.maxHp}`;
                 item.classList.add('active');
+                if (isMaxed) item.classList.add('maxed');
             } else {
-                const level = stats[skillType] || 0;
-                valueSpan.textContent = `Lv.${level}`;
+                valueSpan.textContent = isMaxed ? 'MAX' : `Lv.${level}`;
                 if (level > 0) {
                     item.classList.add('active');
                 }

@@ -764,6 +764,15 @@ body {
     background: rgba(52, 152, 219, 0.2);
 }
 
+.skill-item.maxed {
+    border-color: rgba(241, 196, 15, 0.8);
+    background: rgba(241, 196, 15, 0.15);
+}
+
+.skill-item.maxed .skill-value {
+    color: #f1c40f;
+}
+
 .skill-icon {
     font-size: 24px;
 }
