@@ -37,23 +37,43 @@
 
     <script type="module">
         import { PlayerRenderer } from './js/playerRenderer.js';
-
-        // 角度：上=180 左=270 下=0 右=90
-        const DIR_TO_ANGLE = {
-            '0,-1': Math.PI,
-            '-1,0': Math.PI * 3 / 2,
-            '0,1': 0,
-            '1,0': Math.PI / 2,
-            '-1,-1': Math.PI * 5 / 4,
-            '-1,1': Math.PI * 3 / 4,
-            '1,1': Math.PI / 4,
-            '1,-1': -Math.PI / 4
-        };
+        import { loadConfig, buildDirToAngle } from './js/configLoader.js';
 
         const renderer = new PlayerRenderer();
         const debug = document.getElementById('debug');
         const canvas = document.getElementById('main');
         const ctx = canvas.getContext('2d');
+
+        let DIR_TO_ANGLE = new Map();
+        let defaultAngle = 0;
+
+        const dirMap = {
+            '0,-1': { id: 'p-up', label: '↑上' },
+            '-1,0': { id: 'p-left', label: '←左' },
+            '0,1': { id: 'p-down', label: '↓下' },
+            '1,0': { id: 'p-right', label: '→右' }
+        };
+
+        let previews = [];
+
+        function buildPreviews() {
+            previews = [
+                { id: 'p-default', angle: defaultAngle, label: `預設 ${Math.round(defaultAngle * 180 / Math.PI)}°` },
+                ...Object.entries(dirMap).map(([key, info]) => ({
+                    id: info.id,
+                    angle: DIR_TO_ANGLE.get(key) ?? 0,
+                    label: `${info.label} ${Math.round((DIR_TO_ANGLE.get(key) ?? 0) * 180 / Math.PI)}°`
+                }))
+            ];
+            previews.forEach(drawPreview);
+        }
+
+        // 從 JSON 載入角度設定
+        loadConfig('./config/angles.json').then(config => {
+            DIR_TO_ANGLE = buildDirToAngle(config.directions);
+            defaultAngle = config.defaultAngle * Math.PI / 180;
+            buildPreviews();
+        });
 
         const core = {
             x: 200, y: 200, radius: 20,
@@ -64,22 +84,6 @@
         const combat = {
             attackAnimationTime: 0, attackDuration: 0.15, attackAngle: 0
         };
-
-        // 從 DIR_TO_ANGLE 建立預覽
-        const dirMap = {
-            '0,-1': { id: 'p-up', label: '↑上' },
-            '-1,0': { id: 'p-left', label: '←左' },
-            '0,1': { id: 'p-down', label: '↓下' },
-            '1,0': { id: 'p-right', label: '→右' }
-        };
-        const previews = [
-            { id: 'p-default', angle: 0, label: '預設' },
-            ...Object.entries(dirMap).map(([key, info]) => ({
-                id: info.id,
-                angle: DIR_TO_ANGLE[key],
-                label: info.label
-            }))
-        ];
 
         function drawPreview(preview) {
             const cvs = document.getElementById(preview.id);
@@ -101,8 +105,17 @@
         previews.forEach(drawPreview);
 
         const keys = {};
-        window.addEventListener('keydown', e => { keys[e.key] = true; e.preventDefault(); });
-        window.addEventListener('keyup', e => { keys[e.key] = false; });
+        window.addEventListener('keydown', e => {
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                keys[e.key] = true;
+                e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', e => {
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                keys[e.key] = false;
+            }
+        });
 
         function loop() {
             let dx = 0, dy = 0;
@@ -112,7 +125,7 @@
             if (keys['ArrowRight']) dx = 1;
 
             const key = `${dx},${dy}`;
-            core.facingAngle = DIR_TO_ANGLE[key] ?? 0;
+            core.facingAngle = DIR_TO_ANGLE.get(key) ?? defaultAngle;
 
             if (combat.attackAnimationTime > 0) combat.attackAnimationTime -= 1 / 60;
             if (keys[' ']) combat.attackAnimationTime = combat.attackDuration;

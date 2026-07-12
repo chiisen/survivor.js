@@ -1,7 +1,15 @@
 import { Game } from './game.js';
+import { loadConfig, buildDirToAngle } from './configLoader.js';
 
 const canvas = document.getElementById('game-canvas');
 const game = new Game(canvas);
+
+// 從 JSON 載入角度設定
+loadConfig('./config/angles.json').then(config => {
+    const dirToAngle = buildDirToAngle(config.directions);
+    const defaultAngle = config.defaultAngle * Math.PI / 180;
+    game.setAngleConfig(dirToAngle, defaultAngle);
+});
 
 let selectedDifficulty = 'normal';
 

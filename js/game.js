@@ -145,6 +145,17 @@ export class Game {
         this.setupInput();
         this.setupRestart();
         this.setupSaveButton();
+
+        this.dirToAngle = new Map();
+        this.defaultAngle = 0;
+    }
+
+    setAngleConfig(dirToAngle, defaultAngle) {
+        this.dirToAngle = dirToAngle;
+        this.defaultAngle = defaultAngle;
+        if (this.player) {
+            this.player.setAngleConfig(dirToAngle, defaultAngle);
+        }
     }
 
     resize() {
@@ -300,6 +311,7 @@ start() {
         this.spawnTimer = 0;
         
         this.player = new Player(this.canvas.width / 2, this.canvas.height / 2);
+        this.player.setAngleConfig(this.dirToAngle, this.defaultAngle);
         
         this.player.maxHp = Math.floor(100 * difficultySettings.playerHpMultiplier);
         this.player.hp = this.player.maxHp;
@@ -1369,6 +1381,7 @@ this.autoFire();
 
         const ps = state.player;
         this.player = new Player(ps.x, ps.y);
+        this.player.setAngleConfig(this.dirToAngle, this.defaultAngle);
         this.player.hp = ps.hp;
         this.player.maxHp = ps.maxHp;
         this.player.shield = ps.shield;

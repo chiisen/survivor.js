@@ -1,23 +1,13 @@
 import { normalize, clamp } from './utils.js';
 
-// 角度：上=180 左=270 下=0 右=90
-const DIR_TO_ANGLE = {
-    '0,-1': Math.PI,         // 上
-    '-1,0': Math.PI * 3 / 2, // 左
-    '0,1': 0,                // 下
-    '1,0': Math.PI / 2,      // 右
-    '-1,-1': Math.PI * 5 / 4,
-    '-1,1': Math.PI * 3 / 4,
-    '1,1': Math.PI / 4,
-    '1,-1': -Math.PI / 4
-};
-
 export class PlayerCore {
     constructor(x, y) {
         this.x = x;
         this.y = y;
         this.radius = 20;
         this.speed = 200;
+        this.dirToAngle = new Map();
+        this.defaultAngle = 0;
         this.maxHp = 100;
         this.hp = this.maxHp;
         this.shield = 0;
@@ -57,7 +47,7 @@ export class PlayerCore {
         }
 
         const key = `${dx},${dy}`;
-        this.facingAngle = DIR_TO_ANGLE[key] ?? 0;
+        this.facingAngle = this.dirToAngle.get(key) ?? this.defaultAngle;
         
         this.x = clamp(this.x, this.radius, canvasWidth - this.radius);
         this.y = clamp(this.y, this.radius, canvasHeight - this.radius);
@@ -71,6 +61,11 @@ export class PlayerCore {
         if (this.magnetTimer > 0) {
             this.magnetTimer = Math.max(0, this.magnetTimer - dt);
         }
+    }
+
+    setAngleConfig(dirToAngle, defaultAngle) {
+        this.dirToAngle = dirToAngle;
+        this.defaultAngle = defaultAngle;
     }
     
     applyUpgrade(upgrade) {

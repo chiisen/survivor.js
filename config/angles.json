@@ -1,0 +1,9 @@
+{
+  "directions": {
+    "up":    { "dx": 0,  "dy": -1, "angle": 180 },
+    "left":  { "dx": -1, "dy": 0,  "angle": 270 },
+    "down":  { "dx": 0,  "dy": 1,  "angle": 0 },
+    "right": { "dx": 1,  "dy": 0,  "angle": 90 }
+  },
+  "defaultAngle": 0
+}

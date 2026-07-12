@@ -108,6 +108,10 @@ export class Player {
         this.core.update(dt, keys, canvasWidth, canvasHeight);
         this.combat.update(dt);
     }
+
+    setAngleConfig(dirToAngle, defaultAngle) {
+        this.core.setAngleConfig(dirToAngle, defaultAngle);
+    }
     
     draw(ctx) {
         this.renderer.draw(ctx, this.core, this.combat);
