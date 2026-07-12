@@ -10,50 +10,49 @@ export class PlayerRenderer {
      */
     draw(ctx, core, combat) {
         ctx.save();
-        
+
         if (core.flashTime > 0) {
             ctx.globalAlpha = 0.5 + Math.sin(core.flashTime * 50) * 0.5;
         }
-        
+
         this.drawAttackRange(ctx, core);
-        
+
         if (core.magnetTimer > 0) {
             ctx.save();
             const t = (Date.now() / 1000) % 1;
             const radius = 20 + t * 60;
             const alpha = (1 - t) * 0.4;
-            
+
             ctx.beginPath();
             ctx.arc(core.x, core.y, radius, 0, Math.PI * 2);
             ctx.strokeStyle = `rgba(52, 152, 219, ${alpha})`;
             ctx.lineWidth = 2;
             ctx.stroke();
-            
+
             ctx.beginPath();
             ctx.arc(core.x, core.y, 25, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(52, 152, 219, 0.08)';
             ctx.fill();
             ctx.restore();
         }
-        
+
         ctx.translate(core.x, core.y);
-        ctx.rotate(core.facingAngle);
+        ctx.rotate(-core.facingAngle);
         ctx.translate(-core.x, -core.y);
-        
-        this.drawHelmet(ctx, core);
+
         this.drawBody(ctx, core);
-        this.drawLegs(ctx, core);
-        this.drawArms(ctx, core);
+        this.drawShoulderPads(ctx, core);
+        this.drawArms(ctx, core, combat);
+        this.drawHelmet(ctx, core);
         this.drawSword(ctx, core, combat);
-        
+
         ctx.restore();
     }
-    
+
     /**
      * 繪製攻擊範圍指示器
-     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
-     * @param {object} core - 玩家核心屬性
-     * @returns {void}
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {object} core
      */
     drawAttackRange(ctx, core) {
         ctx.beginPath();
@@ -61,14 +60,14 @@ export class PlayerRenderer {
         ctx.strokeStyle = 'rgba(52, 152, 219, 0.3)';
         ctx.lineWidth = 2;
         ctx.stroke();
-        
+
         if (core.attackRange > core.baseAttackRange) {
             ctx.beginPath();
             ctx.arc(core.x, core.y, core.attackRange, 0, Math.PI * 2);
             ctx.strokeStyle = 'rgba(46, 204, 113, 0.3)';
             ctx.lineWidth = 2;
             ctx.stroke();
-            
+
             const extraRange = core.attackRange - core.baseAttackRange;
             ctx.beginPath();
             ctx.arc(core.x, core.y, core.baseAttackRange + extraRange / 2, 0, Math.PI * 2);
@@ -77,145 +76,245 @@ export class PlayerRenderer {
             ctx.stroke();
         }
     }
-    
+
     /**
-     * 繪製玩家頭盔
-     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
-     * @param {object} core - 玩家核心屬性
-     * @returns {void}
+     * 繪製頭盔 — 帶面罩反射與裝飾
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {object} core
      */
     drawHelmet(ctx, core) {
+        const r = core.radius * 0.95;
+
+        // 頭盔本體
         ctx.beginPath();
-        ctx.arc(core.x, core.y - 5, core.radius * 0.9, 0, Math.PI * 2);
-        const helmetGradient = ctx.createRadialGradient(
-            core.x, core.y - 10, 0,
-            core.x, core.y - 5, core.radius * 0.9
+        ctx.arc(core.x, core.y - 4, r, 0, Math.PI * 2);
+        const helmGrad = ctx.createRadialGradient(
+            core.x - 4, core.y - 10, 0,
+            core.x, core.y - 4, r
         );
-        helmetGradient.addColorStop(0, '#95a5a6');
-        helmetGradient.addColorStop(0.5, '#7f8c8d');
-        helmetGradient.addColorStop(1, '#5d6d7e');
-        ctx.fillStyle = helmetGradient;
+        helmGrad.addColorStop(0, '#b0bec5');
+        helmGrad.addColorStop(0.3, '#78909c');
+        helmGrad.addColorStop(0.7, '#546e7a');
+        helmGrad.addColorStop(1, '#37474f');
+        ctx.fillStyle = helmGrad;
         ctx.fill();
-        ctx.strokeStyle = '#34495e';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#263238';
+        ctx.lineWidth = 2.5;
         ctx.stroke();
-        
+
+        // 頭盔高光
         ctx.beginPath();
-        ctx.moveTo(core.x - core.radius * 0.3, core.y - core.radius * 0.6);
-        ctx.lineTo(core.x - core.radius * 0.1, core.y - core.radius * 1.1);
-        ctx.lineTo(core.x + core.radius * 0.1, core.y - core.radius * 1.1);
-        ctx.lineTo(core.x + core.radius * 0.3, core.y - core.radius * 0.6);
-        ctx.fillStyle = '#5d6d7e';
-        ctx.fill();
-        ctx.strokeStyle = '#34495e';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.moveTo(core.x - core.radius * 0.2, core.y - core.radius * 1.05);
-        ctx.lineTo(core.x - core.radius * 0.4, core.y - core.radius * 1.4);
-        ctx.lineTo(core.x + core.radius * 0.4, core.y - core.radius * 1.4);
-        ctx.lineTo(core.x + core.radius * 0.2, core.y - core.radius * 1.05);
-        ctx.fillStyle = '#5d6d7e';
-        ctx.fill();
-        ctx.strokeStyle = '#34495e';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.arc(core.x - 5, core.y - 6, 2, 0, Math.PI * 2);
-        ctx.arc(core.x + 5, core.y - 6, 2, 0, Math.PI * 2);
-        ctx.fillStyle = '#e74c3c';
-        ctx.fill();
-        
-        ctx.beginPath();
-        ctx.moveTo(core.x - 8, core.y - 3);
-        ctx.lineTo(core.x + 8, core.y - 3);
-        ctx.strokeStyle = '#34495e';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-    }
-    
-    /**
-     * 繪製玩家身體
-     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
-     * @param {object} core - 玩家核心屬性
-     * @returns {void}
-     */
-    drawBody(ctx, core) {
-        ctx.beginPath();
-        ctx.arc(core.x, core.y + 8, core.radius * 1.1, 0, Math.PI * 2);
-        const bodyGradient = ctx.createRadialGradient(
-            core.x - 5, core.y + 5, 0,
-            core.x, core.y + 8, core.radius * 1.1
+        ctx.arc(core.x - 3, core.y - 10, r * 0.45, 0, Math.PI * 2);
+        const highlight = ctx.createRadialGradient(
+            core.x - 3, core.y - 10, 0,
+            core.x - 3, core.y - 10, r * 0.45
         );
-        bodyGradient.addColorStop(0, '#bdc3c7');
-        bodyGradient.addColorStop(0.4, '#95a5a6');
-        bodyGradient.addColorStop(1, '#7f8c8d');
-        ctx.fillStyle = bodyGradient;
+        highlight.addColorStop(0, 'rgba(255,255,255,0.35)');
+        highlight.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = highlight;
         ctx.fill();
-        ctx.strokeStyle = '#34495e';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-    }
-    
-    /**
-     * 繪製玩家腿部
-     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
-     * @param {object} core - 玩家核心屬性
-     * @returns {void}
-     */
-    drawLegs(ctx, core) {
+
+        // 頂部尖角
         ctx.beginPath();
-        ctx.moveTo(core.x - 2, core.y + 3);
-        ctx.lineTo(core.x - 2, core.y + 15);
-        ctx.moveTo(core.x + 2, core.y + 3);
-        ctx.lineTo(core.x + 2, core.y + 15);
-        ctx.strokeStyle = '#5d6d7e';
+        ctx.moveTo(core.x - r * 0.25, core.y - r * 0.85);
+        ctx.lineTo(core.x, core.y - r * 1.45);
+        ctx.lineTo(core.x + r * 0.25, core.y - r * 0.85);
+        ctx.closePath();
+        const hornGrad = ctx.createLinearGradient(core.x, core.y - r * 1.45, core.x, core.y - r * 0.85);
+        hornGrad.addColorStop(0, '#78909c');
+        hornGrad.addColorStop(1, '#455a64');
+        ctx.fillStyle = hornGrad;
+        ctx.fill();
+        ctx.strokeStyle = '#263238';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 面罩 V 形
+        ctx.beginPath();
+        ctx.moveTo(core.x - r * 0.55, core.y - 8);
+        ctx.lineTo(core.x - r * 0.15, core.y + 4);
+        ctx.lineTo(core.x + r * 0.15, core.y + 4);
+        ctx.lineTo(core.x + r * 0.55, core.y - 8);
+        ctx.closePath();
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fill();
+        ctx.strokeStyle = '#37474f';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 眼睛 — 發光紅眼
+        ctx.save();
+        ctx.shadowColor = '#e74c3c';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(core.x - r * 0.28, core.y - 4, 2.5, 0, Math.PI * 2);
+        ctx.arc(core.x + r * 0.28, core.y - 4, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff5252';
+        ctx.fill();
+        ctx.restore();
+
+        // 面罩通氣孔
+        for (let i = -1; i <= 1; i++) {
+            ctx.beginPath();
+            ctx.arc(core.x + i * 5, core.y + 2, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = '#263238';
+            ctx.fill();
+        }
+
+        // 頭盔底部邊緣
+        ctx.beginPath();
+        ctx.arc(core.x, core.y - 4, r, Math.PI * 0.8, Math.PI * 0.2, true);
+        ctx.strokeStyle = '#455a64';
         ctx.lineWidth = 3;
         ctx.stroke();
     }
-    
+
     /**
-     * 繪製玩家手臂
-     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
-     * @param {object} core - 玩家核心屬性
-     * @returns {void}
+     * 繪製身體 — 盔甲胸板
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {object} core
      */
-    drawArms(ctx, core) {
+    drawBody(ctx, core) {
+        const bw = core.radius * 1.0;
+        const bh = core.radius * 1.3;
+
+        // 身體陰影
         ctx.beginPath();
-        ctx.moveTo(core.x - core.radius * 0.8, core.y + 5);
-        ctx.lineTo(core.x - core.radius * 1.3, core.y + 15);
-        ctx.strokeStyle = '#7f8c8d';
-        ctx.lineWidth = 6;
-        ctx.lineCap = 'round';
-        ctx.stroke();
-        
+        ctx.ellipse(core.x, core.y + 10, bw + 2, bh + 2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.fill();
+
+        // 身體本體
         ctx.beginPath();
-        ctx.moveTo(core.x + core.radius * 0.8, core.y + 5);
-        ctx.lineTo(core.x + core.radius * 1.3, core.y + 15);
-        ctx.strokeStyle = '#7f8c8d';
-        ctx.lineWidth = 6;
-        ctx.lineCap = 'round';
+        ctx.ellipse(core.x, core.y + 8, bw, bh, 0, 0, Math.PI * 2);
+        const bodyGrad = ctx.createLinearGradient(core.x - bw, core.y, core.x + bw, core.y);
+        bodyGrad.addColorStop(0, '#546e7a');
+        bodyGrad.addColorStop(0.3, '#78909c');
+        bodyGrad.addColorStop(0.5, '#90a4ae');
+        bodyGrad.addColorStop(0.7, '#78909c');
+        bodyGrad.addColorStop(1, '#455a64');
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+        ctx.strokeStyle = '#37474f';
+        ctx.lineWidth = 2;
         ctx.stroke();
+
+        // 胸甲中線
+        ctx.beginPath();
+        ctx.moveTo(core.x, core.y - 2);
+        ctx.lineTo(core.x, core.y + bh + 4);
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 胸甲水平線
+        ctx.beginPath();
+        ctx.moveTo(core.x - bw * 0.7, core.y + 4);
+        ctx.lineTo(core.x + bw * 0.7, core.y + 4);
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 腰帶
+        ctx.beginPath();
+        ctx.rect(core.x - bw * 0.85, core.y + bh * 0.6, bw * 1.7, 4);
+        ctx.fillStyle = '#5d4037';
+        ctx.fill();
+        ctx.strokeStyle = '#3e2723';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 腰帶扣
+        ctx.beginPath();
+        ctx.arc(core.x, core.y + bh * 0.6 + 2, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#f39c12';
+        ctx.fill();
     }
-    
+
     /**
-     * 繪製玩家劍
-     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
-     * @param {object} core - 玩家核心屬性
-     * @param {object} combat - 玩家戰鬥屬性
-     * @returns {void}
+     * 繪製肩甲
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {object} core
+     */
+    drawShoulderPads(ctx, core) {
+        const side = [-1, 1];
+        for (const s of side) {
+            const sx = core.x + s * core.radius * 1.15;
+            const sy = core.y + 2;
+
+            // 肩甲陰影
+            ctx.beginPath();
+            ctx.ellipse(sx + 1, sy + 1, core.radius * 0.55, core.radius * 0.4, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.12)';
+            ctx.fill();
+
+            // 肩甲本體
+            ctx.beginPath();
+            ctx.ellipse(sx, sy, core.radius * 0.55, core.radius * 0.4, 0, 0, Math.PI * 2);
+            const spGrad = ctx.createRadialGradient(sx - 2, sy - 3, 0, sx, sy, core.radius * 0.55);
+            spGrad.addColorStop(0, '#90a4ae');
+            spGrad.addColorStop(0.5, '#607d8b');
+            spGrad.addColorStop(1, '#37474f');
+            ctx.fillStyle = spGrad;
+            ctx.fill();
+            ctx.strokeStyle = '#263238';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // 肩甲高光
+            ctx.beginPath();
+            ctx.ellipse(sx - s * 2, sy - 3, core.radius * 0.2, core.radius * 0.12, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.fill();
+        }
+    }
+
+    /**
+     * 繪製手臂
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {object} core
+     * @param {object} combat
+     */
+    drawArms(ctx, core, combat) {
+        const attacking = combat.attackAnimationTime > 0;
+
+        // 左手臂
+        ctx.beginPath();
+        ctx.moveTo(core.x - core.radius * 0.9, core.y + 4);
+        ctx.lineTo(core.x - core.radius * 1.35, core.y + 18);
+        ctx.strokeStyle = '#607d8b';
+        ctx.lineWidth = 7;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // 右手臂 (持劍側)
+        if (!attacking) {
+            ctx.beginPath();
+            ctx.moveTo(core.x + core.radius * 0.9, core.y + 4);
+            ctx.lineTo(core.x + core.radius * 1.35, core.y + 18);
+            ctx.strokeStyle = '#607d8b';
+            ctx.lineWidth = 7;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+    }
+
+    /**
+     * 繪製劍 — 含劍身光效與握把
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {object} core
+     * @param {object} combat
      */
     drawSword(ctx, core, combat) {
         const swordBaseAngle = -Math.PI / 4;
         const swordSwingRange = Math.PI / 2;
         let currentSwordAngle = swordBaseAngle;
-        
+
         if (combat.attackAnimationTime > 0) {
             const progress = combat.attackAnimationTime / combat.attackDuration;
             currentSwordAngle = swordBaseAngle + (1 - progress) * swordSwingRange;
-            
+
+            // 揮砍弧線
             ctx.beginPath();
             ctx.arc(
                 core.x + core.radius * 1.8,
@@ -224,52 +323,103 @@ export class PlayerRenderer {
                 currentSwordAngle - 0.3,
                 currentSwordAngle + 0.3
             );
-            ctx.strokeStyle = 'rgba(52, 152, 219, 0.5)';
+            ctx.strokeStyle = 'rgba(100, 200, 255, 0.5)';
             ctx.lineWidth = 4;
             ctx.stroke();
+
+            // 弧線外層光暈
+            ctx.beginPath();
+            ctx.arc(
+                core.x + core.radius * 1.8,
+                core.y,
+                core.radius * 2.5,
+                currentSwordAngle - 0.4,
+                currentSwordAngle + 0.4
+            );
+            ctx.strokeStyle = 'rgba(100, 200, 255, 0.15)';
+            ctx.lineWidth = 8;
+            ctx.stroke();
         }
-        
+
         ctx.save();
         ctx.translate(core.x + core.radius * 1.3, core.y + 10);
         ctx.rotate(currentSwordAngle);
-        
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(0, -core.radius * 2.5);
-        ctx.lineTo(3, -core.radius * 2.5);
-        ctx.lineTo(3, 0);
-        ctx.closePath();
-        const swordGradient = ctx.createLinearGradient(0, -core.radius * 2.5, 3, 0);
-        swordGradient.addColorStop(0, '#ecf0f1');
-        swordGradient.addColorStop(0.5, '#bdc3c7');
-        swordGradient.addColorStop(1, '#95a5a6');
-        ctx.fillStyle = swordGradient;
-        ctx.fill();
-        ctx.strokeStyle = '#7f8c8d';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        
+
+        const bladeLen = core.radius * 2.8;
+
+        // 劍身
         ctx.beginPath();
         ctx.moveTo(-2, 0);
+        ctx.lineTo(-1, -bladeLen);
+        ctx.lineTo(0, -bladeLen - 5);
+        ctx.lineTo(4, -bladeLen);
         ctx.lineTo(5, 0);
-        ctx.lineTo(5, 5);
-        ctx.lineTo(-2, 5);
         ctx.closePath();
-        ctx.fillStyle = '#f39c12';
+        const swordGrad = ctx.createLinearGradient(-2, 0, 4, 0);
+        swordGrad.addColorStop(0, '#b0bec5');
+        swordGrad.addColorStop(0.3, '#eceff1');
+        swordGrad.addColorStop(0.5, '#ffffff');
+        swordGrad.addColorStop(0.7, '#eceff1');
+        swordGrad.addColorStop(1, '#78909c');
+        ctx.fillStyle = swordGrad;
         ctx.fill();
-        ctx.strokeStyle = '#e67e22';
+        ctx.strokeStyle = '#546e7a';
         ctx.lineWidth = 1;
         ctx.stroke();
-        
-        if (combat.attackAnimationTime > 0) {
+
+        // 劍身中線
+        ctx.beginPath();
+        ctx.moveTo(1.5, -5);
+        ctx.lineTo(1.5, -bladeLen + 5);
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 劍格
+        ctx.beginPath();
+        ctx.moveTo(-6, 0);
+        ctx.lineTo(9, 0);
+        ctx.lineTo(9, 4);
+        ctx.lineTo(-6, 4);
+        ctx.closePath();
+        const guardGrad = ctx.createLinearGradient(-6, 0, 9, 0);
+        guardGrad.addColorStop(0, '#f39c12');
+        guardGrad.addColorStop(0.5, '#f1c40f');
+        guardGrad.addColorStop(1, '#e67e22');
+        ctx.fillStyle = guardGrad;
+        ctx.fill();
+        ctx.strokeStyle = '#d35400';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 劍柄
+        ctx.beginPath();
+        ctx.rect(-1, 4, 5, 8);
+        ctx.fillStyle = '#5d4037';
+        ctx.fill();
+
+        // 劍柄纏繞
+        for (let i = 0; i < 3; i++) {
             ctx.beginPath();
-            ctx.moveTo(1, -core.radius * 2.5);
-            ctx.lineTo(1, -core.radius * 3);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.lineWidth = 2;
+            ctx.moveTo(-1, 5 + i * 3);
+            ctx.lineTo(4, 6 + i * 3);
+            ctx.strokeStyle = '#3e2723';
+            ctx.lineWidth = 1;
             ctx.stroke();
         }
-        
+
+        // 劍尖發光（攻擊時）
+        if (combat.attackAnimationTime > 0) {
+            ctx.save();
+            ctx.shadowColor = '#64b5f6';
+            ctx.shadowBlur = 12;
+            ctx.beginPath();
+            ctx.arc(1.5, -bladeLen - 5, 3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(100, 181, 246, 0.7)';
+            ctx.fill();
+            ctx.restore();
+        }
+
         ctx.restore();
     }
 }

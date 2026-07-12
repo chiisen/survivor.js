@@ -1,5 +1,17 @@
 import { normalize, clamp } from './utils.js';
 
+// 角度：上=180 左=270 下=0 右=90
+const DIR_TO_ANGLE = {
+    '0,-1': Math.PI,         // 上
+    '-1,0': Math.PI * 3 / 2, // 左
+    '0,1': 0,                // 下
+    '1,0': Math.PI / 2,      // 右
+    '-1,-1': Math.PI * 5 / 4,
+    '-1,1': Math.PI * 3 / 4,
+    '1,1': Math.PI / 4,
+    '1,-1': -Math.PI / 4
+};
+
 export class PlayerCore {
     constructor(x, y) {
         this.x = x;
@@ -42,8 +54,10 @@ export class PlayerCore {
             const normalized = normalize(dx, dy);
             this.x += normalized.x * this.speed * dt;
             this.y += normalized.y * this.speed * dt;
-            this.facingAngle = Math.atan2(dy, dx);
         }
+
+        const key = `${dx},${dy}`;
+        this.facingAngle = DIR_TO_ANGLE[key] ?? 0;
         
         this.x = clamp(this.x, this.radius, canvasWidth - this.radius);
         this.y = clamp(this.y, this.radius, canvasHeight - this.radius);
