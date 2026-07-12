@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>技能測試</title>
+    <style>
+        body { margin: 0; background: #1a1a2e; display: flex; flex-direction: column; align-items: center; min-height: 100vh; font-family: sans-serif; color: #ecf0f1; padding: 20px; }
+        h1 { color: #f1c40f; font-size: 24px; margin-bottom: 15px; }
+        .formula-box { background: #16213e; border: 2px solid #34495e; border-radius: 8px; max-width: 700px; width: 100%; margin-bottom: 15px; }
+        .formula-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; cursor: pointer; }
+        .formula-header:hover { background: rgba(255,255,255,0.05); }
+        .formula-title { color: #f39c12; font-size: 14px; font-weight: bold; margin: 0; }
+        .formula-toggle { color: #95a5a6; font-size: 12px; }
+        .formula-content { padding: 0 15px 15px 15px; display: block; }
+        .formula-box.collapsed .formula-content { display: none; }
+        .formula-box.collapsed .formula-toggle::after { content: '展開'; }
+        .formula-box:not(.collapsed) .formula-toggle::after { content: '收合'; }
+        #grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 700px; width: 100%; }
+        .skill-card { background: #16213e; border: 2px solid #34495e; border-radius: 8px; padding: 12px; text-align: center; }
+        .skill-icon { font-size: 28px; }
+        .skill-name { color: #f39c12; font-size: 14px; font-weight: bold; margin: 5px 0; }
+        .skill-desc { color: #95a5a6; font-size: 11px; margin-bottom: 8px; }
+        .skill-level { display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .skill-level button { width: 24px; height: 24px; border: 1px solid #3498db; background: #0d1117; color: white; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .skill-level button:hover { background: #3498db; }
+        .skill-level span { color: #f1c40f; font-size: 14px; min-width: 30px; }
+        .skill-effect { color: #2ecc71; font-size: 12px; margin-top: 5px; }
+        .skill-total { color: #e74c3c; font-size: 12px; font-weight: bold; margin-top: 3px; }
+        #debug { margin-top: 20px; color: #f39c12; font-size: 14px; }
+        a { color: #5dade2; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>技能圖鑑</h1>
+
+    <div class="formula-box collapsed">
+        <div class="formula-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            <div class="formula-title">玩家屬性總覽</div>
+            <div class="formula-toggle"></div>
+        </div>
+        <div class="formula-content">
+            <div id="player-stats" style="color: #ecf0f1; font-size: 13px; line-height: 1.8;"></div>
+        </div>
+    </div>
+
+    <div id="grid"></div>
+    <div id="debug"></div>
+    <div style="margin-top: 15px;"><a href="index.html" style="color: #5dade2; font-size: 14px;">← 返回首頁</a></div>
+
+    <script type="module">
+        // 技能定義
+        const skills = [
+            { type: 'maxHp', name: '生命強化', desc: '最大生命值 +20', value: 20, icon: '❤️' },
+            { type: 'speed', name: '疾風步', desc: '移動速度 +30', value: 30, icon: '💨' },
+            { type: 'pickupRange', name: '磁力手套', desc: '拾取範圍 +30', value: 30, icon: '🧲' },
+            { type: 'attackRange', name: '鹰眼', desc: '攻擊範圍 +50', value: 50, icon: '👁️' },
+            { type: 'fireRate', name: '急速射擊', desc: '射擊間隔 -0.08秒', value: -0.08, icon: '⚡' },
+            { type: 'damage', name: '魔力增幅', desc: '傷害 +1', value: 1, icon: '✨' },
+            { type: 'projectileSpeed', name: '子彈加速', desc: '子彈速度 +100', value: 100, icon: '🚀' },
+            { type: 'projectileCount', name: '多重射擊', desc: '同時發射 +2 顆子彈', value: 2, icon: '🎯' },
+            { type: 'critChance', name: '暴击大师', desc: '暴击率 +10%', value: 0.1, icon: '💥' },
+            { type: 'critDamage', name: '暴击增幅', desc: '暴击伤害 +50%', value: 0.5, icon: '🔥' },
+            { type: 'lifesteal', name: '吸血鬼', desc: '击杀回复 +5 HP', value: 5, icon: '🩸' },
+            { type: 'shield', name: '护盾大师', desc: '获得 +15 护盾', value: 15, icon: '🛡️' },
+            { type: 'expBonus', name: '经验达人', desc: '经验值获取 +20%', value: 0.2, icon: '📚' },
+            { type: 'armor', name: '铁壁', desc: '受到伤害 -5', value: 5, icon: '🧱' }
+        ];
+
+        // 玩家基礎值
+        const baseStats = {
+            maxHp: 100, speed: 200, pickupRange: 80, attackRange: 300,
+            fireRate: 0.5, damage: 1, projectileSpeed: 400, projectileCount: 3,
+            critChance: 0, critDamage: 1.5, lifesteal: 0, shield: 0,
+            expBonus: 0, armor: 0
+        };
+
+        const grid = document.getElementById('grid');
+        const debug = document.getElementById('debug');
+        const playerStatsDiv = document.getElementById('player-stats');
+
+        // 儲存每個技能的等級
+        const skillLevels = {};
+        skills.forEach(s => skillLevels[s.type] = 0);
+
+        // 技能格式化
+        const formatValue = (type, value) => {
+            if (type === 'fireRate') return value.toFixed(2) + '秒';
+            if (type === 'critChance') return (value * 100).toFixed(0) + '%';
+            if (type === 'critDamage') return (value * 100).toFixed(0) + '%';
+            if (type === 'expBonus') return (value * 100).toFixed(0) + '%';
+            return Math.floor(value);
+        };
+
+        // 建立技能卡片
+        skills.forEach(skill => {
+            const card = document.createElement('div');
+            card.className = 'skill-card';
+
+            card.innerHTML = `
+                <div class="skill-icon">${skill.icon}</div>
+                <div class="skill-name">${skill.name}</div>
+                <div class="skill-desc">${skill.desc}</div>
+                <div class="skill-level">
+                    <button onclick="changeLevel('${skill.type}', -1)">-</button>
+                    <span id="level-${skill.type}">0</span>
+                    <button onclick="changeLevel('${skill.type}', 1)">+</button>
+                </div>
+                <div class="skill-effect">每級：${skill.desc}</div>
+                <div class="skill-total" id="total-${skill.type}"></div>
+            `;
+
+            grid.appendChild(card);
+        });
+
+        // 調整技能等級
+        window.changeLevel = (type, delta) => {
+            skillLevels[type] = Math.max(0, Math.min(20, skillLevels[type] + delta));
+            document.getElementById(`level-${type}`).textContent = skillLevels[type];
+            updateTotals();
+        };
+
+        // 更新所有技能總計
+        function updateTotals() {
+            const totals = { ...baseStats };
+
+            skills.forEach(skill => {
+                const level = skillLevels[skill.type];
+                const totalEl = document.getElementById(`total-${skill.type}`);
+
+                if (level > 0) {
+                    if (skill.type === 'fireRate') {
+                        totals.fireRate += skill.value * level;
+                        totalEl.textContent = `總計：${formatValue(skill.type, totals.fireRate)}`;
+                    } else if (skill.type === 'critChance') {
+                        totals.critChance += skill.value * level;
+                        totalEl.textContent = `總計：${formatValue(skill.type, totals.critChance)}`;
+                    } else if (skill.type === 'critDamage') {
+                        totals.critDamage += skill.value * level;
+                        totalEl.textContent = `總計：${formatValue(skill.type, totals.critDamage)}`;
+                    } else if (skill.type === 'expBonus') {
+                        totals.expBonus += skill.value * level;
+                        totalEl.textContent = `總計：${formatValue(skill.type, totals.expBonus)}`;
+                    } else if (totals[skill.type] !== undefined) {
+                        totals[skill.type] += skill.value * level;
+                        totalEl.textContent = `總計：${formatValue(skill.type, totals[skill.type])}`;
+                    } else {
+                        totalEl.textContent = '';
+                    }
+                } else {
+                    totalEl.textContent = '';
+                }
+            });
+
+            // 更新玩家屬性總覽
+            playerStatsDiv.innerHTML = `
+                <span style="color:#2ecc71;">HP</span>：${totals.maxHp}　
+                <span style="color:#2ecc71;">速度</span>：${totals.speed}　
+                <span style="color:#2ecc71;">攻擊</span>：${totals.damage}<br>
+                <span style="color:#f39c12;">射速</span>：${totals.fireRate.toFixed(2)}秒　
+                <span style="color:#f39c12;">暴率</span>：${(totals.critChance * 100).toFixed(0)}%　
+                <span style="color:#f39c12;">暴傷</span>：${(totals.critDamage * 100).toFixed(0)}%<br>
+                <span style="color:#5dade2;">子彈數</span>：${totals.projectileCount}　
+                <span style="color:#5dade2;">子彈速</span>：${totals.projectileSpeed}　
+                <span style="color:#5dade2;">攻擊範圍</span>：${totals.attackRange}<br>
+                <span style="color:#e74c3c;">護盾</span>：${totals.shield}　
+                <span style="color:#e74c3c;">護甲</span>：${totals.armor}　
+                <span style="color:#e74c3c;">吸血</span>：${totals.lifesteal}　
+                <span style="color:#e74c3c;">拾取</span>：${totals.pickupRange}　
+                <span style="color:#e74c3c;">經驗</span>：${(totals.expBonus * 100).toFixed(0)}%
+            `;
+        }
+
+        updateTotals();
+        debug.textContent = `共 ${skills.length} 種技能，每種最高 20 級`;
+    </script>
+</body>
+</html>
