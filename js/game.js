@@ -380,7 +380,8 @@ this.logger.phase('phase2', { fireCooldown: this.player.fireCooldown });
             if (this.waveManager.shouldSpawnEnemy(this.enemies.length)) {
                 for (let i = 0; i < spawnCount; i++) {
                     if (this.waveManager.shouldSpawnEnemy(this.enemies.length)) {
-                        this.spawnEnemy(false);
+                        const enemy = this.spawnEnemy(false);
+                        this.enemyGrid.insert(enemy);
                     }
                 }
             }
@@ -389,6 +390,7 @@ this.logger.phase('phase2', { fireCooldown: this.player.fireCooldown });
         if (this.waveManager.shouldSpawnBoss()) {
             const boss = this.spawnEnemy(true);
             if (boss) {
+                this.enemyGrid.insert(boss);
                 this.bossSpawnPool.get(boss.x, boss.y);
                 this.audio.playChainKill();
             }
@@ -815,8 +817,9 @@ this.autoFire();
                 shootInterval: 0
             });
             this.enemies.push(splitEnemy);
+            this.enemyGrid.insert(splitEnemy);
         }
-        
+
         const chainSplitRadius = 80;
         const nearbySplitters = this.enemyGrid.getNearby(parentEnemy.x, parentEnemy.y, chainSplitRadius);
         
@@ -860,8 +863,9 @@ this.autoFire();
                 shootInterval: 0
             });
             this.enemies.push(splitEnemy);
+            this.enemyGrid.insert(splitEnemy);
         }
-        
+
         this.explosionPool.get(enemy.x, enemy.y);
         this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, 0, '#1abc9c'));
     }
@@ -922,6 +926,7 @@ this.autoFire();
                     shieldMaxHp: 2
                 });
                 this.enemies.push(eliteMinion);
+                this.enemyGrid.insert(eliteMinion);
             } else {
                 const minion = new Enemy(minionX, minionY, {
                     name: 'minion',
@@ -938,6 +943,7 @@ this.autoFire();
                     shootInterval: 0
                 });
                 this.enemies.push(minion);
+                this.enemyGrid.insert(minion);
             }
         }
     }
