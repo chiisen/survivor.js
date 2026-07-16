@@ -87,6 +87,7 @@ export class Game {
         );
         this.achievementManager = new AchievementManager();
         this.screenShake = { x: 0, y: 0 };
+        this.achievementNotifications = [];
         
         this.floorImage = new Image();
         this.floorImage.src = 'images/floor_tileset.png';
@@ -684,6 +685,7 @@ this.autoFire();
                     }
                     
                     this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage, damageColor));
+                    this.limitDamageNumbers();
                     this.audio.playHit();
                     this.projectilePool.release(projectile);
                     
@@ -760,6 +762,7 @@ this.autoFire();
                 const nearbyExpValue = this.calculateExpValue(nearbyEnemy.expValue, nearbyExpBonus);
                 this.expOrbs.push(new ExperienceOrb(nearbyEnemy.x, nearbyEnemy.y, nearbyExpValue));
                 this.damageNumbers.push(new DamageNumber(nearbyEnemy.x, nearbyEnemy.y - nearbyEnemy.radius, projectile.damage));
+                this.limitDamageNumbers();
                 const idx = this.enemies.indexOf(nearbyEnemy);
                 if (idx !== -1) {
                     this.enemies.splice(idx, 1);
@@ -773,7 +776,8 @@ this.autoFire();
             this.enemies.splice(enemyIdx, 1);
         }
         this.kills += chainKills;
-        
+        this.checkAchievementsRealtime();
+
         if (chainKills >= 2) {
             this.audio.playChainKill();
             this.chainKillDisplay.trigger(chainKills);
@@ -933,6 +937,7 @@ this.autoFire();
 
         this.explosionPool.get(enemy.x, enemy.y);
         this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, 0, '#1abc9c'));
+        this.limitDamageNumbers();
     }
 
     createExplosiveDeath(enemy) {
@@ -958,11 +963,12 @@ this.autoFire();
         }
         
         this.damageNumbers.push(new DamageNumber(
-            enemy.x, 
-            enemy.y - enemy.radius - 20, 
+            enemy.x,
+            enemy.y - enemy.radius - 20,
             enemy.explosionDamage,
             '#f39c12'
         ));
+        this.limitDamageNumbers();
     }
 
     spawnMinionEnemies(x, y, count, spawnElite = false) {
@@ -1075,6 +1081,7 @@ this.autoFire();
             enemy.hp -= skillDamage;
             this.explosionPool.get(enemy.x, enemy.y);
             this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, skillDamage, '#f1c40f'));
+            this.limitDamageNumbers();
             
             if (enemy.hp <= 0) {
                 const expValue = this.calculateExpValue(enemy.expValue, this.player.expBonus);
@@ -1652,7 +1659,12 @@ this.autoFire();
             }
         }
         
+        const margin = 80;
         for (const enemy of this.enemies) {
+            if (enemy.x + enemy.radius < -margin || enemy.x - enemy.radius > this.canvas.width + margin ||
+                enemy.y + enemy.radius < -margin || enemy.y - enemy.radius > this.canvas.height + margin) {
+                continue;
+            }
             enemy.draw(this.ctx);
         }
         
@@ -1733,12 +1745,135 @@ this.autoFire();
         this.waveManager.drawWaveInfo(this.ctx, this.canvas.width - 180, this.canvas.height * 0.75);
         
         this.drawBossHealthBar();
-        
+
         this.debugOverlay.draw(this.ctx);
-        
+
         this.visibilityMask.draw(this.ctx, this.canvas.width, this.canvas.height, this.player.x, this.player.y);
-        
+
+        this.drawAchievementNotifications();
+
         this.ctx.restore();
+    }
+
+    /**
+     * 限制傷害數字數量（防止掉幀）
+     */
+    limitDamageNumbers() {
+        const max = 50;
+        while (this.damageNumbers.length > max) {
+            this.damageNumbers.shift();
+        }
+    }
+
+    /**
+     * 遊戲中即時成就檢查（非 game over 時）
+     */
+    checkAchievementsRealtime() {
+        const stats = {
+            kills: this.kills,
+            bossesKilled: this.bossesKilled,
+            highestWave: this.waveManager.currentWave,
+            highestLevel: this.level,
+            survivedTime: this.gameTime,
+            totalGames: 1
+        };
+        const newAchievements = this.achievementManager.check(stats, this.difficulty);
+        for (const ach of newAchievements) {
+            this.showAchievementNotification(ach);
+        }
+    }
+
+    /**
+     * 顯示成就解鎖通知
+     * @param {object} achievement - 成就物件
+     */
+    showAchievementNotification(achievement) {
+        this.achievementNotifications.push({
+            icon: achievement.icon,
+            name: achievement.name,
+            description: achievement.description,
+            time: 0,
+            duration: 3
+        });
+    }
+
+    /**
+     * 繪製成就解鎖通知（從頂部滑入 + 淡出）
+     */
+    drawAchievementNotifications() {
+        const now = performance.now() / 1000;
+
+        for (let i = this.achievementNotifications.length - 1; i >= 0; i--) {
+            const notif = this.achievementNotifications[i];
+            notif.time += 1 / 60;
+
+            if (notif.time > notif.duration) {
+                this.achievementNotifications.splice(i, 1);
+                continue;
+            }
+
+            const progress = notif.time / notif.duration;
+            let alpha, slideY;
+
+            if (notif.time < 0.4) {
+                alpha = notif.time / 0.4;
+                slideY = -50 + (notif.time / 0.4) * 50;
+            } else if (notif.time > notif.duration - 0.5) {
+                alpha = (notif.duration - notif.time) / 0.5;
+                slideY = 0;
+            } else {
+                alpha = 1;
+                slideY = 0;
+            }
+
+            this.ctx.save();
+            this.ctx.globalAlpha = alpha;
+
+            const x = this.canvas.width / 2;
+            const y = 80 + slideY;
+            const boxW = 320;
+            const boxH = 70;
+
+            // 背景框
+            const bgGrad = this.ctx.createLinearGradient(x - boxW / 2, y, x + boxW / 2, y);
+            bgGrad.addColorStop(0, 'rgba(30, 30, 50, 0.9)');
+            bgGrad.addColorStop(0.5, 'rgba(40, 40, 60, 0.95)');
+            bgGrad.addColorStop(1, 'rgba(30, 30, 50, 0.9)');
+            this.ctx.fillStyle = bgGrad;
+            this.ctx.beginPath();
+            this.ctx.roundRect(x - boxW / 2, y - boxH / 2, boxW, boxH, 12);
+            this.ctx.fill();
+
+            // 邊框
+            this.ctx.strokeStyle = '#f1c40f';
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+
+            // 圖標
+            this.ctx.font = '28px sans-serif';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillStyle = '#fff';
+            this.ctx.fillText(notif.icon, x - boxW / 2 + 30, y);
+
+            // 標題
+            this.ctx.font = 'bold 16px "Segoe UI", sans-serif';
+            this.ctx.textAlign = 'left';
+            this.ctx.fillStyle = '#f1c40f';
+            this.ctx.fillText('成就解鎖！', x - boxW / 2 + 55, y - 10);
+
+            // 名稱
+            this.ctx.font = 'bold 14px "Segoe UI", sans-serif';
+            this.ctx.fillStyle = '#ecf0f1';
+            this.ctx.fillText(notif.name, x - boxW / 2 + 55, y + 12);
+
+            // 描述
+            this.ctx.font = '11px "Segoe UI", sans-serif';
+            this.ctx.fillStyle = '#95a5a6';
+            this.ctx.fillText(notif.description, x - boxW / 2 + 55, y + 28);
+
+            this.ctx.restore();
+        }
     }
 
     drawBossHealthBar() {

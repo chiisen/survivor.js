@@ -99,7 +99,15 @@ export class GroundDecoration {
         ctx.globalAlpha = this.alpha;
         ctx.imageSmoothingEnabled = false;
         ctx.imageSmoothingQuality = 'high';
-        
+
+        // 地面陰影（非圖片型裝飾物）
+        if (!this[`${this.type}ImageLoaded`]) {
+            ctx.beginPath();
+            ctx.ellipse(this.x + 3, this.y + 2, this.width * 0.5, this.height * 0.15, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fill();
+        }
+
         switch (this.type) {
             case 'rock':
                 this.drawRock(ctx);
@@ -126,7 +134,7 @@ export class GroundDecoration {
                 this.drawCrystal(ctx);
                 break;
         }
-        
+
         ctx.restore();
     }
 

@@ -144,24 +144,47 @@ export class WaveManager {
      */
     drawAnnouncement(ctx, centerX, centerY) {
         if (!this.showAnnouncement) return;
-        
+
         ctx.save();
-        ctx.globalAlpha = Math.min(1, this.waveAnnouncementTime);
+        const t = this.waveAnnouncementTime;
+
+        // 淡入淡出
+        const alpha = t < 0.3 ? t / 0.3 : t > 2.5 ? Math.max(0, 1 - (t - 2.5) / 0.5) : 1;
+        ctx.globalAlpha = Math.min(1, alpha);
+
+        // 縮放動畫（從大縮小到正常）
+        const scale = t < 0.3 ? 1.3 - (t / 0.3) * 0.3 : 1;
+        ctx.translate(centerX, centerY - 50);
+        ctx.scale(scale, scale);
+        ctx.translate(-centerX, -(centerY - 50));
+
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        
-        const fontSize = 72;
+
+        const fontSize = this.isBossWave ? 80 : 64;
         ctx.font = `bold ${fontSize}px 'Segoe UI', sans-serif`;
-        
+
+        // 外框光暈
         ctx.shadowColor = this.isBossWave ? '#e74c3c' : '#f39c12';
-        ctx.shadowBlur = 15;
-        
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillText(this.announcementText, centerX + 2, centerY - 50 + 2);
-        
+        ctx.shadowBlur = 20;
+
+        // 背景條
+        const textWidth = ctx.measureText(this.announcementText).width;
+        ctx.fillStyle = this.isBossWave ? 'rgba(231, 76, 60, 0.15)' : 'rgba(243, 156, 18, 0.1)';
+        ctx.fillRect(centerX - textWidth * 0.6, centerY - 50 - fontSize * 0.5, textWidth * 1.2, fontSize * 1.1);
+
+        // 陰影文字
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillText(this.announcementText, centerX + 3, centerY - 50 + 3);
+
+        // 主文字
         ctx.fillStyle = this.isBossWave ? '#e74c3c' : '#f39c12';
         ctx.fillText(this.announcementText, centerX, centerY - 50);
-        
+
+        // 高光文字
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.fillText(this.announcementText, centerX - 1, centerY - 51);
+
         ctx.restore();
     }
 

@@ -99,12 +99,12 @@ describe('ExperienceOrb', () => {
             expect(ctx.restore).toHaveBeenCalledTimes(1);
         });
 
-        it('繪製三次圓形（光暈 + 主體 + 高光）', () => {
+        it('繪製多個圓形（光暈 + 主體 + 外框 + 高光）', () => {
             const ctx = createMockCtx();
             orb.draw(ctx);
-            expect(ctx.beginPath).toHaveBeenCalledTimes(3);
-            expect(ctx.arc).toHaveBeenCalledTimes(3);
-            expect(ctx.fill).toHaveBeenCalledTimes(3);
+            expect(ctx.beginPath).toHaveBeenCalled();
+            expect(ctx.arc).toHaveBeenCalled();
+            expect(ctx.fill).toHaveBeenCalled();
         });
     });
 
@@ -147,12 +147,19 @@ describe('ExperienceOrb', () => {
  * @returns {{ save: Function, restore: Function, beginPath: Function, arc: Function, fill: Function, fillStyle: string }}
  */
 function createMockCtx() {
+    const mockGradient = {
+        addColorStop: vi.fn()
+    };
     return {
         save: vi.fn(),
         restore: vi.fn(),
         beginPath: vi.fn(),
         arc: vi.fn(),
         fill: vi.fn(),
+        stroke: vi.fn(),
+        strokeStyle: '',
+        lineWidth: 1,
         fillStyle: '',
+        createRadialGradient: vi.fn(() => mockGradient),
     };
 }

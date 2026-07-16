@@ -74,41 +74,67 @@ export class Projectile {
      */
     draw(ctx) {
         ctx.save();
-        
-        const baseColor = this.isCrit ? '#e74c3c' : '#f39c12';
-        const trailColor = this.isCrit ? 'rgba(231, 76, 60,' : 'rgba(243, 156, 18,';
 
+        // 傷害等級決定顏色（低→橘 中→紅 高→金）
+        const dmgLevel = Math.min(this.damage / 20, 1);
+        let baseColor, trailR, trailG, trailB;
+        if (this.isCrit) {
+            baseColor = '#ff4444';
+            trailR = 255; trailG = 68; trailB = 68;
+        } else if (dmgLevel > 0.6) {
+            baseColor = '#ffd700';
+            trailR = 255; trailG = 215; trailB = 0;
+        } else if (dmgLevel > 0.3) {
+            baseColor = '#ff6b35';
+            trailR = 255; trailG = 107; trailB = 53;
+        } else {
+            baseColor = '#f39c12';
+            trailR = 243; trailG = 156; trailB = 18;
+        }
+
+        const sizeScale = 1 + dmgLevel * 0.3;
+        const currentRadius = this.radius * sizeScale;
+
+        // 軌跡
         for (let i = 0; i < this.trail.length; i++) {
-            const alpha = (1 - i / this.trail.length) * 0.3;
-            const radius = this.radius * (1 - i / this.trail.length * 0.5);
+            const alpha = (1 - i / this.trail.length) * 0.35;
+            const radius = currentRadius * (1 - i / this.trail.length * 0.5);
             ctx.beginPath();
             ctx.arc(this.trail[i].x, this.trail[i].y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = `${trailColor} ${alpha})`;
+            ctx.fillStyle = `rgba(${trailR}, ${trailG}, ${trailB}, ${alpha})`;
             ctx.fill();
         }
 
+        // 外發光
+        const glowGrad = ctx.createRadialGradient(this.x, this.y, currentRadius * 0.5, this.x, this.y, currentRadius * 2);
+        glowGrad.addColorStop(0, `rgba(${trailR}, ${trailG}, ${trailB}, 0.3)`);
+        glowGrad.addColorStop(1, `rgba(${trailR}, ${trailG}, ${trailB}, 0)`);
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = baseColor;
+        ctx.arc(this.x, this.y, currentRadius * 2, 0, Math.PI * 2);
+        ctx.fillStyle = glowGrad;
         ctx.fill();
 
+        // 主體漸層
+        const gradient = ctx.createRadialGradient(
+            this.x - 1, this.y - 1, 0,
+            this.x, this.y, currentRadius
+        );
+        gradient.addColorStop(0, '#ffffff');
+        gradient.addColorStop(0.3, baseColor);
+        gradient.addColorStop(1, `rgba(${trailR * 0.6 | 0}, ${trailG * 0.6 | 0}, ${trailB * 0.6 | 0}, 1)`);
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, currentRadius, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // 暴擊額外光環
         if (this.isCrit) {
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius + 4, 0, Math.PI * 2);
-            ctx.strokeStyle = '#f1c40f';
+            ctx.arc(this.x, this.y, currentRadius + 4, 0, Math.PI * 2);
+            ctx.strokeStyle = '#ffd700';
             ctx.lineWidth = 2;
             ctx.stroke();
         }
-
-        const gradient = ctx.createRadialGradient(
-            this.x - 2, this.y - 2, 0,
-            this.x, this.y, this.radius
-        );
-        gradient.addColorStop(0, '#fff');
-        gradient.addColorStop(0.3, baseColor);
-        gradient.addColorStop(1, this.isCrit ? '#c0392b' : '#e67e22');
-        ctx.fillStyle = gradient;
-        ctx.fill();
 
         ctx.restore();
     }

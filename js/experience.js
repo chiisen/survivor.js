@@ -53,20 +53,40 @@ export class ExperienceOrb {
 
         const pulseScale = 1 + Math.sin(this.pulseTime) * 0.2;
         const currentRadius = this.radius * pulseScale;
+        const t = this.pulseTime;
 
+        // 外層脈動光暈
+        const glowRadius = currentRadius + 6 + Math.sin(t * 1.5) * 2;
+        const glowGrad = ctx.createRadialGradient(this.x, this.y, currentRadius * 0.5, this.x, this.y, glowRadius);
+        glowGrad.addColorStop(0, 'rgba(46, 204, 113, 0.35)');
+        glowGrad.addColorStop(0.6, 'rgba(46, 204, 113, 0.15)');
+        glowGrad.addColorStop(1, 'rgba(46, 204, 113, 0)');
         ctx.beginPath();
-        ctx.arc(this.x, this.y, currentRadius + 4, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(46, 204, 113, 0.3)';
+        ctx.arc(this.x, this.y, glowRadius, 0, Math.PI * 2);
+        ctx.fillStyle = glowGrad;
         ctx.fill();
 
+        // 主體漸層
+        const bodyGrad = ctx.createRadialGradient(this.x - 1, this.y - 1, 0, this.x, this.y, currentRadius);
+        bodyGrad.addColorStop(0, '#5dde8e');
+        bodyGrad.addColorStop(0.4, '#2ecc71');
+        bodyGrad.addColorStop(1, '#1a9c54');
         ctx.beginPath();
         ctx.arc(this.x, this.y, currentRadius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = bodyGrad;
         ctx.fill();
 
+        // 外框
         ctx.beginPath();
-        ctx.arc(this.x - 2, this.y - 2, currentRadius * 0.4, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.arc(this.x, this.y, currentRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 高光
+        ctx.beginPath();
+        ctx.arc(this.x - currentRadius * 0.25, this.y - currentRadius * 0.25, currentRadius * 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
         ctx.fill();
 
         ctx.restore();
