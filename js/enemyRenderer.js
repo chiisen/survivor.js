@@ -546,52 +546,95 @@ export class EnemyRenderer {
         const { x, y, radius } = core;
         const t = Date.now() / 1000;
 
-        // 分裂核心（中心發光）
-        const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.4);
-        coreGrad.addColorStop(0, 'rgba(26, 188, 156, 0.5)');
-        coreGrad.addColorStop(1, 'rgba(26, 188, 156, 0)');
+        // 裂痕紋路（從中心向外輻射）
+        const cracks = [
+            { angle: 0.3, len: 0.85, branches: 2 },
+            { angle: 1.2, len: 0.7, branches: 1 },
+            { angle: 2.1, len: 0.9, branches: 2 },
+            { angle: 3.0, len: 0.6, branches: 1 },
+            { angle: 3.8, len: 0.8, branches: 2 },
+            { angle: 4.9, len: 0.65, branches: 1 },
+            { angle: 5.5, len: 0.75, branches: 2 }
+        ];
+
+        cracks.forEach(crack => {
+            const endX = x + Math.cos(crack.angle) * radius * crack.len;
+            const endY = y + Math.sin(crack.angle) * radius * crack.len;
+
+            // 主裂痕
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            // 中間加一個折點讓裂痕更自然
+            const midX = x + Math.cos(crack.angle + 0.15) * radius * crack.len * 0.5;
+            const midY = y + Math.sin(crack.angle + 0.15) * radius * crack.len * 0.5;
+            ctx.lineTo(midX, midY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = 'rgba(22, 160, 133, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            // 分支裂痕
+            for (let b = 0; b < crack.branches; b++) {
+                const branchPos = 0.4 + b * 0.25;
+                const branchX = x + Math.cos(crack.angle) * radius * crack.len * branchPos;
+                const branchY = y + Math.sin(crack.angle) * radius * crack.len * branchPos;
+                const branchAngle = crack.angle + (b % 2 === 0 ? 0.8 : -0.8);
+                const branchLen = radius * 0.3;
+                const branchEndX = branchX + Math.cos(branchAngle) * branchLen;
+                const branchEndY = branchY + Math.sin(branchAngle) * branchLen;
+
+                ctx.beginPath();
+                ctx.moveTo(branchX, branchY);
+                ctx.lineTo(branchEndX, branchEndY);
+                ctx.strokeStyle = 'rgba(22, 160, 133, 0.4)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
+        });
+
+        // 中心裂縫核心（發光）
+        const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.3);
+        coreGrad.addColorStop(0, 'rgba(26, 188, 156, 0.6)');
+        coreGrad.addColorStop(0.5, 'rgba(22, 160, 133, 0.3)');
+        coreGrad.addColorStop(1, 'rgba(22, 160, 133, 0)');
         ctx.beginPath();
-        ctx.arc(x, y, radius * 0.4, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * 0.3, 0, Math.PI * 2);
         ctx.fillStyle = coreGrad;
         ctx.fill();
 
-        // 旋轉分裂碎片（4 片）
+        // 中心裂縫（十字形）
+        ctx.beginPath();
+        ctx.moveTo(x - radius * 0.2, y);
+        ctx.lineTo(x + radius * 0.2, y);
+        ctx.moveTo(x, y - radius * 0.2);
+        ctx.lineTo(x, y + radius * 0.2);
+        ctx.strokeStyle = '#16a085';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // 旋轉分裂碎片（4 片，沿裂痕末端）
         for (let i = 0; i < 4; i++) {
             const angle = (Math.PI * 2 / 4) * i + t * 1.5;
-            const dist = radius * 0.7;
+            const dist = radius * 0.75;
             const fx = x + Math.cos(angle) * dist;
             const fy = y + Math.sin(angle) * dist;
 
+            const fragGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, 4);
+            fragGrad.addColorStop(0, 'rgba(26, 188, 156, 0.8)');
+            fragGrad.addColorStop(1, 'rgba(26, 188, 156, 0)');
             ctx.beginPath();
-            ctx.arc(fx, fy, 3, 0, Math.PI * 2);
-            ctx.fillStyle = '#1abc9c';
+            ctx.arc(fx, fy, 4, 0, Math.PI * 2);
+            ctx.fillStyle = fragGrad;
             ctx.fill();
 
-            // 連接線
             ctx.beginPath();
-            ctx.moveTo(x, y);
-            ctx.lineTo(fx, fy);
-            ctx.strokeStyle = 'rgba(26, 188, 156, 0.3)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
+            ctx.arc(fx, fy, 2, 0, Math.PI * 2);
+            ctx.fillStyle = '#1abc9c';
+            ctx.fill();
         }
-
-        // 頂部分裂標記（雙箭頭）
-        ctx.beginPath();
-        ctx.moveTo(x - radius * 0.3, y - radius * 1.1);
-        ctx.lineTo(x, y - radius * 1.4);
-        ctx.lineTo(x + radius * 0.3, y - radius * 1.1);
-        ctx.closePath();
-        ctx.fillStyle = '#1abc9c';
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(x - radius * 0.15, y - radius * 1.1);
-        ctx.lineTo(x, y - radius * 1.25);
-        ctx.lineTo(x + radius * 0.15, y - radius * 1.1);
-        ctx.closePath();
-        ctx.fillStyle = '#16a085';
-        ctx.fill();
     }
     
     /**
@@ -621,39 +664,91 @@ export class EnemyRenderer {
         ctx.fillStyle = auraGrad;
         ctx.fill();
 
-        // 引信（頂部曲線）
+        // 引信路徑點（從頭頂到末端）
+        const fuseStartX = x;
+        const fuseStartY = y - radius;
+        const fuseCtrl1X = x + radius * 0.3;
+        const fuseCtrl1Y = y - radius * 1.3;
+        const fuseCtrl2X = x - radius * 0.2;
+        const fuseCtrl2Y = y - radius * 1.5;
+        const fuseEndX = x + radius * 0.4;
+        const fuseEndY = y - radius * 1.4;
+
+        // 引信本體（粗麻繩紋理）
         ctx.beginPath();
-        ctx.moveTo(x, y - radius);
-        ctx.quadraticCurveTo(x + radius * 0.5, y - radius * 1.5, x + radius * 0.3, y - radius * 1.6);
-        ctx.strokeStyle = '#795548';
-        ctx.lineWidth = 2;
+        ctx.moveTo(fuseStartX, fuseStartY);
+        ctx.bezierCurveTo(fuseCtrl1X, fuseCtrl1Y, fuseCtrl2X, fuseCtrl2Y, fuseEndX, fuseEndY);
+        ctx.strokeStyle = '#5d4037';
+        ctx.lineWidth = 3.5;
         ctx.lineCap = 'round';
         ctx.stroke();
 
-        // 引信火花
-        const sparkX = x + radius * 0.3;
-        const sparkY = y - radius * 1.6;
-        const sparkPulse = Math.sin(t * 12) * 0.4 + 0.6;
+        // 引信內側亮線
+        ctx.beginPath();
+        ctx.moveTo(fuseStartX, fuseStartY);
+        ctx.bezierCurveTo(fuseCtrl1X, fuseCtrl1Y - 1, fuseCtrl2X, fuseCtrl2Y - 1, fuseEndX, fuseEndY);
+        ctx.strokeStyle = '#8d6e63';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
 
-        const sparkGrad = ctx.createRadialGradient(sparkX, sparkY, 0, sparkX, sparkY, 5);
-        sparkGrad.addColorStop(0, `rgba(255, 255, 100, ${sparkPulse})`);
-        sparkGrad.addColorStop(0.5, `rgba(255, 200, 0, ${sparkPulse * 0.6})`);
-        sparkGrad.addColorStop(1, 'rgba(255, 100, 0, 0)');
+        // 燃燒 ember（沿引信移動）
+        const burnProgress = (t * 0.8) % 1;
+        const burnT = burnProgress;
+        // 三次貝塞爾曲線上的點
+        const mt = 1 - burnT;
+        const emberX = mt * mt * mt * fuseStartX + 3 * mt * mt * burnT * fuseCtrl1X + 3 * mt * burnT * burnT * fuseCtrl2X + burnT * burnT * burnT * fuseEndX;
+        const emberY = mt * mt * mt * fuseStartY + 3 * mt * mt * burnT * fuseCtrl1Y + 3 * mt * burnT * burnT * fuseCtrl2Y + burnT * burnT * burnT * fuseEndY;
+
+        // ember 外發光
+        const emberGlow = ctx.createRadialGradient(emberX, emberY, 0, emberX, emberY, 8);
+        emberGlow.addColorStop(0, 'rgba(255, 200, 50, 0.8)');
+        emberGlow.addColorStop(0.4, 'rgba(255, 120, 0, 0.5)');
+        emberGlow.addColorStop(1, 'rgba(255, 50, 0, 0)');
         ctx.beginPath();
-        ctx.arc(sparkX, sparkY, 5, 0, Math.PI * 2);
-        ctx.fillStyle = sparkGrad;
+        ctx.arc(emberX, emberY, 8, 0, Math.PI * 2);
+        ctx.fillStyle = emberGlow;
         ctx.fill();
 
-        // 危險標記（骷髏頭簡化版）
+        // ember 核心
+        const emberPulse = Math.sin(t * 15) * 0.3 + 0.7;
         ctx.beginPath();
-        ctx.arc(x, y + radius * 0.1, radius * 0.25, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.arc(emberX, emberY, 3 * emberPulse, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffeb3b';
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(x - radius * 0.08, y + radius * 0.05, 2, 0, Math.PI * 2);
-        ctx.arc(x + radius * 0.08, y + radius * 0.05, 2, 0, Math.PI * 2);
-        ctx.fillStyle = '#f39c12';
+        ctx.arc(emberX, emberY, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
         ctx.fill();
+
+        // 煙霧粒子（從 ember 位置飄出）
+        for (let i = 0; i < 3; i++) {
+            const smokeT = (t * 2 + i * 0.7) % 2;
+            if (smokeT < 1) {
+                const smokeX = emberX + Math.sin(t * 3 + i * 2) * 4;
+                const smokeY = emberY - smokeT * 15;
+                const smokeAlpha = (1 - smokeT) * 0.3;
+                const smokeSize = 2 + smokeT * 3;
+                ctx.beginPath();
+                ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(150, 150, 150, ${smokeAlpha})`;
+                ctx.fill();
+            }
+        }
+
+        // 已燃燒過的引信痕跡（ ember 後方的暗色路徑）
+        ctx.beginPath();
+        ctx.moveTo(fuseStartX, fuseStartY);
+        ctx.bezierCurveTo(
+            fuseStartX + (fuseCtrl1X - fuseStartX) * burnProgress,
+            fuseStartY + (fuseCtrl1Y - fuseStartY) * burnProgress,
+            fuseStartX + (fuseCtrl2X - fuseStartX) * burnProgress,
+            fuseStartY + (fuseCtrl2Y - fuseStartY) * burnProgress,
+            emberX, emberY
+        );
+        ctx.strokeStyle = '#2c1810';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.stroke();
     }
     
     /**
