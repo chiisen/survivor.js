@@ -720,20 +720,22 @@ export class EnemyRenderer {
         const { x, y, radius } = core;
         const t = Date.now() / 1000;
 
-        // 速度線（身後 3 條）
-        for (let i = -1; i <= 1; i++) {
-            const lineY = y + i * radius * 0.3;
-            const lineLen = radius * 1.2 + Math.sin(t * 8 + i) * radius * 0.3;
-            const lineAlpha = 0.4 - Math.abs(i) * 0.1;
+        // 速度線（左右各 3 條）
+        [-1, 1].forEach(dir => {
+            for (let i = -1; i <= 1; i++) {
+                const lineY = y + i * radius * 0.3;
+                const lineLen = radius * 1.2 + Math.sin(t * 8 + i + dir) * radius * 0.3;
+                const lineAlpha = 0.4 - Math.abs(i) * 0.1;
 
-            ctx.beginPath();
-            ctx.moveTo(x - radius * 0.8, lineY);
-            ctx.lineTo(x - radius * 0.8 - lineLen, lineY);
-            ctx.strokeStyle = `rgba(46, 204, 113, ${lineAlpha})`;
-            ctx.lineWidth = 2 - Math.abs(i) * 0.5;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-        }
+                ctx.beginPath();
+                ctx.moveTo(x + dir * radius * 0.8, lineY);
+                ctx.lineTo(x + dir * (radius * 0.8 + lineLen), lineY);
+                ctx.strokeStyle = `rgba(46, 204, 113, ${lineAlpha})`;
+                ctx.lineWidth = 2 - Math.abs(i) * 0.5;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+        });
 
         // 頂部速度翼
         ctx.beginPath();
@@ -750,15 +752,18 @@ export class EnemyRenderer {
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // 尾焰（底部）
+        // 尾焰（左右各一）
         const flamePulse = Math.sin(t * 10) * 0.3 + 0.7;
-        const flameGrad = ctx.createRadialGradient(x, y + radius * 0.8, 0, x, y + radius * 0.8, radius * 0.6);
-        flameGrad.addColorStop(0, `rgba(46, 204, 113, ${0.4 * flamePulse})`);
-        flameGrad.addColorStop(1, 'rgba(46, 204, 113, 0)');
-        ctx.beginPath();
-        ctx.arc(x, y + radius * 0.8, radius * 0.6, 0, Math.PI * 2);
-        ctx.fillStyle = flameGrad;
-        ctx.fill();
+        [-1, 1].forEach(dir => {
+            const fx = x + dir * radius * 0.9;
+            const flameGrad = ctx.createRadialGradient(fx, y, 0, fx, y, radius * 0.5);
+            flameGrad.addColorStop(0, `rgba(46, 204, 113, ${0.4 * flamePulse})`);
+            flameGrad.addColorStop(1, 'rgba(46, 204, 113, 0)');
+            ctx.beginPath();
+            ctx.arc(fx, y, radius * 0.5, 0, Math.PI * 2);
+            ctx.fillStyle = flameGrad;
+            ctx.fill();
+        });
     }
     
     /**
@@ -770,37 +775,37 @@ export class EnemyRenderer {
     drawRangedDecoration(ctx, core) {
         const { x, y, radius } = core;
         const t = Date.now() / 1000;
-        const barrelLen = radius * 2.2;
-        const barrelH = radius * 0.4;
+        const barrelLen = radius * 2.8;
+        const barrelH = radius * 0.25;
 
         // 中央機身（連接左右炮管）
-        const bodyGrad = ctx.createLinearGradient(x, y - radius * 0.5, x, y + radius * 0.5);
+        const bodyGrad = ctx.createLinearGradient(x, y - radius * 0.35, x, y + radius * 0.35);
         bodyGrad.addColorStop(0, '#757575');
         bodyGrad.addColorStop(0.5, '#9e9e9e');
         bodyGrad.addColorStop(1, '#616161');
         ctx.beginPath();
-        ctx.ellipse(x, y, radius * 0.6, radius * 0.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(x, y, radius * 0.4, radius * 0.35, 0, 0, Math.PI * 2);
         ctx.fillStyle = bodyGrad;
         ctx.fill();
         ctx.strokeStyle = '#424242';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
         // 中央裝飾圓環
         ctx.beginPath();
-        ctx.arc(x, y, radius * 0.3, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * 0.2, 0, Math.PI * 2);
         ctx.strokeStyle = '#f39c12';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
         ctx.beginPath();
-        ctx.arc(x, y, radius * 0.18, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * 0.12, 0, Math.PI * 2);
         ctx.fillStyle = '#263238';
         ctx.fill();
 
         // 左炮管
-        this.drawBarrel(ctx, x - radius * 0.6, y, barrelLen, barrelH, t, -1);
+        this.drawBarrel(ctx, x - radius * 0.4, y, barrelLen, barrelH, t, -1);
         // 右炮管
-        this.drawBarrel(ctx, x + radius * 0.6, y, barrelLen, barrelH, t, 1);
+        this.drawBarrel(ctx, x + radius * 0.4, y, barrelLen, barrelH, t, 1);
     }
 
     /**
