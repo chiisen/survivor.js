@@ -97,6 +97,7 @@
         let enemyTypes = [];
         let bossRenderer = null;
         let bossType = null;
+        let bossCanvas = null;
 
         loadConfig('./config/enemies.json').then(config => {
             enemyTypes = Object.entries(config.enemies).map(([key, info]) => ({
@@ -158,6 +159,7 @@
                 if (type.isBoss) {
                     bossRenderer = renderer;
                     bossType = type;
+                    bossCanvas = canvas;
                 }
 
                 renderer.draw(ctx, {
@@ -202,11 +204,9 @@
         }
 
         function renderBossCard() {
-            if (!bossType || !bossRenderer) return;
-            const canvas = grid.querySelector('.enemy-card:last-child canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!bossType || !bossRenderer || !bossCanvas) return;
+            const ctx = bossCanvas.getContext('2d');
+            ctx.clearRect(0, 0, bossCanvas.width, bossCanvas.height);
             bossRenderer.draw(ctx, {
                 x: 50, y: 50,
                 radius: bossType.radius > 30 ? 25 : bossType.radius,
