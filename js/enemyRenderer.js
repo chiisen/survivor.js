@@ -1,17 +1,5 @@
 // @ts-check
 
-const EnemyTypes = {
-    NORMAL: { color: '#e74c3c', strokeColor: '#c0392b', eyeColor: '#fff', mouthStyle: 'angry' },
-    FAST: { color: '#27ae60', strokeColor: '#229954', eyeColor: '#fff', mouthStyle: 'neutral' },
-    TANK: { color: '#7f8c8d', strokeColor: '#5d6d7e', eyeColor: '#e74c3c', mouthStyle: 'wide' },
-    RANGED: { color: '#9b59b6', strokeColor: '#8e44ad', eyeColor: '#f1c40f', mouthStyle: 'shooter' },
-    BOSS: { color: '#c0392b', strokeColor: '#922b21', eyeColor: '#f1c40f', mouthStyle: 'boss', isBoss: true },
-    ELITE: { color: '#e67e22', strokeColor: '#d35400', eyeColor: '#fff', mouthStyle: 'elite', isElite: true },
-    SPLITTER: { color: '#16a085', strokeColor: '#138d75', eyeColor: '#fff', mouthStyle: 'split' },
-    EXPLOSIVE: { color: '#d35400', strokeColor: '#bf4a1a', eyeColor: '#f39c12', mouthStyle: 'explosive' },
-    STEALTH: { color: '#5d6d7e', strokeColor: '#4a5a6a', eyeColor: '#3498db', mouthStyle: 'stealth' }
-};
-
 export class EnemyRenderer {
     /**
      * 敵人渲染器

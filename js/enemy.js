@@ -1,147 +1,29 @@
+// @ts-check
+
 import { normalize, distance, randomRange } from './utils.js';
 import { EnemyCore } from './enemyCore.js';
 import { EnemyBehaviors } from './enemyBehaviors.js';
 import { BossPhaseManager } from './bossPhaseManager.js';
 import { EnemyRenderer } from './enemyRenderer.js';
+import { loadConfig } from './configLoader.js';
 
-const EnemyTypes = {
-    NORMAL: {
-        name: 'normal',
-        radius: 15,
-        speed: 60,
-        maxHp: 1,
-        damage: 10,
-        expValue: 10,
-        color: '#e74c3c',
-        strokeColor: '#c0392b',
-        eyeColor: '#fff',
-        mouthStyle: 'angry',
-        canShoot: false,
-        shootInterval: 0
-    },
-    FAST: {
-        name: 'fast',
-        radius: 12,
-        speed: 100,
-        maxHp: 1,
-        damage: 8,
-        expValue: 12,
-        color: '#27ae60',
-        strokeColor: '#229954',
-        eyeColor: '#fff',
-        mouthStyle: 'neutral',
-        canShoot: false,
-        shootInterval: 0
-    },
-    TANK: {
-        name: 'tank',
-        radius: 22,
-        speed: 35,
-        maxHp: 3,
-        damage: 20,
-        expValue: 25,
-        color: '#7f8c8d',
-        strokeColor: '#5d6d7e',
-        eyeColor: '#e74c3c',
-        mouthStyle: 'wide',
-        canShoot: false,
-        shootInterval: 0
-    },
-    RANGED: {
-        name: 'ranged',
-        radius: 14,
-        speed: 40,
-        maxHp: 2,
-        damage: 10,
-        expValue: 15,
-        color: '#9b59b6',
-        strokeColor: '#8e44ad',
-        eyeColor: '#f1c40f',
-        mouthStyle: 'shooter',
-        canShoot: true,
-        shootInterval: 2.0
-    },
-    BOSS: {
-        name: 'boss',
-        radius: 160,
-        speed: 18,
-        maxHp: 200,
-        damage: 50,
-        expValue: 300,
-        color: '#c0392b',
-        strokeColor: '#922b21',
-        eyeColor: '#f1c40f',
-        mouthStyle: 'boss',
-        canShoot: true,
-        shootInterval: 1.0,
-        isBoss: true
-    },
-    ELITE: {
-        name: 'elite',
-        radius: 25,
-        speed: 45,
-        maxHp: 8,
-        damage: 25,
-        expValue: 50,
-        color: '#e67e22',
-        strokeColor: '#d35400',
-        eyeColor: '#fff',
-        mouthStyle: 'elite',
-        canShoot: false,
-        shootInterval: 0,
-        isElite: true,
-        shieldHp: 5,
-        shieldMaxHp: 5
-    },
-    SPLITTER: {
-        name: 'splitter',
-        radius: 18,
-        speed: 50,
-        maxHp: 2,
-        damage: 10,
-        expValue: 15,
-        color: '#16a085',
-        strokeColor: '#138d75',
-        eyeColor: '#fff',
-        mouthStyle: 'split',
-        canShoot: false,
-        shootInterval: 0,
-        canSplit: true
-    },
-    EXPLOSIVE: {
-        name: 'explosive',
-        radius: 16,
-        speed: 55,
-        maxHp: 2,
-        damage: 15,
-        expValue: 20,
-        color: '#d35400',
-        strokeColor: '#bf4a1a',
-        eyeColor: '#f39c12',
-        mouthStyle: 'explosive',
-        canShoot: false,
-        shootInterval: 0,
-        explosive: true,
-        explosionRadius: 60,
-        explosionDamage: 20
-    },
-    STEALTH: {
-        name: 'stealth',
-        radius: 13,
-        speed: 80,
-        maxHp: 1,
-        damage: 15,
-        expValue: 18,
-        color: '#5d6d7e',
-        strokeColor: '#4a5a6a',
-        eyeColor: '#3498db',
-        mouthStyle: 'stealth',
-        canShoot: false,
-        shootInterval: 0,
-        isStealth: true,
-        baseAlpha: 0.3
-    }
+// 預設敵人類型（JSON 載入後會覆蓋）
+let EnemyTypes = {
+    NORMAL: { name: 'normal', radius: 15, speed: 60, maxHp: 1, damage: 10, expValue: 10, color: '#e74c3c', strokeColor: '#c0392b', eyeColor: '#fff', mouthStyle: 'angry', canShoot: false, shootInterval: 0 },
+    FAST: { name: 'fast', radius: 12, speed: 100, maxHp: 1, damage: 8, expValue: 12, color: '#27ae60', strokeColor: '#229954', eyeColor: '#fff', mouthStyle: 'neutral', canShoot: false, shootInterval: 0 },
+    TANK: { name: 'tank', radius: 22, speed: 35, maxHp: 3, damage: 20, expValue: 25, color: '#7f8c8d', strokeColor: '#5d6d7e', eyeColor: '#e74c3c', mouthStyle: 'wide', canShoot: false, shootInterval: 0 },
+    RANGED: { name: 'ranged', radius: 14, speed: 40, maxHp: 2, damage: 10, expValue: 15, color: '#9b59b6', strokeColor: '#8e44ad', eyeColor: '#f1c40f', mouthStyle: 'shooter', canShoot: true, shootInterval: 2.0 },
+    BOSS: { name: 'boss', radius: 160, speed: 18, maxHp: 200, damage: 50, expValue: 300, color: '#c0392b', strokeColor: '#922b21', eyeColor: '#f1c40f', mouthStyle: 'boss', canShoot: true, shootInterval: 1.0, isBoss: true },
+    ELITE: { name: 'elite', radius: 25, speed: 45, maxHp: 8, damage: 25, expValue: 50, color: '#e67e22', strokeColor: '#d35400', eyeColor: '#fff', mouthStyle: 'elite', canShoot: false, shootInterval: 0, isElite: true, shieldHp: 5, shieldMaxHp: 5 },
+    SPLITTER: { name: 'splitter', radius: 18, speed: 50, maxHp: 2, damage: 10, expValue: 15, color: '#16a085', strokeColor: '#138d75', eyeColor: '#fff', mouthStyle: 'split', canShoot: false, shootInterval: 0, canSplit: true },
+    EXPLOSIVE: { name: 'explosive', radius: 16, speed: 55, maxHp: 2, damage: 15, expValue: 20, color: '#d35400', strokeColor: '#bf4a1a', eyeColor: '#f39c12', mouthStyle: 'explosive', canShoot: false, shootInterval: 0, explosive: true, explosionRadius: 60, explosionDamage: 20 },
+    STEALTH: { name: 'stealth', radius: 13, speed: 80, maxHp: 1, damage: 15, expValue: 18, color: '#5d6d7e', strokeColor: '#4a5a6a', eyeColor: '#3498db', mouthStyle: 'stealth', canShoot: false, shootInterval: 0, isStealth: true, baseAlpha: 0.3 }
 };
+
+// 從 JSON 載入怪物設定
+loadConfig('./config/enemies.json').then(config => {
+    EnemyTypes = config.enemies;
+});
 
 export class Enemy {
     constructor(x, y, type = EnemyTypes.NORMAL) {

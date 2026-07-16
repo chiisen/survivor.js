@@ -89,18 +89,28 @@
 
     <script type="module">
         import { EnemyRenderer } from './js/enemyRenderer.js';
+        import { loadConfig } from './js/configLoader.js';
 
-        const enemyTypes = [
-            { key: 'NORMAL', name: '普通', radius: 15, hp: 1, dmg: 10, speed: 60, color: '#e74c3c', strokeColor: '#c0392b', eyeColor: '#fff', mouthStyle: 'angry' },
-            { key: 'FAST', name: '快速', radius: 12, hp: 1, dmg: 8, speed: 100, color: '#27ae60', strokeColor: '#229954', eyeColor: '#fff', mouthStyle: 'neutral' },
-            { key: 'TANK', name: '坦克', radius: 22, hp: 3, dmg: 20, speed: 35, color: '#7f8c8d', strokeColor: '#5d6d7e', eyeColor: '#e74c3c', mouthStyle: 'wide' },
-            { key: 'RANGED', name: '遠程', radius: 14, hp: 2, dmg: 10, speed: 40, color: '#9b59b6', strokeColor: '#8e44ad', eyeColor: '#f1c40f', mouthStyle: 'shooter' },
-            { key: 'ELITE', name: '精英', radius: 25, hp: 8, dmg: 25, speed: 45, color: '#e67e22', strokeColor: '#d35400', eyeColor: '#fff', mouthStyle: 'elite', isElite: true },
-            { key: 'SPLITTER', name: '分裂', radius: 18, hp: 2, dmg: 10, speed: 50, color: '#16a085', strokeColor: '#138d75', eyeColor: '#fff', mouthStyle: 'split' },
-            { key: 'EXPLOSIVE', name: '爆炸', radius: 16, hp: 2, dmg: 15, speed: 55, color: '#d35400', strokeColor: '#bf4a1a', eyeColor: '#f39c12', mouthStyle: 'explosive' },
-            { key: 'STEALTH', name: '隱身', radius: 13, hp: 1, dmg: 15, speed: 80, color: '#5d6d7e', strokeColor: '#4a5a6a', eyeColor: '#3498db', mouthStyle: 'stealth', isStealth: true },
-            { key: 'BOSS', name: 'BOSS', radius: 40, hp: 200, dmg: 50, speed: 18, color: '#c0392b', strokeColor: '#922b21', eyeColor: '#f1c40f', mouthStyle: 'boss', isBoss: true }
-        ];
+        let enemyTypes = [];
+
+        loadConfig('./config/enemies.json').then(config => {
+            enemyTypes = Object.entries(config.enemies).map(([key, info]) => ({
+                key,
+                name: info.name,
+                radius: info.radius,
+                hp: info.maxHp,
+                dmg: info.damage,
+                speed: info.speed,
+                color: info.color,
+                strokeColor: info.strokeColor,
+                eyeColor: info.eyeColor,
+                mouthStyle: info.mouthStyle,
+                isElite: info.isElite || false,
+                isStealth: info.isStealth || false,
+                isBoss: info.isBoss || false
+            }));
+            initGrid();
+        });
 
         const grid = document.getElementById('grid');
         const debug = document.getElementById('debug');
@@ -110,40 +120,48 @@
 
         const cardStats = [];
 
-        enemyTypes.forEach(type => {
-            const card = document.createElement('div');
-            card.className = 'enemy-card';
+        function initGrid() {
+            grid.innerHTML = '';
+            cardStats.length = 0;
 
-            const canvas = document.createElement('canvas');
-            canvas.width = 100;
-            canvas.height = 100;
-            card.appendChild(canvas);
+            enemyTypes.forEach(type => {
+                const card = document.createElement('div');
+                card.className = 'enemy-card';
 
-            const name = document.createElement('div');
-            name.className = 'enemy-name';
-            name.textContent = type.name;
-            card.appendChild(name);
+                const canvas = document.createElement('canvas');
+                canvas.width = 100;
+                canvas.height = 100;
+                card.appendChild(canvas);
 
-            const stats = document.createElement('div');
-            stats.className = 'enemy-stats';
-            card.appendChild(stats);
-            cardStats.push({ element: stats, type });
+                const name = document.createElement('div');
+                name.className = 'enemy-name';
+                name.textContent = type.name;
+                card.appendChild(name);
 
-            grid.appendChild(card);
+                const stats = document.createElement('div');
+                stats.className = 'enemy-stats';
+                card.appendChild(stats);
+                cardStats.push({ element: stats, type });
 
-            const ctx = canvas.getContext('2d');
-            const renderer = new EnemyRenderer(type);
+                grid.appendChild(card);
 
-            renderer.draw(ctx, {
-                x: 50, y: 50,
-                radius: type.radius > 30 ? 25 : type.radius,
-                hp: type.hp, maxHp: type.hp, type,
-                shieldHp: type.isElite ? 5 : 0, shieldMaxHp: type.isElite ? 5 : 0,
-                hasShield: type.isElite || false, isElite: type.isElite || false,
-                isStealth: type.isStealth || false,
-                baseAlpha: type.isStealth ? 0.3 : 1, currentAlpha: type.isStealth ? 0.3 : 1, revealTime: 0
-            }, { shootCooldown: 0, canShoot: type.canShoot || false }, null);
-        });
+                const ctx = canvas.getContext('2d');
+                const renderer = new EnemyRenderer(type);
+
+                renderer.draw(ctx, {
+                    x: 50, y: 50,
+                    radius: type.radius > 30 ? 25 : type.radius,
+                    hp: type.hp, maxHp: type.hp, type,
+                    shieldHp: type.isElite ? 5 : 0, shieldMaxHp: type.isElite ? 5 : 0,
+                    hasShield: type.isElite || false, isElite: type.isElite || false,
+                    isStealth: type.isStealth || false,
+                    baseAlpha: type.isStealth ? 0.3 : 1, currentAlpha: type.isStealth ? 0.3 : 1, revealTime: 0
+                }, { shootCooldown: 0, canShoot: type.canShoot || false }, null);
+            });
+
+            updateStats();
+            debug.textContent = `共 ${enemyTypes.length} 種怪物`;
+        }
 
         function updateStats() {
             const wave = parseInt(waveInput.value) || 1;
@@ -196,9 +214,6 @@
         waveInput.addEventListener('input', updateStats);
         diffInput.addEventListener('change', updateStats);
         levelInput.addEventListener('input', updateStats);
-        updateStats();
-
-        debug.textContent = `共 ${enemyTypes.length} 種怪物`;
     </script>
 </body>
 </html>
