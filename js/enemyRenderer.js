@@ -163,19 +163,38 @@ export class EnemyRenderer {
                 ctx.globalAlpha = core.baseAlpha;
             }
 
-            // 隱身扭曲波紋
             const t = Date.now() / 1000;
             const { x, y, radius } = core;
+
+            // 外層旋轉虛線圈（3 層）
+            for (let i = 0; i < 3; i++) {
+                const ringRadius = radius + 6 + i * 5;
+                const ringAlpha = 0.15 - i * 0.04;
+                const rotation = t * (0.5 + i * 0.3) * (i % 2 === 0 ? 1 : -1);
+
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(rotation);
+                ctx.beginPath();
+                ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(52, 152, 219, ${ringAlpha})`;
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([5, 7]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.restore();
+            }
+
+            // 扭曲波紋（脈動擴散）
             for (let i = 0; i < 2; i++) {
-                const rippleRadius = radius + 8 + i * 6 + Math.sin(t * 2 + i) * 3;
-                const rippleAlpha = 0.1 - i * 0.03;
+                const ripplePhase = (t * 1.5 + i * 0.8) % 2;
+                const rippleRadius = radius + 4 + ripplePhase * 10;
+                const rippleAlpha = (1 - ripplePhase / 2) * 0.12;
                 ctx.beginPath();
                 ctx.arc(x, y, rippleRadius, 0, Math.PI * 2);
                 ctx.strokeStyle = `rgba(52, 152, 219, ${rippleAlpha})`;
                 ctx.lineWidth = 1;
-                ctx.setLineDash([4, 6]);
                 ctx.stroke();
-                ctx.setLineDash([]);
             }
         }
     }
