@@ -23,8 +23,9 @@
         .control-group select { padding: 5px; border-radius: 4px; border: 1px solid #3498db; background: #0d1117; color: white; font-size: 13px; }
         .result { color: #f39c12; font-size: 13px; margin-top: 8px; }
         #grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 600px; }
-        .enemy-card { background: #16213e; border: 2px solid #34495e; border-radius: 8px; padding: 15px; text-align: center; }
+        .enemy-card { background: #16213e; border: 2px solid #34495e; border-radius: 8px; padding: 15px; text-align: center; position: relative; }
         .enemy-card canvas { border-radius: 4px; }
+        .theme-select { position: absolute; top: 8px; right: 8px; padding: 3px 6px; border-radius: 4px; border: 1px solid #f39c12; background: #0d1117; color: #f39c12; font-size: 11px; cursor: pointer; }
         .enemy-name { color: #f39c12; font-size: 16px; font-weight: bold; margin-top: 10px; }
         .enemy-stats { color: #95a5a6; font-size: 12px; margin-top: 5px; line-height: 1.6; }
         #debug { margin-top: 20px; color: #f39c12; font-size: 14px; }
@@ -80,12 +81,6 @@
         <div class="control-group">
             等級：<input type="number" id="level-input" value="1" min="1" max="100">
         </div>
-        <div class="control-group" id="boss-theme-group" style="display:none;">
-            BOSS 造型：<select id="boss-theme-select"></select>
-        </div>
-        <div class="control-group" id="elite-theme-group" style="display:none;">
-            精英 造型：<select id="elite-theme-select"></select>
-        </div>
     </div>
     <div class="result">最終 HP 倍率：<span id="hp-mult" style="color:#f1c40f; font-weight:bold;">1.0</span>x</div>
 
@@ -101,9 +96,11 @@
         let bossRenderer = null;
         let bossType = null;
         let bossCanvas = null;
+        let bossCard = null;
         let eliteRenderer = null;
         let eliteType = null;
         let eliteCanvas = null;
+        let eliteCard = null;
 
         loadConfig('./config/enemies.json').then(config => {
             enemyTypes = Object.entries(config.enemies).map(([key, info]) => ({
@@ -167,12 +164,14 @@
                     bossRenderer = renderer;
                     bossType = type;
                     bossCanvas = canvas;
+                    bossCard = card;
                 }
 
                 if (type.isElite) {
                     eliteRenderer = renderer;
                     eliteType = type;
                     eliteCanvas = canvas;
+                    eliteCard = card;
                 }
 
                 renderer.draw(ctx, {
@@ -191,12 +190,10 @@
         }
 
         function initBossThemeSelector() {
-            const group = document.getElementById('boss-theme-group');
-            const select = document.getElementById('boss-theme-select');
-            if (!bossType || !bossRenderer) {
-                group.style.display = 'none';
-                return;
-            }
+            if (!bossType || !bossRenderer || !bossCard) return;
+
+            const select = document.createElement('select');
+            select.className = 'theme-select';
 
             const names = EnemyRenderer.getBossThemeNames();
             names.forEach((name, i) => {
@@ -206,7 +203,7 @@
                 select.appendChild(opt);
             });
 
-            group.style.display = 'flex';
+            bossCard.appendChild(select);
 
             select.addEventListener('change', () => {
                 const idx = parseInt(select.value);
@@ -232,12 +229,10 @@
         }
 
         function initEliteThemeSelector() {
-            const group = document.getElementById('elite-theme-group');
-            const select = document.getElementById('elite-theme-select');
-            if (!eliteType || !eliteRenderer) {
-                group.style.display = 'none';
-                return;
-            }
+            if (!eliteType || !eliteRenderer || !eliteCard) return;
+
+            const select = document.createElement('select');
+            select.className = 'theme-select';
 
             const names = EnemyRenderer.getEliteThemeNames();
             names.forEach((name, i) => {
@@ -247,7 +242,7 @@
                 select.appendChild(opt);
             });
 
-            group.style.display = 'flex';
+            eliteCard.appendChild(select);
 
             select.addEventListener('change', () => {
                 const idx = parseInt(select.value);
