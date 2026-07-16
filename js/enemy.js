@@ -31,11 +31,13 @@ export class Enemy {
         this.core = new EnemyCore(type, x, y);
         this.behaviors = new EnemyBehaviors(type, this.core);
         this.renderer = new EnemyRenderer(type);
-        
+
         if (type.isBoss) {
             this.phaseManager = new BossPhaseManager(this.core, this.behaviors);
+            this.bossTheme = EnemyRenderer.randomBossTheme();
+            this.renderer.setBossTheme(this.bossTheme);
         }
-        
+
         this.projectiles = [];
     }
     

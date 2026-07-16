@@ -1,5 +1,15 @@
 // @ts-check
 
+// BOSS 隨機造型主題
+const BOSS_THEMES = [
+    { name: '暗紅魔王', body: ['#e74c3c', '#c0392b', '#922b21', '#5a1a14'], aura: [180, 30, 20], crown: ['#ffd700', '#daa520', '#b8860b'], eye: '#ff2200', glow: [255, 100, 50], rage: '#e74c3c' },
+    { name: '暗紫亡靈', body: ['#9b59b6', '#7d3c98', '#5b2c6f', '#2c1338'], aura: [120, 40, 160], crown: ['#d4ac0d', '#b7950b', '#7d6608'], eye: '#bb8fce', glow: [180, 80, 220], rage: '#8e44ad' },
+    { name: '暗綠毒龍', body: ['#27ae60', '#1e8449', '#145a32', '#0b2e1a'], aura: [30, 140, 60], crown: ['#f39c12', '#d68910', '#b9770e'], eye: '#58d68d', glow: [50, 200, 100], rage: '#2ecc71' },
+    { name: '暗金龍王', body: ['#f1c40f', '#d4ac0d', '#9a7d0a', '#5d4e0a'], aura: [200, 170, 20], crown: ['#e74c3c', '#c0392b', '#922b21'], eye: '#ff4444', glow: [255, 200, 50], rage: '#f39c12' },
+    { name: '暗藍深淵', body: ['#2980b9', '#1f6fa5', '#154360', '#0a2342'], aura: [30, 100, 180], crown: ['#1abc9c', '#16a085', '#0e6655'], eye: '#5dade2', glow: [50, 150, 255], rage: '#3498db' },
+    { name: '暗黑虛空', body: ['#37474f', '#263238', '#1a1a2e', '#0d0d1a'], aura: [60, 60, 80], crown: ['#e74c3c', '#ff4444', '#ff6666'], eye: '#ff0044', glow: [200, 50, 80], rage: '#c0392b' }
+];
+
 export class EnemyRenderer {
     /**
      * 敵人渲染器
@@ -12,6 +22,40 @@ export class EnemyRenderer {
         this.strokeColor = type.strokeColor;
         this.eyeColor = type.eyeColor;
         this.mouthStyle = type.mouthStyle;
+        this.bossTheme = null;
+    }
+
+    /**
+     * 設定 Boss 隨機造型主題
+     * @param {object} theme - BOSS 主題物件
+     * @returns {void}
+     */
+    setBossTheme(theme) {
+        this.bossTheme = theme;
+    }
+
+    /**
+     * 取得目前 BOSS 主題（若無則回傳預設暗紅）
+     * @returns {object} BOSS 主題
+     */
+    getBossTheme() {
+        return this.bossTheme || BOSS_THEMES[0];
+    }
+
+    /**
+     * 隨機選取一個 BOSS 造型主題
+     * @returns {object} 隨機主題
+     */
+    static randomBossTheme() {
+        return BOSS_THEMES[Math.floor(Math.random() * BOSS_THEMES.length)];
+    }
+
+    /**
+     * 取得所有 BOSS 主題名稱（供 UI 顯示）
+     * @returns {string[]} 主題名稱陣列
+     */
+    static getBossThemeNames() {
+        return BOSS_THEMES.map(t => t.name);
     }
     
     /**
@@ -100,6 +144,8 @@ export class EnemyRenderer {
     drawBossDecorations(ctx, core, phaseManager) {
         const rageMode = phaseManager ? phaseManager.rageMode : false;
         const t = Date.now() / 1000;
+        const th = this.getBossTheme();
+        const [ar, ag, ab] = th.aura;
 
         // 旋轉能量環（非狂怒時也有的常駐裝飾）
         if (!rageMode) {
@@ -108,7 +154,7 @@ export class EnemyRenderer {
             ctx.rotate(t * 0.5);
             ctx.beginPath();
             ctx.ellipse(0, 0, core.radius + 12, core.radius + 6, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(192, 57, 43, ${0.15 + Math.sin(t * 2) * 0.1})`;
+            ctx.strokeStyle = `rgba(${ar}, ${ag}, ${ab}, ${0.15 + Math.sin(t * 2) * 0.1})`;
             ctx.lineWidth = 2;
             ctx.setLineDash([8, 12]);
             ctx.stroke();
@@ -132,19 +178,21 @@ export class EnemyRenderer {
     drawRageFlames(ctx, core) {
         const { x, y, radius } = core;
         const t = Date.now() / 1000;
+        const th = this.getBossTheme();
+        const [gr, gg, gb] = th.glow;
 
-        // 脈動能量環
+        // 脈動能量環（使用主題色）
         for (let ring = 0; ring < 3; ring++) {
             const ringRadius = radius + 18 + ring * 8;
             const ringAlpha = (0.4 - ring * 0.1) * (Math.sin(t * 4 + ring) * 0.3 + 0.7);
             ctx.beginPath();
             ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(231, 76, 60, ${ringAlpha})`;
+            ctx.strokeStyle = `rgba(${gr}, ${gg}, ${gb}, ${ringAlpha})`;
             ctx.lineWidth = 3 - ring;
             ctx.stroke();
         }
 
-        // 外層火焰粒子（12顆，隨機大小和距離）
+        // 外層火焰粒子（12顆）
         for (let i = 0; i < 12; i++) {
             const angle = (Math.PI * 2 / 12) * i + t * 2;
             const dist = radius + 15 + Math.sin(t * 6 + i * 1.5) * 8;
@@ -152,18 +200,17 @@ export class EnemyRenderer {
             const fy = y + Math.sin(angle) * dist;
             const fSize = 3 + Math.sin(t * 8 + i * 2) * 2;
 
-            // 火焰漸層
             const flameGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, fSize * 2);
-            flameGrad.addColorStop(0, 'rgba(255, 200, 50, 0.9)');
-            flameGrad.addColorStop(0.4, 'rgba(255, 100, 0, 0.7)');
-            flameGrad.addColorStop(1, 'rgba(200, 30, 0, 0)');
+            flameGrad.addColorStop(0, `rgba(${Math.min(255, gr + 55)}, ${Math.min(255, gg + 100)}, ${Math.min(255, gb + 50)}, 0.9)`);
+            flameGrad.addColorStop(0.4, `rgba(${gr}, ${gg}, ${gb}, 0.7)`);
+            flameGrad.addColorStop(1, `rgba(${gr * 0.6 | 0}, ${gg * 0.3 | 0}, ${gb * 0.2 | 0}, 0)`);
             ctx.beginPath();
             ctx.arc(fx, fy, fSize * 2, 0, Math.PI * 2);
             ctx.fillStyle = flameGrad;
             ctx.fill();
         }
 
-        // 內層小火焰（8顆，更靠近身體）
+        // 內層小火焰（8顆）
         for (let i = 0; i < 8; i++) {
             const angle = (Math.PI * 2 / 8) * i + t * 3;
             const dist = radius + 8 + Math.sin(t * 10 + i) * 3;
@@ -171,7 +218,7 @@ export class EnemyRenderer {
             const fy = y + Math.sin(angle) * dist;
             ctx.beginPath();
             ctx.arc(fx, fy, 2.5, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffd700';
+            ctx.fillStyle = th.crown[0];
             ctx.fill();
         }
     }
@@ -186,58 +233,55 @@ export class EnemyRenderer {
     drawBossCrown(ctx, core, rageMode) {
         const { x, y, radius } = core;
         const t = Date.now() / 1000;
+        const th = this.getBossTheme();
         const crownY = y - radius - 5;
         const crownW = radius * 0.5;
         const spikeH = radius * 0.35;
+        const [c0, c1, c2] = th.crown;
 
         // 皇冠底座光暈
         const glowPulse = Math.sin(t * 4) * 0.2 + 0.8;
         ctx.beginPath();
         ctx.ellipse(x, crownY + 5, crownW + 10, 12, 0, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(241, 196, 15, ${0.15 * glowPulse})`;
+        ctx.fillStyle = `rgba(${parseInt(c0.slice(1, 3), 16)}, ${parseInt(c0.slice(3, 5), 16)}, ${parseInt(c0.slice(5, 7), 16)}, ${0.15 * glowPulse})`;
         ctx.fill();
 
         // 皇冠主體（五尖刺）
         ctx.beginPath();
         const baseY = crownY + 8;
         const tipY = crownY - spikeH;
-        // 左側底
         ctx.moveTo(x - crownW - 8, baseY);
-        // 左一尖刺
         ctx.lineTo(x - crownW, tipY + 8);
         ctx.lineTo(x - crownW * 0.5, baseY - 2);
-        // 中央尖刺（最高）
         ctx.lineTo(x - crownW * 0.3, tipY);
         ctx.lineTo(x, baseY - 5);
         ctx.lineTo(x + crownW * 0.3, tipY);
-        // 右一尖刺
         ctx.lineTo(x + crownW * 0.5, baseY - 2);
         ctx.lineTo(x + crownW, tipY + 8);
-        // 右側底
         ctx.lineTo(x + crownW + 8, baseY);
         ctx.closePath();
 
         // 皇冠漸層
         const crownGrad = ctx.createLinearGradient(x, tipY, x, baseY);
         if (rageMode) {
-            crownGrad.addColorStop(0, '#ff4444');
-            crownGrad.addColorStop(0.5, '#cc2222');
-            crownGrad.addColorStop(1, '#881111');
+            crownGrad.addColorStop(0, th.rage);
+            crownGrad.addColorStop(0.5, th.body[1]);
+            crownGrad.addColorStop(1, th.body[2]);
         } else {
-            crownGrad.addColorStop(0, '#ffd700');
-            crownGrad.addColorStop(0.5, '#daa520');
-            crownGrad.addColorStop(1, '#b8860b');
+            crownGrad.addColorStop(0, c0);
+            crownGrad.addColorStop(0.5, c1);
+            crownGrad.addColorStop(1, c2);
         }
         ctx.fillStyle = crownGrad;
         ctx.fill();
-        ctx.strokeStyle = rageMode ? '#aa1111' : '#8b6914';
+        ctx.strokeStyle = rageMode ? th.body[2] : c2;
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // 皇冠寶石（三顆）
+        // 皇冠寶石（三顆，使用主題色）
         const jewelColors = rageMode
-            ? ['#ff0000', '#ff4444', '#ff0000']
-            : ['#e74c3c', '#3498db', '#2ecc71'];
+            ? [th.rage, c0, th.rage]
+            : [th.body[0], th.eye, c0];
         const jewelX = [-crownW * 0.5, 0, crownW * 0.5];
         jewelX.forEach((offset, i) => {
             const jx = x + offset;
@@ -256,7 +300,7 @@ export class EnemyRenderer {
         tipJewelX.forEach(offset => {
             ctx.beginPath();
             ctx.arc(x + offset, tipY + 6, 3, 0, Math.PI * 2);
-            ctx.fillStyle = rageMode ? '#ff6666' : '#ffd700';
+            ctx.fillStyle = rageMode ? th.rage : c0;
             ctx.fill();
         });
     }
@@ -419,33 +463,37 @@ export class EnemyRenderer {
     drawBossBody(ctx, core) {
         const { x, y, radius } = core;
         const t = Date.now() / 1000;
+        const th = this.getBossTheme();
 
         // 外層脈衝光暈
         const pulse = Math.sin(t * 3) * 0.15 + 0.85;
+        const [ar, ag, ab] = th.aura;
         const auraGrad = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius * 1.6);
-        auraGrad.addColorStop(0, `rgba(180, 30, 20, ${0.3 * pulse})`);
-        auraGrad.addColorStop(0.5, `rgba(120, 10, 5, ${0.15 * pulse})`);
-        auraGrad.addColorStop(1, 'rgba(60, 0, 0, 0)');
+        auraGrad.addColorStop(0, `rgba(${ar}, ${ag}, ${ab}, ${0.3 * pulse})`);
+        auraGrad.addColorStop(0.5, `rgba(${ar * 0.6 | 0}, ${ag * 0.3 | 0}, ${ab * 0.3 | 0}, ${0.15 * pulse})`);
+        auraGrad.addColorStop(1, `rgba(${ar * 0.3 | 0}, 0, ${ab * 0.2 | 0}, 0)`);
         ctx.beginPath();
         ctx.arc(x, y, radius * 1.6, 0, Math.PI * 2);
         ctx.fillStyle = auraGrad;
         ctx.fill();
 
-        // 主體漸層（深紅到暗紅，模擬 3D 球體）
+        // 主體漸層（4 色，模擬 3D 球體）
+        const [b0, b1, b2, b3] = th.body;
         const bodyGrad = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, radius * 0.1, x, y, radius);
-        bodyGrad.addColorStop(0, '#e74c3c');
-        bodyGrad.addColorStop(0.3, '#c0392b');
-        bodyGrad.addColorStop(0.7, '#922b21');
-        bodyGrad.addColorStop(1, '#5a1a14');
+        bodyGrad.addColorStop(0, b0);
+        bodyGrad.addColorStop(0.3, b1);
+        bodyGrad.addColorStop(0.7, b2);
+        bodyGrad.addColorStop(1, b3);
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fillStyle = bodyGrad;
         ctx.fill();
 
         // 內層發光核心
+        const [gr, gg, gb] = th.glow;
         const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.5);
-        coreGrad.addColorStop(0, 'rgba(255, 100, 50, 0.25)');
-        coreGrad.addColorStop(1, 'rgba(255, 50, 20, 0)');
+        coreGrad.addColorStop(0, `rgba(${gr}, ${gg}, ${gb}, 0.25)`);
+        coreGrad.addColorStop(1, `rgba(${gr}, ${gg}, ${gb}, 0)`);
         ctx.beginPath();
         ctx.arc(x, y, radius * 0.5, 0, Math.PI * 2);
         ctx.fillStyle = coreGrad;
@@ -454,14 +502,14 @@ export class EnemyRenderer {
         // 外框
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = '#6b1a12';
+        ctx.strokeStyle = b3;
         ctx.lineWidth = 4;
         ctx.stroke();
 
         // 外框高光
         ctx.beginPath();
         ctx.arc(x, y, radius, -Math.PI * 0.8, -Math.PI * 0.2);
-        ctx.strokeStyle = 'rgba(255, 150, 100, 0.4)';
+        ctx.strokeStyle = `rgba(${gr}, ${gg}, ${gb}, 0.4)`;
         ctx.lineWidth = 2;
         ctx.stroke();
     }
@@ -493,9 +541,11 @@ export class EnemyRenderer {
     drawBossEyes(ctx, core) {
         const { x, y, radius } = core;
         const t = Date.now() / 1000;
+        const th = this.getBossTheme();
         const eyeSpacing = radius * 0.28;
         const eyeY = y - radius * 0.15;
         const eyeRadius = radius * 0.15;
+        const [gr, gg, gb] = th.glow;
 
         // 眼窩陰影
         [-1, 1].forEach(dir => {
@@ -515,15 +565,15 @@ export class EnemyRenderer {
             ctx.fill();
         });
 
-        // 瞳孔（紅色發光）
+        // 瞳孔（主題色發光）
         const glowPulse = Math.sin(t * 5) * 0.3 + 0.7;
         [-1, 1].forEach(dir => {
             const ex = x + dir * eyeSpacing;
 
             // 瞳孔外發光
             const pupilGlow = ctx.createRadialGradient(ex, eyeY, 0, ex, eyeY, eyeRadius * 0.8);
-            pupilGlow.addColorStop(0, `rgba(255, 50, 0, ${0.6 * glowPulse})`);
-            pupilGlow.addColorStop(1, 'rgba(255, 30, 0, 0)');
+            pupilGlow.addColorStop(0, `rgba(${gr}, ${gg}, ${gb}, ${0.6 * glowPulse})`);
+            pupilGlow.addColorStop(1, `rgba(${gr}, ${gg}, ${gb}, 0)`);
             ctx.beginPath();
             ctx.arc(ex, eyeY, eyeRadius * 0.8, 0, Math.PI * 2);
             ctx.fillStyle = pupilGlow;
@@ -532,13 +582,13 @@ export class EnemyRenderer {
             // 瞳孔本體
             ctx.beginPath();
             ctx.arc(ex, eyeY, eyeRadius * 0.45, 0, Math.PI * 2);
-            ctx.fillStyle = '#ff2200';
+            ctx.fillStyle = th.eye;
             ctx.fill();
 
             // 瞳孔核心（黑色）
             ctx.beginPath();
             ctx.arc(ex, eyeY, eyeRadius * 0.2, 0, Math.PI * 2);
-            ctx.fillStyle = '#1a0000';
+            ctx.fillStyle = '#0a0a0a';
             ctx.fill();
 
             // 高光
@@ -548,13 +598,13 @@ export class EnemyRenderer {
             ctx.fill();
         });
 
-        // 眉毛（怒眉，向內傾斜增添威壓感）
+        // 眉毛（怒眉，使用主題暗色）
         [-1, 1].forEach(dir => {
             const ex = x + dir * eyeSpacing;
             ctx.beginPath();
             ctx.moveTo(ex - eyeRadius * 1.2, eyeY - eyeRadius * 1.8);
             ctx.lineTo(ex + eyeRadius * 0.8, eyeY - eyeRadius * 1.2);
-            ctx.strokeStyle = '#5a1a14';
+            ctx.strokeStyle = th.body[2];
             ctx.lineWidth = 4;
             ctx.lineCap = 'round';
             ctx.stroke();
