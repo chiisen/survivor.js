@@ -1058,9 +1058,9 @@ export class EnemyRenderer {
      * @returns {void}
      */
     drawLegs(ctx, x, y, radius, color, strokeColor) {
-        const legLen = radius * 0.6;
-        const legW = radius * 0.25;
-        const footW = radius * 0.35;
+        const legLen = radius * 0.35;
+        const legW = radius * 0.22;
+        const footW = radius * 0.3;
         const legTopY = y + radius * 0.85;
         const legBotY = y + radius * 0.85 + legLen;
         const darkColor = this.darkenColor(strokeColor, 0.7);
