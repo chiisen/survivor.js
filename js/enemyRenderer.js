@@ -1010,6 +1010,9 @@ export class EnemyRenderer {
         const g = parseInt(this.color.slice(3, 5), 16);
         const b = parseInt(this.color.slice(5, 7), 16);
 
+        // 雙腳（身體下方）
+        this.drawLegs(ctx, x, y, radius, this.color, this.strokeColor);
+
         // 外層微光暈
         const auraGrad = ctx.createRadialGradient(x, y, radius * 0.7, x, y, radius * 1.2);
         auraGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.12)`);
@@ -1045,6 +1048,55 @@ export class EnemyRenderer {
     }
 
     /**
+     * 繪製怪物雙腳
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {number} x - 中心 X
+     * @param {number} y - 中心 Y
+     * @param {number} radius - 半徑
+     * @param {string} color - 主色
+     * @param {string} strokeColor - 邊框色
+     * @returns {void}
+     */
+    drawLegs(ctx, x, y, radius, color, strokeColor) {
+        const legLen = radius * 0.6;
+        const legW = radius * 0.25;
+        const footW = radius * 0.35;
+        const legTopY = y + radius * 0.85;
+        const legBotY = y + radius * 0.85 + legLen;
+        const darkColor = this.darkenColor(strokeColor, 0.7);
+
+        [-1, 1].forEach(dir => {
+            const legX = x + dir * radius * 0.3;
+
+            // 腿部
+            ctx.beginPath();
+            ctx.moveTo(legX - legW * 0.5, legTopY);
+            ctx.lineTo(legX + legW * 0.5, legTopY);
+            ctx.lineTo(legX + legW * 0.4, legBotY);
+            ctx.lineTo(legX - legW * 0.4, legBotY);
+            ctx.closePath();
+            const legGrad = ctx.createLinearGradient(legX - legW, legTopY, legX + legW, legTopY);
+            legGrad.addColorStop(0, darkColor);
+            legGrad.addColorStop(0.5, color);
+            legGrad.addColorStop(1, darkColor);
+            ctx.fillStyle = legGrad;
+            ctx.fill();
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // 腳掌
+            ctx.beginPath();
+            ctx.ellipse(legX, legBotY + 2, footW * 0.5, legW * 0.4, 0, 0, Math.PI * 2);
+            ctx.fillStyle = darkColor;
+            ctx.fill();
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        });
+    }
+
+    /**
      * 將顏色加深
      * @param {string} hex - 色碼
      * @param {number} factor - 加深比例 (0-1)
@@ -1068,6 +1120,9 @@ export class EnemyRenderer {
         const th = this.getEliteTheme();
         const [b0, b1, b2] = th.body;
         const [gr, gg, gb] = th.glow;
+
+        // 雙腳
+        this.drawLegs(ctx, x, y, radius, b0, b2);
 
         // 外層光暈
         const auraGrad = ctx.createRadialGradient(x, y, radius * 0.7, x, y, radius * 1.3);
@@ -1122,6 +1177,9 @@ export class EnemyRenderer {
         const { x, y, radius } = core;
         const t = Date.now() / 1000;
         const th = this.getBossTheme();
+
+        // 雙腳
+        this.drawLegs(ctx, x, y, radius, th.body[0], th.body[2]);
 
         // 外層脈衝光暈
         const pulse = Math.sin(t * 3) * 0.15 + 0.85;
