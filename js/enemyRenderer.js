@@ -182,23 +182,25 @@ export class EnemyRenderer {
             this.drawEliteDecorations(ctx, core);
         }
         
-        if (this.getTypeId() === 'splitter') {
+        const id = this.getTypeId();
+
+        if (id === 'splitter' || id === '分裂') {
             this.drawSplitterDecoration(ctx, core);
         }
 
-        if (this.getTypeId() === 'explosive') {
+        if (id === 'explosive' || id === '爆炸') {
             this.drawExplosiveDecoration(ctx, core);
         }
 
-        if (this.getTypeId() === 'tank') {
+        if (id === 'tank' || id === '坦克') {
             this.drawTankDecoration(ctx, core);
         }
 
-        if (this.getTypeId() === 'fast') {
+        if (id === 'fast' || id === '快速') {
             this.drawFastDecoration(ctx, core);
         }
 
-        if (this.getTypeId() === 'ranged') {
+        if (id === 'ranged' || id === '遠程') {
             this.drawRangedDecoration(ctx, core);
         }
     }
