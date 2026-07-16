@@ -576,13 +576,81 @@ export class EnemyRenderer {
      * @returns {void}
      */
     drawRangedDecoration(ctx, core) {
+        const { x, y, radius } = core;
+        const bowX = x + radius * 0.9;
+        const bowY = y;
+        const bowH = radius * 1.2;
+
+        // 弓臂（弧形）
         ctx.beginPath();
-        ctx.arc(core.x, core.y - core.radius * 0.5, core.radius * 0.4, 0, Math.PI * 2);
-        ctx.fillStyle = '#8e44ad';
+        ctx.arc(bowX, bowY, bowH, -Math.PI * 0.4, Math.PI * 0.4);
+        ctx.strokeStyle = '#5d4037';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // 弓臂內側（較淺色）
+        ctx.beginPath();
+        ctx.arc(bowX, bowY, bowH - 2, -Math.PI * 0.35, Math.PI * 0.35);
+        ctx.strokeStyle = '#8d6e63';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 弓弦（上下兩段）
+        const stringTop = bowY - bowH * Math.cos(Math.PI * 0.4);
+        const stringBot = bowY + bowH * Math.cos(Math.PI * 0.4);
+        const stringX = bowX + bowH * Math.sin(Math.PI * 0.4);
+
+        ctx.beginPath();
+        ctx.moveTo(stringX, stringTop);
+        ctx.lineTo(bowX - bowH * 0.1, bowY);
+        ctx.lineTo(stringX, stringBot);
+        ctx.strokeStyle = '#bcaaa4';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 箭桿（搭在弦上）
+        const arrowLen = radius * 1.8;
+        const arrowTipX = bowX - arrowLen * 0.5;
+        const arrowTipY = bowY;
+        const arrowTailX = bowX - arrowLen * 0.5 + arrowLen;
+        const arrowTailY = bowY;
+
+        ctx.beginPath();
+        ctx.moveTo(arrowTipX, arrowTipY);
+        ctx.lineTo(arrowTailX, arrowTailY);
+        ctx.strokeStyle = '#795548';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 箭頭（三角形）
+        ctx.beginPath();
+        ctx.moveTo(arrowTipX - 6, arrowTipY);
+        ctx.lineTo(arrowTipX + 2, arrowTipY - 4);
+        ctx.lineTo(arrowTipX + 2, arrowTipY + 4);
+        ctx.closePath();
+        ctx.fillStyle = '#90a4ae';
         ctx.fill();
-        ctx.strokeStyle = '#7d3c98';
+        ctx.strokeStyle = '#546e7a';
         ctx.lineWidth = 1;
         ctx.stroke();
+
+        // 箭羽（末端三片）
+        const featherX = arrowTailX;
+        for (let i = -1; i <= 1; i++) {
+            ctx.beginPath();
+            ctx.moveTo(featherX, arrowTailY);
+            ctx.lineTo(featherX + 8, arrowTailY + i * 5);
+            ctx.strokeStyle = i === 0 ? '#e74c3c' : '#ecf0f1';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        // 弓身裝飾寶石
+        ctx.beginPath();
+        ctx.arc(bowX + bowH * 0.3, bowY, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#f1c40f';
+        ctx.fill();
     }
     
     /**
