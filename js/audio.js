@@ -1,5 +1,7 @@
 // @ts-check
 
+import { loadConfig } from './configLoader.js';
+
 export class AudioManager {
     /**
      * 建立音效管理器實例，初始化 Web Audio API
@@ -18,6 +20,23 @@ export class AudioManager {
         this.bgmSource = null;
         
         this.init();
+        this.loadConfig();
+    }
+
+    /**
+     * 從 JSON 載入音效設定
+     */
+    loadConfig() {
+        loadConfig('./config/audio.json').then(config => {
+            if (config.defaults) {
+                this.masterVolume = config.defaults.masterVolume;
+                this.sfxVolume = config.defaults.sfxVolume;
+                this.bgmVolume = config.defaults.bgmVolume;
+            }
+            if (config.sounds) {
+                this.sounds = config.sounds;
+            }
+        });
     }
 
     /**

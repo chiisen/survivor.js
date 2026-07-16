@@ -1,0 +1,17 @@
+{
+  "defaults": {
+    "masterVolume": 0.5,
+    "sfxVolume": 0.7,
+    "bgmVolume": 0.3
+  },
+  "sounds": {
+    "swing": { "frequency": 200, "duration": 0.15, "type": "square", "volume": 0.3 },
+    "hit": { "frequency": 400, "duration": 0.1, "type": "sine", "volume": 0.4 },
+    "kill": { "frequency": 800, "duration": 0.3, "type": "square", "volume": 0.5 },
+    "chainKill": { "frequency": 1000, "duration": 0.5, "type": "sine", "volume": 0.6 },
+    "levelUp": { "frequency": 600, "duration": 0.8, "type": "sine", "volume": 0.5 },
+    "damage": { "frequency": 150, "duration": 0.2, "type": "square", "volume": 0.4 },
+    "pickup": { "frequency": 500, "duration": 0.1, "type": "sine", "volume": 0.3 },
+    "gameOver": { "frequency": 100, "duration": 1.0, "type": "sine", "volume": 0.4 }
+  }
+}
