@@ -775,16 +775,16 @@ export class EnemyRenderer {
     drawRangedDecoration(ctx, core) {
         const { x, y, radius } = core;
         const t = Date.now() / 1000;
-        const barrelLen = radius * 2.8;
-        const barrelH = radius * 0.25;
+        const barrelLen = radius * 1.6;
+        const barrelH = radius * 0.2;
 
         // 中央機身（連接左右炮管）
-        const bodyGrad = ctx.createLinearGradient(x, y - radius * 0.35, x, y + radius * 0.35);
+        const bodyGrad = ctx.createLinearGradient(x, y - radius * 0.3, x, y + radius * 0.3);
         bodyGrad.addColorStop(0, '#757575');
         bodyGrad.addColorStop(0.5, '#9e9e9e');
         bodyGrad.addColorStop(1, '#616161');
         ctx.beginPath();
-        ctx.ellipse(x, y, radius * 0.4, radius * 0.35, 0, 0, Math.PI * 2);
+        ctx.ellipse(x, y, radius * 0.35, radius * 0.3, 0, 0, Math.PI * 2);
         ctx.fillStyle = bodyGrad;
         ctx.fill();
         ctx.strokeStyle = '#424242';
@@ -793,19 +793,19 @@ export class EnemyRenderer {
 
         // 中央裝飾圓環
         ctx.beginPath();
-        ctx.arc(x, y, radius * 0.2, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * 0.18, 0, Math.PI * 2);
         ctx.strokeStyle = '#f39c12';
         ctx.lineWidth = 1.5;
         ctx.stroke();
         ctx.beginPath();
-        ctx.arc(x, y, radius * 0.12, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * 0.1, 0, Math.PI * 2);
         ctx.fillStyle = '#263238';
         ctx.fill();
 
         // 左炮管
-        this.drawBarrel(ctx, x - radius * 0.4, y, barrelLen, barrelH, t, -1);
+        this.drawBarrel(ctx, x - radius * 0.35, y, barrelLen, barrelH, t, -1);
         // 右炮管
-        this.drawBarrel(ctx, x + radius * 0.4, y, barrelLen, barrelH, t, 1);
+        this.drawBarrel(ctx, x + radius * 0.35, y, barrelLen, barrelH, t, 1);
     }
 
     /**
