@@ -80,6 +80,9 @@
         <div class="control-group">
             等級：<input type="number" id="level-input" value="1" min="1" max="100">
         </div>
+        <div class="control-group" id="boss-theme-group" style="display:none;">
+            BOSS 造型：<select id="boss-theme-select"></select>
+        </div>
     </div>
     <div class="result">最終 HP 倍率：<span id="hp-mult" style="color:#f1c40f; font-weight:bold;">1.0</span>x</div>
 
@@ -92,6 +95,8 @@
         import { loadConfig } from './js/configLoader.js';
 
         let enemyTypes = [];
+        let bossRenderer = null;
+        let bossType = null;
 
         loadConfig('./config/enemies.json').then(config => {
             enemyTypes = Object.entries(config.enemies).map(([key, info]) => ({
@@ -107,9 +112,11 @@
                 mouthStyle: info.mouthStyle,
                 isElite: info.isElite || false,
                 isStealth: info.isStealth || false,
-                isBoss: info.isBoss || false
+                isBoss: info.isBoss || false,
+                canShoot: info.canShoot || false
             }));
             initGrid();
+            initBossThemeSelector();
         });
 
         const grid = document.getElementById('grid');
@@ -148,6 +155,11 @@
                 const ctx = canvas.getContext('2d');
                 const renderer = new EnemyRenderer(type);
 
+                if (type.isBoss) {
+                    bossRenderer = renderer;
+                    bossType = type;
+                }
+
                 renderer.draw(ctx, {
                     x: 50, y: 50,
                     radius: type.radius > 30 ? 25 : type.radius,
@@ -161,6 +173,49 @@
 
             updateStats();
             debug.textContent = `共 ${enemyTypes.length} 種怪物`;
+        }
+
+        function initBossThemeSelector() {
+            const group = document.getElementById('boss-theme-group');
+            const select = document.getElementById('boss-theme-select');
+            if (!bossType || !bossRenderer) {
+                group.style.display = 'none';
+                return;
+            }
+
+            const names = EnemyRenderer.getBossThemeNames();
+            names.forEach((name, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+
+            group.style.display = 'flex';
+
+            select.addEventListener('change', () => {
+                const idx = parseInt(select.value);
+                const theme = EnemyRenderer.getBossTheme(idx);
+                bossRenderer.setBossTheme(theme);
+                renderBossCard();
+            });
+        }
+
+        function renderBossCard() {
+            if (!bossType || !bossRenderer) return;
+            const canvas = grid.querySelector('.enemy-card:last-child canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            bossRenderer.draw(ctx, {
+                x: 50, y: 50,
+                radius: bossType.radius > 30 ? 25 : bossType.radius,
+                hp: bossType.hp, maxHp: bossType.hp, type: bossType,
+                shieldHp: 0, shieldMaxHp: 0,
+                hasShield: false, isElite: false,
+                isStealth: false,
+                baseAlpha: 1, currentAlpha: 1, revealTime: 0
+            }, { shootCooldown: 0, canShoot: bossType.canShoot || false }, null);
         }
 
         function updateStats() {

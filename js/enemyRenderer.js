@@ -51,6 +51,15 @@ export class EnemyRenderer {
     }
 
     /**
+     * 依索引取得 BOSS 造型主題
+     * @param {number} index - 主題索引
+     * @returns {object} 主題物件
+     */
+    static getBossTheme(index) {
+        return BOSS_THEMES[index] || BOSS_THEMES[0];
+    }
+
+    /**
      * 取得所有 BOSS 主題名稱（供 UI 顯示）
      * @returns {string[]} 主題名稱陣列
      */
