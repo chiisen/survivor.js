@@ -12,12 +12,12 @@ const BOSS_THEMES = [
 
 // 精英怪隨機造型主題
 const ELITE_THEMES = [
-    { name: '金甲戰士', ring: '#f1c40f', shield: '#3498db', glow: [241, 196, 15] },
-    { name: '碧綠守護', ring: '#2ecc71', shield: '#1abc9c', glow: [46, 204, 113] },
-    { name: '深藍術士', ring: '#3498db', shield: '#9b59b6', glow: [52, 152, 219] },
-    { name: '暗紫刺客', ring: '#9b59b6', shield: '#e74c3c', glow: [155, 89, 182] },
-    { name: '赤紅狂戰', ring: '#e74c3c', shield: '#f39c12', glow: [231, 76, 60] },
-    { name: '銀白騎士', ring: '#ecf0f1', shield: '#bdc3c7', glow: [236, 240, 241] }
+    { name: '金甲戰士', body: ['#f39c12', '#e67e22', '#d35400'], ring: '#f1c40f', shield: '#3498db', glow: [241, 196, 15], accent: '#fff' },
+    { name: '碧綠守護', body: ['#2ecc71', '#27ae60', '#1e8449'], ring: '#2ecc71', shield: '#1abc9c', glow: [46, 204, 113], accent: '#a3e4d7' },
+    { name: '深藍術士', body: ['#3498db', '#2980b9', '#1f6fa5'], ring: '#3498db', shield: '#9b59b6', glow: [52, 152, 219], accent: '#d6eaf8' },
+    { name: '暗紫刺客', body: ['#9b59b6', '#8e44ad', '#6c3483'], ring: '#9b59b6', shield: '#e74c3c', glow: [155, 89, 182], accent: '#d2b4de' },
+    { name: '赤紅狂戰', body: ['#e74c3c', '#c0392b', '#922b21'], ring: '#e74c3c', shield: '#f39c12', glow: [231, 76, 60], accent: '#fadbd8' },
+    { name: '銀白騎士', body: ['#ecf0f1', '#bdc3c7', '#95a5a6'], ring: '#ecf0f1', shield: '#bdc3c7', glow: [236, 240, 241], accent: '#ffffff' }
 ];
 
 export class EnemyRenderer {
@@ -375,30 +375,48 @@ export class EnemyRenderer {
     drawEliteDecorations(ctx, core) {
         const th = this.getEliteTheme();
         const t = Date.now() / 1000;
-
-        // 外圈光暈（脈動）
-        const pulse = Math.sin(t * 3) * 0.15 + 0.85;
+        const { x, y, radius } = core;
         const [gr, gg, gb] = th.glow;
-        ctx.beginPath();
-        ctx.arc(core.x, core.y, core.radius + 12, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${gr}, ${gg}, ${gb}, ${0.2 * pulse})`;
-        ctx.lineWidth = 6;
-        ctx.stroke();
 
-        // 裝飾環
+        // 外層脈衝光暈
+        const pulse = Math.sin(t * 3) * 0.15 + 0.85;
+        const auraGrad = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius * 1.5);
+        auraGrad.addColorStop(0, `rgba(${gr}, ${gg}, ${gb}, ${0.25 * pulse})`);
+        auraGrad.addColorStop(1, `rgba(${gr}, ${gg}, ${gb}, 0)`);
         ctx.beginPath();
-        ctx.arc(core.x, core.y, core.radius + 8, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = auraGrad;
+        ctx.fill();
+
+        // 雙層裝飾環
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 6, 0, Math.PI * 2);
         ctx.strokeStyle = th.ring;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        // 旋轉裝飾點
-        for (let i = 0; i < 4; i++) {
-            const angle = (Math.PI * 2 / 4) * i + t * 1.5;
-            const dx = core.x + Math.cos(angle) * (core.radius + 8);
-            const dy = core.y + Math.sin(angle) * (core.radius + 8);
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 10, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${gr}, ${gg}, ${gb}, ${0.4 + Math.sin(t * 4) * 0.15})`;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 8]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 旋轉能量節點（6 顆）
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI * 2 / 6) * i + t * 2;
+            const dx = x + Math.cos(angle) * (radius + 8);
+            const dy = y + Math.sin(angle) * (radius + 8);
+            const nodeGrad = ctx.createRadialGradient(dx, dy, 0, dx, dy, 4);
+            nodeGrad.addColorStop(0, `rgba(${gr}, ${gg}, ${gb}, 0.9)`);
+            nodeGrad.addColorStop(1, `rgba(${gr}, ${gg}, ${gb}, 0)`);
             ctx.beginPath();
-            ctx.arc(dx, dy, 3, 0, Math.PI * 2);
+            ctx.arc(dx, dy, 4, 0, Math.PI * 2);
+            ctx.fillStyle = nodeGrad;
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(dx, dy, 2, 0, Math.PI * 2);
             ctx.fillStyle = th.ring;
             ctx.fill();
         }
@@ -416,20 +434,38 @@ export class EnemyRenderer {
      */
     drawShield(ctx, core) {
         const th = this.getEliteTheme();
-        const [sr, sg, sb] = th.shield.split('').reduce((acc, c, i) => {
-            if (i % 2 === 1) acc.push(parseInt(th.shield.slice(i - 1, i + 1), 16));
-            return acc;
-        }, []).length === 3
-            ? [parseInt(th.shield.slice(1, 3), 16), parseInt(th.shield.slice(3, 5), 16), parseInt(th.shield.slice(5, 7), 16)]
-            : [52, 152, 219];
+        const { x, y, radius } = core;
+        const t = Date.now() / 1000;
+        const sr = parseInt(th.shield.slice(1, 3), 16);
+        const sg = parseInt(th.shield.slice(3, 5), 16);
+        const sb = parseInt(th.shield.slice(5, 7), 16);
+        const shieldPct = core.shieldHp / core.shieldMaxHp;
 
-        const shieldAlpha = 0.4 + (core.shieldHp / core.shieldMaxHp) * 0.3;
+        // 護盾脈動光暈
+        const pulse = Math.sin(t * 4) * 0.1 + 0.9;
+        const auraGrad = ctx.createRadialGradient(x, y, radius + 10, x, y, radius + 28);
+        auraGrad.addColorStop(0, `rgba(${sr}, ${sg}, ${sb}, ${0.15 * pulse})`);
+        auraGrad.addColorStop(1, `rgba(${sr}, ${sg}, ${sb}, 0)`);
         ctx.beginPath();
-        ctx.arc(core.x, core.y, core.radius + 18, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${sr}, ${sg}, ${sb}, ${shieldAlpha})`;
+        ctx.arc(x, y, radius + 28, 0, Math.PI * 2);
+        ctx.fillStyle = auraGrad;
+        ctx.fill();
+
+        // 護盾本體
+        const shieldAlpha = 0.3 + shieldPct * 0.35;
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 16, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${sr}, ${sg}, ${sb}, ${shieldAlpha * pulse})`;
         ctx.fill();
         ctx.strokeStyle = th.shield;
         ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // 護盾高光
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 16, -Math.PI * 0.7, -Math.PI * 0.1);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 * pulse})`;
+        ctx.lineWidth = 2;
         ctx.stroke();
 
         this.drawShieldBar(ctx, core);
@@ -443,15 +479,36 @@ export class EnemyRenderer {
      */
     drawShieldBar(ctx, core) {
         const th = this.getEliteTheme();
-        const barWidth = core.radius * 1.5;
-        const barHeight = 4;
-        const barY = core.y - core.radius - 18;
+        const { x, y, radius } = core;
+        const barWidth = radius * 1.5;
+        const barHeight = 5;
+        const barY = y - radius - 20;
+        const barX = x - barWidth / 2;
+        const shieldPct = core.shieldHp / core.shieldMaxHp;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(core.x - barWidth / 2, barY, barWidth, barHeight);
+        // 外框
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
 
-        ctx.fillStyle = th.shield;
-        ctx.fillRect(core.x - barWidth / 2, barY, barWidth * (core.shieldHp / core.shieldMaxHp), barHeight);
+        // 背景
+        ctx.fillStyle = 'rgba(20, 20, 40, 0.8)';
+        ctx.fillRect(barX, barY, barWidth, barHeight);
+
+        // 護盾量漸層
+        const barGrad = ctx.createLinearGradient(barX, barY, barX + barWidth * shieldPct, barY);
+        barGrad.addColorStop(0, th.shield);
+        barGrad.addColorStop(1, th.accent);
+        ctx.fillStyle = barGrad;
+        ctx.fillRect(barX, barY, barWidth * shieldPct, barHeight);
+
+        // 高光
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.fillRect(barX, barY, barWidth * shieldPct, barHeight * 0.4);
+
+        // 邊框
+        ctx.strokeStyle = th.shield;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, barY, barWidth, barHeight);
     }
     
     /**
@@ -539,12 +596,71 @@ export class EnemyRenderer {
             this.drawBossBody(ctx, core);
             return;
         }
+        if (this.type.isElite) {
+            this.drawEliteBody(ctx, core);
+            return;
+        }
         ctx.beginPath();
         ctx.arc(core.x, core.y, core.radius, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
         ctx.fill();
         ctx.strokeStyle = this.strokeColor;
         ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    /**
+     * 繪製精英怪身體（漸層 + 內發光 + 外框）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
+    drawEliteBody(ctx, core) {
+        const { x, y, radius } = core;
+        const th = this.getEliteTheme();
+        const [b0, b1, b2] = th.body;
+        const [gr, gg, gb] = th.glow;
+
+        // 外層光暈
+        const auraGrad = ctx.createRadialGradient(x, y, radius * 0.7, x, y, radius * 1.3);
+        auraGrad.addColorStop(0, `rgba(${gr}, ${gg}, ${gb}, 0.15)`);
+        auraGrad.addColorStop(1, `rgba(${gr}, ${gg}, ${gb}, 0)`);
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 1.3, 0, Math.PI * 2);
+        ctx.fillStyle = auraGrad;
+        ctx.fill();
+
+        // 主體漸層
+        const bodyGrad = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, radius * 0.1, x, y, radius);
+        bodyGrad.addColorStop(0, b0);
+        bodyGrad.addColorStop(0.5, b1);
+        bodyGrad.addColorStop(1, b2);
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+
+        // 內層發光
+        const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.5);
+        coreGrad.addColorStop(0, `rgba(${gr}, ${gg}, ${gb}, 0.2)`);
+        coreGrad.addColorStop(1, `rgba(${gr}, ${gg}, ${gb}, 0)`);
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = coreGrad;
+        ctx.fill();
+
+        // 外框
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = b2;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // 外框高光
+        ctx.beginPath();
+        ctx.arc(x, y, radius, -Math.PI * 0.8, -Math.PI * 0.2);
+        ctx.strokeStyle = `rgba(${gr}, ${gg}, ${gb}, 0.4)`;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
     }
 
@@ -619,11 +735,91 @@ export class EnemyRenderer {
             this.drawBossEyes(ctx, core);
             return;
         }
+        if (this.type.isElite) {
+            this.drawEliteEyes(ctx, core);
+            return;
+        }
         ctx.beginPath();
         ctx.arc(core.x - core.radius * 0.3, core.y - core.radius * 0.2, core.radius * 0.2, 0, Math.PI * 2);
         ctx.arc(core.x + core.radius * 0.3, core.y - core.radius * 0.2, core.radius * 0.2, 0, Math.PI * 2);
         ctx.fillStyle = this.eyeColor;
         ctx.fill();
+    }
+
+    /**
+     * 繪製精英怪眼睛（發光瞳孔 + 眼窩）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
+    drawEliteEyes(ctx, core) {
+        const { x, y, radius } = core;
+        const th = this.getEliteTheme();
+        const eyeSpacing = radius * 0.3;
+        const eyeY = y - radius * 0.15;
+        const eyeRadius = radius * 0.18;
+
+        // 眼窩
+        [-1, 1].forEach(dir => {
+            const ex = x + dir * eyeSpacing;
+            ctx.beginPath();
+            ctx.ellipse(ex, eyeY, eyeRadius * 1.3, eyeRadius * 1.1, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fill();
+        });
+
+        // 眼白
+        [-1, 1].forEach(dir => {
+            const ex = x + dir * eyeSpacing;
+            ctx.beginPath();
+            ctx.arc(ex, eyeY, eyeRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#f5e6c8';
+            ctx.fill();
+        });
+
+        // 瞳孔（主題色）
+        [-1, 1].forEach(dir => {
+            const ex = x + dir * eyeSpacing;
+
+            // 瞳孔外發光
+            const pupilGlow = ctx.createRadialGradient(ex, eyeY, 0, ex, eyeY, eyeRadius * 0.7);
+            pupilGlow.addColorStop(0, `rgba(${th.glow[0]}, ${th.glow[1]}, ${th.glow[2]}, 0.4)`);
+            pupilGlow.addColorStop(1, `rgba(${th.glow[0]}, ${th.glow[1]}, ${th.glow[2]}, 0)`);
+            ctx.beginPath();
+            ctx.arc(ex, eyeY, eyeRadius * 0.7, 0, Math.PI * 2);
+            ctx.fillStyle = pupilGlow;
+            ctx.fill();
+
+            // 瞳孔本體
+            ctx.beginPath();
+            ctx.arc(ex, eyeY, eyeRadius * 0.5, 0, Math.PI * 2);
+            ctx.fillStyle = th.ring;
+            ctx.fill();
+
+            // 瞳孔核心
+            ctx.beginPath();
+            ctx.arc(ex, eyeY, eyeRadius * 0.2, 0, Math.PI * 2);
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fill();
+
+            // 高光
+            ctx.beginPath();
+            ctx.arc(ex - eyeRadius * 0.15, eyeY - eyeRadius * 0.15, eyeRadius * 0.12, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fill();
+        });
+
+        // 怒眉
+        [-1, 1].forEach(dir => {
+            const ex = x + dir * eyeSpacing;
+            ctx.beginPath();
+            ctx.moveTo(ex - eyeRadius * 1.2, eyeY - eyeRadius * 1.8);
+            ctx.lineTo(ex + eyeRadius * 0.8, eyeY - eyeRadius * 1.2);
+            ctx.strokeStyle = th.body[2];
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        });
     }
 
     /**
@@ -706,6 +902,48 @@ export class EnemyRenderer {
     }
     
     /**
+     * 繪製精英怪嘴巴（鋸齒獠牙）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
+    drawEliteMouth(ctx, core) {
+        const { x, y, radius } = core;
+        const th = this.getEliteTheme();
+        const mouthY = y + radius * 0.35;
+        const mouthW = radius * 0.4;
+        const mouthH = radius * 0.2;
+
+        // 嘴巴內部
+        ctx.beginPath();
+        ctx.ellipse(x, mouthY, mouthW, mouthH, 0, 0, Math.PI * 2);
+        const mouthGrad = ctx.createRadialGradient(x, mouthY, 0, x, mouthY, mouthW);
+        mouthGrad.addColorStop(0, th.body[2]);
+        mouthGrad.addColorStop(1, '#1a0a0a');
+        ctx.fillStyle = mouthGrad;
+        ctx.fill();
+
+        // 上排獠牙（3顆）
+        for (let i = 0; i < 3; i++) {
+            const fx = x - mouthW * 0.5 + (mouthW * 1 / 2) * i;
+            ctx.beginPath();
+            ctx.moveTo(fx - 3, mouthY - mouthH * 0.3);
+            ctx.lineTo(fx, mouthY + mouthH * 0.5);
+            ctx.lineTo(fx + 3, mouthY - mouthH * 0.3);
+            ctx.closePath();
+            ctx.fillStyle = th.accent;
+            ctx.fill();
+        }
+
+        // 嘴巴邊框
+        ctx.beginPath();
+        ctx.ellipse(x, mouthY, mouthW, mouthH, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = th.body[2];
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    /**
      * 繪製敵人嘴巴
      * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
      * @param {object} core - 敵人核心屬性
@@ -714,6 +952,10 @@ export class EnemyRenderer {
     drawMouth(ctx, core) {
         if (this.mouthStyle === 'boss') {
             this.drawBossMouth(ctx, core);
+            return;
+        }
+        if (this.mouthStyle === 'elite') {
+            this.drawEliteMouth(ctx, core);
             return;
         }
 
@@ -732,12 +974,6 @@ export class EnemyRenderer {
                 break;
             case 'shooter':
                 ctx.arc(core.x, core.y + core.radius * 0.35, core.radius * 0.25, Math.PI * 0.2, Math.PI * 0.8);
-                break;
-            case 'elite':
-                ctx.moveTo(core.x - core.radius * 0.4, core.y + core.radius * 0.3);
-                ctx.lineTo(core.x - core.radius * 0.2, core.y + core.radius * 0.5);
-                ctx.lineTo(core.x + core.radius * 0.2, core.y + core.radius * 0.5);
-                ctx.lineTo(core.x + core.radius * 0.4, core.y + core.radius * 0.3);
                 break;
             case 'split':
                 ctx.moveTo(core.x - core.radius * 0.3, core.y + core.radius * 0.25);
