@@ -83,6 +83,9 @@
         <div class="control-group" id="boss-theme-group" style="display:none;">
             BOSS 造型：<select id="boss-theme-select"></select>
         </div>
+        <div class="control-group" id="elite-theme-group" style="display:none;">
+            精英 造型：<select id="elite-theme-select"></select>
+        </div>
     </div>
     <div class="result">最終 HP 倍率：<span id="hp-mult" style="color:#f1c40f; font-weight:bold;">1.0</span>x</div>
 
@@ -98,6 +101,9 @@
         let bossRenderer = null;
         let bossType = null;
         let bossCanvas = null;
+        let eliteRenderer = null;
+        let eliteType = null;
+        let eliteCanvas = null;
 
         loadConfig('./config/enemies.json').then(config => {
             enemyTypes = Object.entries(config.enemies).map(([key, info]) => ({
@@ -118,6 +124,7 @@
             }));
             initGrid();
             initBossThemeSelector();
+            initEliteThemeSelector();
         });
 
         const grid = document.getElementById('grid');
@@ -160,6 +167,12 @@
                     bossRenderer = renderer;
                     bossType = type;
                     bossCanvas = canvas;
+                }
+
+                if (type.isElite) {
+                    eliteRenderer = renderer;
+                    eliteType = type;
+                    eliteCanvas = canvas;
                 }
 
                 renderer.draw(ctx, {
@@ -216,6 +229,47 @@
                 isStealth: false,
                 baseAlpha: 1, currentAlpha: 1, revealTime: 0
             }, { shootCooldown: 0, canShoot: bossType.canShoot || false }, null);
+        }
+
+        function initEliteThemeSelector() {
+            const group = document.getElementById('elite-theme-group');
+            const select = document.getElementById('elite-theme-select');
+            if (!eliteType || !eliteRenderer) {
+                group.style.display = 'none';
+                return;
+            }
+
+            const names = EnemyRenderer.getEliteThemeNames();
+            names.forEach((name, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+
+            group.style.display = 'flex';
+
+            select.addEventListener('change', () => {
+                const idx = parseInt(select.value);
+                const theme = EnemyRenderer.getEliteTheme(idx);
+                eliteRenderer.setEliteTheme(theme);
+                renderEliteCard();
+            });
+        }
+
+        function renderEliteCard() {
+            if (!eliteType || !eliteRenderer || !eliteCanvas) return;
+            const ctx = eliteCanvas.getContext('2d');
+            ctx.clearRect(0, 0, eliteCanvas.width, eliteCanvas.height);
+            eliteRenderer.draw(ctx, {
+                x: 50, y: 50,
+                radius: eliteType.radius > 30 ? 25 : eliteType.radius,
+                hp: eliteType.hp, maxHp: eliteType.hp, type: eliteType,
+                shieldHp: 5, shieldMaxHp: 5,
+                hasShield: true, isElite: true,
+                isStealth: false,
+                baseAlpha: 1, currentAlpha: 1, revealTime: 0
+            }, { shootCooldown: 0, canShoot: eliteType.canShoot || false }, null);
         }
 
         function updateStats() {

@@ -10,6 +10,16 @@ const BOSS_THEMES = [
     { name: '暗黑虛空', body: ['#37474f', '#263238', '#1a1a2e', '#0d0d1a'], aura: [60, 60, 80], crown: ['#e74c3c', '#ff4444', '#ff6666'], eye: '#ff0044', glow: [200, 50, 80], rage: '#c0392b' }
 ];
 
+// 精英怪隨機造型主題
+const ELITE_THEMES = [
+    { name: '金甲戰士', ring: '#f1c40f', shield: '#3498db', glow: [241, 196, 15] },
+    { name: '碧綠守護', ring: '#2ecc71', shield: '#1abc9c', glow: [46, 204, 113] },
+    { name: '深藍術士', ring: '#3498db', shield: '#9b59b6', glow: [52, 152, 219] },
+    { name: '暗紫刺客', ring: '#9b59b6', shield: '#e74c3c', glow: [155, 89, 182] },
+    { name: '赤紅狂戰', ring: '#e74c3c', shield: '#f39c12', glow: [231, 76, 60] },
+    { name: '銀白騎士', ring: '#ecf0f1', shield: '#bdc3c7', glow: [236, 240, 241] }
+];
+
 export class EnemyRenderer {
     /**
      * 敵人渲染器
@@ -65,6 +75,48 @@ export class EnemyRenderer {
      */
     static getBossThemeNames() {
         return BOSS_THEMES.map(t => t.name);
+    }
+
+    /**
+     * 設定精英怪隨機造型主題
+     * @param {object} theme - 精英主題物件
+     * @returns {void}
+     */
+    setEliteTheme(theme) {
+        this.eliteTheme = theme;
+    }
+
+    /**
+     * 取得目前精英主題（若無則回傳預設金甲）
+     * @returns {object} 精英主題
+     */
+    getEliteTheme() {
+        return this.eliteTheme || ELITE_THEMES[0];
+    }
+
+    /**
+     * 隨機選取一個精英怪造型主題
+     * @returns {object} 隨機主題
+     */
+    static randomEliteTheme() {
+        return ELITE_THEMES[Math.floor(Math.random() * ELITE_THEMES.length)];
+    }
+
+    /**
+     * 依索引取得精英怪造型主題
+     * @param {number} index - 主題索引
+     * @returns {object} 主題物件
+     */
+    static getEliteTheme(index) {
+        return ELITE_THEMES[index] || ELITE_THEMES[0];
+    }
+
+    /**
+     * 取得所有精英主題名稱（供 UI 顯示）
+     * @returns {string[]} 主題名稱陣列
+     */
+    static getEliteThemeNames() {
+        return ELITE_THEMES.map(t => t.name);
     }
     
     /**
@@ -321,17 +373,41 @@ export class EnemyRenderer {
      * @returns {void}
      */
     drawEliteDecorations(ctx, core) {
+        const th = this.getEliteTheme();
+        const t = Date.now() / 1000;
+
+        // 外圈光暈（脈動）
+        const pulse = Math.sin(t * 3) * 0.15 + 0.85;
+        const [gr, gg, gb] = th.glow;
+        ctx.beginPath();
+        ctx.arc(core.x, core.y, core.radius + 12, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${gr}, ${gg}, ${gb}, ${0.2 * pulse})`;
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        // 裝飾環
         ctx.beginPath();
         ctx.arc(core.x, core.y, core.radius + 8, 0, Math.PI * 2);
-        ctx.strokeStyle = '#f1c40f';
+        ctx.strokeStyle = th.ring;
         ctx.lineWidth = 3;
         ctx.stroke();
-        
+
+        // 旋轉裝飾點
+        for (let i = 0; i < 4; i++) {
+            const angle = (Math.PI * 2 / 4) * i + t * 1.5;
+            const dx = core.x + Math.cos(angle) * (core.radius + 8);
+            const dy = core.y + Math.sin(angle) * (core.radius + 8);
+            ctx.beginPath();
+            ctx.arc(dx, dy, 3, 0, Math.PI * 2);
+            ctx.fillStyle = th.ring;
+            ctx.fill();
+        }
+
         if (core.hasShield && core.shieldHp > 0) {
             this.drawShield(ctx, core);
         }
     }
-    
+
     /**
      * 繪製護盾
      * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
@@ -339,18 +415,26 @@ export class EnemyRenderer {
      * @returns {void}
      */
     drawShield(ctx, core) {
+        const th = this.getEliteTheme();
+        const [sr, sg, sb] = th.shield.split('').reduce((acc, c, i) => {
+            if (i % 2 === 1) acc.push(parseInt(th.shield.slice(i - 1, i + 1), 16));
+            return acc;
+        }, []).length === 3
+            ? [parseInt(th.shield.slice(1, 3), 16), parseInt(th.shield.slice(3, 5), 16), parseInt(th.shield.slice(5, 7), 16)]
+            : [52, 152, 219];
+
         const shieldAlpha = 0.4 + (core.shieldHp / core.shieldMaxHp) * 0.3;
         ctx.beginPath();
         ctx.arc(core.x, core.y, core.radius + 18, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(52, 152, 219, ${shieldAlpha})`;
+        ctx.fillStyle = `rgba(${sr}, ${sg}, ${sb}, ${shieldAlpha})`;
         ctx.fill();
-        ctx.strokeStyle = '#3498db';
+        ctx.strokeStyle = th.shield;
         ctx.lineWidth = 3;
         ctx.stroke();
-        
+
         this.drawShieldBar(ctx, core);
     }
-    
+
     /**
      * 繪製護盾血條
      * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
@@ -358,14 +442,15 @@ export class EnemyRenderer {
      * @returns {void}
      */
     drawShieldBar(ctx, core) {
+        const th = this.getEliteTheme();
         const barWidth = core.radius * 1.5;
         const barHeight = 4;
         const barY = core.y - core.radius - 18;
-        
+
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.fillRect(core.x - barWidth / 2, barY, barWidth, barHeight);
-        
-        ctx.fillStyle = '#3498db';
+
+        ctx.fillStyle = th.shield;
         ctx.fillRect(core.x - barWidth / 2, barY, barWidth * (core.shieldHp / core.shieldMaxHp), barHeight);
     }
     

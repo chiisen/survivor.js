@@ -38,6 +38,11 @@ export class Enemy {
             this.renderer.setBossTheme(this.bossTheme);
         }
 
+        if (type.isElite) {
+            this.eliteTheme = EnemyRenderer.randomEliteTheme();
+            this.renderer.setEliteTheme(this.eliteTheme);
+        }
+
         this.projectiles = [];
     }
     
