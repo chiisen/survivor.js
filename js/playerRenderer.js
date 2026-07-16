@@ -2,11 +2,17 @@
 
 // 盔甲顏色設定
 const ARMOR_COLORS = {
-    default: { main: '#78909c', dark: '#546e7a', light: '#b0bec5' },
-    gold: { main: '#f1c40f', dark: '#f39c12', light: '#f9e547' },
-    blue: { main: '#3498db', dark: '#2980b9', light: '#5dade2' },
-    red: { main: '#e74c3c', dark: '#c0392b', light: '#ec7063' },
-    pink: { main: '#e91e63', dark: '#c2185b', light: '#f06292' }
+    default: { main: '#78909c', dark: '#546e7a', light: '#b0bec5', blade: '#b0bec5', glow: '#90a4ae' },
+    gold: { main: '#f1c40f', dark: '#f39c12', light: '#f9e547', blade: '#f9e547', glow: '#ffd700' },
+    blue: { main: '#3498db', dark: '#2980b9', light: '#5dade2', blade: '#5dade2', glow: '#3498db' },
+    red: { main: '#e74c3c', dark: '#c0392b', light: '#ec7063', blade: '#ec7063', glow: '#e74c3c' },
+    pink: { main: '#e91e63', dark: '#c2185b', light: '#f06292', blade: '#f06292', glow: '#e91e63' },
+    green: { main: '#27ae60', dark: '#1e8449', light: '#52be80', blade: '#52be80', glow: '#2ecc71' },
+    purple: { main: '#8e44ad', dark: '#6c3483', light: '#bb8fce', blade: '#bb8fce', glow: '#9b59b6' },
+    cyan: { main: '#00bcd4', dark: '#0097a7', light: '#4dd0e1', blade: '#4dd0e1', glow: '#00e5ff' },
+    orange: { main: '#ff9800', dark: '#e65100', light: '#ffb74d', blade: '#ffb74d', glow: '#ff9800' },
+    black: { main: '#37474f', dark: '#1a1a2e', light: '#607d8b', blade: '#78909c', glow: '#546e7a' },
+    white: { main: '#eceff1', dark: '#b0bec5', light: '#ffffff', blade: '#ffffff', glow: '#eceff1' }
 };
 
 export class PlayerRenderer {
@@ -338,6 +344,7 @@ export class PlayerRenderer {
      * @param {object} combat
      */
     drawSword(ctx, core, combat) {
+        const colors = this.getColors();
         const swordBaseAngle = -Math.PI / 4;
         const swordSwingRange = Math.PI / 2;
         let currentSwordAngle = swordBaseAngle;
@@ -346,7 +353,7 @@ export class PlayerRenderer {
             const progress = combat.attackAnimationTime / combat.attackDuration;
             currentSwordAngle = swordBaseAngle + (1 - progress) * swordSwingRange;
 
-            // 揮砍弧線
+            // 揮砍弧線（使用劍色光效）
             ctx.beginPath();
             ctx.arc(
                 core.x + core.radius * 1.8,
@@ -355,7 +362,7 @@ export class PlayerRenderer {
                 currentSwordAngle - 0.3,
                 currentSwordAngle + 0.3
             );
-            ctx.strokeStyle = 'rgba(100, 200, 255, 0.5)';
+            ctx.strokeStyle = `rgba(${this._hexToRgb(colors.glow)}, 0.5)`;
             ctx.lineWidth = 4;
             ctx.stroke();
 
@@ -368,7 +375,7 @@ export class PlayerRenderer {
                 currentSwordAngle - 0.4,
                 currentSwordAngle + 0.4
             );
-            ctx.strokeStyle = 'rgba(100, 200, 255, 0.15)';
+            ctx.strokeStyle = `rgba(${this._hexToRgb(colors.glow)}, 0.15)`;
             ctx.lineWidth = 8;
             ctx.stroke();
         }
@@ -379,7 +386,7 @@ export class PlayerRenderer {
 
         const bladeLen = core.radius * 2.8;
 
-        // 劍身
+        // 劍身（使用盔甲配色）
         ctx.beginPath();
         ctx.moveTo(-2, 0);
         ctx.lineTo(-1, -bladeLen);
@@ -388,14 +395,14 @@ export class PlayerRenderer {
         ctx.lineTo(5, 0);
         ctx.closePath();
         const swordGrad = ctx.createLinearGradient(-2, 0, 4, 0);
-        swordGrad.addColorStop(0, '#b0bec5');
-        swordGrad.addColorStop(0.3, '#eceff1');
+        swordGrad.addColorStop(0, colors.dark);
+        swordGrad.addColorStop(0.3, colors.light);
         swordGrad.addColorStop(0.5, '#ffffff');
-        swordGrad.addColorStop(0.7, '#eceff1');
-        swordGrad.addColorStop(1, '#78909c');
+        swordGrad.addColorStop(0.7, colors.light);
+        swordGrad.addColorStop(1, colors.dark);
         ctx.fillStyle = swordGrad;
         ctx.fill();
-        ctx.strokeStyle = '#546e7a';
+        ctx.strokeStyle = colors.dark;
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -440,18 +447,31 @@ export class PlayerRenderer {
             ctx.stroke();
         }
 
-        // 劍尖發光（攻擊時）
+        // 劍尖發光（攻擊時，使用劍色）
         if (combat.attackAnimationTime > 0) {
             ctx.save();
-            ctx.shadowColor = '#64b5f6';
+            ctx.shadowColor = colors.glow;
             ctx.shadowBlur = 12;
             ctx.beginPath();
             ctx.arc(1.5, -bladeLen - 5, 3, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(100, 181, 246, 0.7)';
+            ctx.fillStyle = colors.glow;
+            ctx.globalAlpha = 0.7;
             ctx.fill();
             ctx.restore();
         }
 
         ctx.restore();
+    }
+
+    /**
+     * 將 hex 色碼轉為 RGB 字串
+     * @param {string} hex - 色碼 (如 '#ff0000')
+     * @returns {string} RGB 字串 (如 '255,0,0')
+     */
+    _hexToRgb(hex) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `${r},${g},${b}`;
     }
 }
