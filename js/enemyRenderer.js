@@ -162,6 +162,21 @@ export class EnemyRenderer {
             } else {
                 ctx.globalAlpha = core.baseAlpha;
             }
+
+            // 隱身扭曲波紋
+            const t = Date.now() / 1000;
+            const { x, y, radius } = core;
+            for (let i = 0; i < 2; i++) {
+                const rippleRadius = radius + 8 + i * 6 + Math.sin(t * 2 + i) * 3;
+                const rippleAlpha = 0.1 - i * 0.03;
+                ctx.beginPath();
+                ctx.arc(x, y, rippleRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(52, 152, 219, ${rippleAlpha})`;
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 6]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
         }
     }
     
@@ -522,60 +537,227 @@ export class EnemyRenderer {
     }
     
     /**
-     * 繪製分裂敵人裝飾
+     * 繪製分裂敵人裝飾（分裂核心 + 旋轉碎片）
      * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
      * @param {object} core - 敵人核心屬性
      * @returns {void}
      */
     drawSplitterDecoration(ctx, core) {
+        const { x, y, radius } = core;
+        const t = Date.now() / 1000;
+
+        // 分裂核心（中心發光）
+        const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.4);
+        coreGrad.addColorStop(0, 'rgba(26, 188, 156, 0.5)');
+        coreGrad.addColorStop(1, 'rgba(26, 188, 156, 0)');
         ctx.beginPath();
-        ctx.moveTo(core.x - core.radius * 0.3, core.y - core.radius * 1.2);
-        ctx.lineTo(core.x + core.radius * 0.3, core.y - core.radius * 1.2);
-        ctx.lineTo(core.x, core.y - core.radius * 0.8);
+        ctx.arc(x, y, radius * 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = coreGrad;
+        ctx.fill();
+
+        // 旋轉分裂碎片（4 片）
+        for (let i = 0; i < 4; i++) {
+            const angle = (Math.PI * 2 / 4) * i + t * 1.5;
+            const dist = radius * 0.7;
+            const fx = x + Math.cos(angle) * dist;
+            const fy = y + Math.sin(angle) * dist;
+
+            ctx.beginPath();
+            ctx.arc(fx, fy, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#1abc9c';
+            ctx.fill();
+
+            // 連接線
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(fx, fy);
+            ctx.strokeStyle = 'rgba(26, 188, 156, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // 頂部分裂標記（雙箭頭）
+        ctx.beginPath();
+        ctx.moveTo(x - radius * 0.3, y - radius * 1.1);
+        ctx.lineTo(x, y - radius * 1.4);
+        ctx.lineTo(x + radius * 0.3, y - radius * 1.1);
         ctx.closePath();
         ctx.fillStyle = '#1abc9c';
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(x - radius * 0.15, y - radius * 1.1);
+        ctx.lineTo(x, y - radius * 1.25);
+        ctx.lineTo(x + radius * 0.15, y - radius * 1.1);
+        ctx.closePath();
+        ctx.fillStyle = '#16a085';
         ctx.fill();
     }
     
     /**
-     * 繪製爆炸敵人裝飾
+     * 繪製爆炸敵人裝飾（炸彈引信 + 脈動危險環）
      * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
      * @param {object} core - 敵人核心屬性
      * @returns {void}
      */
     drawExplosiveDecoration(ctx, core) {
+        const { x, y, radius } = core;
+        const t = Date.now() / 1000;
+
+        // 脈動危險環
+        const pulse = Math.sin(t * 5) * 0.2 + 0.8;
         ctx.beginPath();
-        ctx.arc(core.x, core.y, core.radius + 6, 0, Math.PI * 2);
-        ctx.strokeStyle = '#f39c12';
+        ctx.arc(x, y, radius + 6, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(243, 156, 18, ${pulse})`;
         ctx.lineWidth = 3;
         ctx.stroke();
+
+        // 外層光暈
+        const auraGrad = ctx.createRadialGradient(x, y, radius, x, y, radius * 1.4);
+        auraGrad.addColorStop(0, `rgba(243, 156, 18, ${0.15 * pulse})`);
+        auraGrad.addColorStop(1, 'rgba(243, 156, 18, 0)');
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 1.4, 0, Math.PI * 2);
+        ctx.fillStyle = auraGrad;
+        ctx.fill();
+
+        // 引信（頂部曲線）
+        ctx.beginPath();
+        ctx.moveTo(x, y - radius);
+        ctx.quadraticCurveTo(x + radius * 0.5, y - radius * 1.5, x + radius * 0.3, y - radius * 1.6);
+        ctx.strokeStyle = '#795548';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // 引信火花
+        const sparkX = x + radius * 0.3;
+        const sparkY = y - radius * 1.6;
+        const sparkPulse = Math.sin(t * 12) * 0.4 + 0.6;
+
+        const sparkGrad = ctx.createRadialGradient(sparkX, sparkY, 0, sparkX, sparkY, 5);
+        sparkGrad.addColorStop(0, `rgba(255, 255, 100, ${sparkPulse})`);
+        sparkGrad.addColorStop(0.5, `rgba(255, 200, 0, ${sparkPulse * 0.6})`);
+        sparkGrad.addColorStop(1, 'rgba(255, 100, 0, 0)');
+        ctx.beginPath();
+        ctx.arc(sparkX, sparkY, 5, 0, Math.PI * 2);
+        ctx.fillStyle = sparkGrad;
+        ctx.fill();
+
+        // 危險標記（骷髏頭簡化版）
+        ctx.beginPath();
+        ctx.arc(x, y + radius * 0.1, radius * 0.25, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x - radius * 0.08, y + radius * 0.05, 2, 0, Math.PI * 2);
+        ctx.arc(x + radius * 0.08, y + radius * 0.05, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#f39c12';
+        ctx.fill();
     }
     
     /**
-     * 繪製坦克敵人裝飾
+     * 繪製坦克敵人裝飾（裝甲板 + 鉚釘）
      * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
      * @param {object} core - 敵人核心屬性
      * @returns {void}
      */
     drawTankDecoration(ctx, core) {
+        const { x, y, radius } = core;
+        const t = Date.now() / 1000;
+
+        // 外層裝甲光暈
+        const armorGrad = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius * 1.25);
+        armorGrad.addColorStop(0, 'rgba(127, 140, 141, 0.15)');
+        armorGrad.addColorStop(1, 'rgba(127, 140, 141, 0)');
         ctx.beginPath();
-        ctx.arc(core.x, core.y, core.radius + 4, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(127, 140, 141, 0.3)';
+        ctx.arc(x, y, radius * 1.25, 0, Math.PI * 2);
+        ctx.fillStyle = armorGrad;
         ctx.fill();
+
+        // 裝甲外環
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = '#7f8c8d';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // 鉚釘（8 顆均勻分佈）
+        for (let i = 0; i < 8; i++) {
+            const angle = (Math.PI * 2 / 8) * i;
+            const rx = x + Math.cos(angle) * (radius + 3);
+            const ry = y + Math.sin(angle) * (radius + 3);
+            ctx.beginPath();
+            ctx.arc(rx, ry, 2, 0, Math.PI * 2);
+            ctx.fillStyle = '#bdc3c7';
+            ctx.fill();
+            ctx.strokeStyle = '#95a5a6';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+
+        // 胸口裝甲板
+        ctx.beginPath();
+        ctx.moveTo(x - radius * 0.5, y + radius * 0.3);
+        ctx.lineTo(x + radius * 0.5, y + radius * 0.3);
+        ctx.lineTo(x + radius * 0.3, y + radius * 0.7);
+        ctx.lineTo(x - radius * 0.3, y + radius * 0.7);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(127, 140, 141, 0.25)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(127, 140, 141, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
     }
     
     /**
-     * 繪製快速敵人裝飾
+     * 繪製快速敵人裝飾（速度線 + 尾焰）
      * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
      * @param {object} core - 敵人核心屬性
      * @returns {void}
      */
     drawFastDecoration(ctx, core) {
+        const { x, y, radius } = core;
+        const t = Date.now() / 1000;
+
+        // 速度線（身後 3 條）
+        for (let i = -1; i <= 1; i++) {
+            const lineY = y + i * radius * 0.3;
+            const lineLen = radius * 1.2 + Math.sin(t * 8 + i) * radius * 0.3;
+            const lineAlpha = 0.4 - Math.abs(i) * 0.1;
+
+            ctx.beginPath();
+            ctx.moveTo(x - radius * 0.8, lineY);
+            ctx.lineTo(x - radius * 0.8 - lineLen, lineY);
+            ctx.strokeStyle = `rgba(46, 204, 113, ${lineAlpha})`;
+            ctx.lineWidth = 2 - Math.abs(i) * 0.5;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+
+        // 頂部速度翼
         ctx.beginPath();
-        ctx.moveTo(core.x - core.radius * 0.5, core.y - core.radius * 0.8);
-        ctx.lineTo(core.x, core.y - core.radius * 1.5);
-        ctx.lineTo(core.x + core.radius * 0.5, core.y - core.radius * 0.8);
-        ctx.fillStyle = this.color;
+        ctx.moveTo(x - radius * 0.4, y - radius * 0.6);
+        ctx.lineTo(x, y - radius * 1.3);
+        ctx.lineTo(x + radius * 0.4, y - radius * 0.6);
+        ctx.closePath();
+        const wingGrad = ctx.createLinearGradient(x, y - radius * 1.3, x, y - radius * 0.6);
+        wingGrad.addColorStop(0, '#2ecc71');
+        wingGrad.addColorStop(1, '#27ae60');
+        ctx.fillStyle = wingGrad;
+        ctx.fill();
+        ctx.strokeStyle = '#1e8449';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 尾焰（底部）
+        const flamePulse = Math.sin(t * 10) * 0.3 + 0.7;
+        const flameGrad = ctx.createRadialGradient(x, y + radius * 0.8, 0, x, y + radius * 0.8, radius * 0.6);
+        flameGrad.addColorStop(0, `rgba(46, 204, 113, ${0.4 * flamePulse})`);
+        flameGrad.addColorStop(1, 'rgba(46, 204, 113, 0)');
+        ctx.beginPath();
+        ctx.arc(x, y + radius * 0.8, radius * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = flameGrad;
         ctx.fill();
     }
     
@@ -588,16 +770,16 @@ export class EnemyRenderer {
     drawRangedDecoration(ctx, core) {
         const { x, y, radius } = core;
         const t = Date.now() / 1000;
-        const barrelLen = radius * 1.2;
-        const barrelH = radius * 0.22;
+        const barrelLen = radius * 2.2;
+        const barrelH = radius * 0.4;
 
         // 中央機身（連接左右炮管）
-        const bodyGrad = ctx.createLinearGradient(x, y - radius * 0.4, x, y + radius * 0.4);
+        const bodyGrad = ctx.createLinearGradient(x, y - radius * 0.5, x, y + radius * 0.5);
         bodyGrad.addColorStop(0, '#757575');
         bodyGrad.addColorStop(0.5, '#9e9e9e');
         bodyGrad.addColorStop(1, '#616161');
         ctx.beginPath();
-        ctx.ellipse(x, y, radius * 0.5, radius * 0.4, 0, 0, Math.PI * 2);
+        ctx.ellipse(x, y, radius * 0.6, radius * 0.5, 0, 0, Math.PI * 2);
         ctx.fillStyle = bodyGrad;
         ctx.fill();
         ctx.strokeStyle = '#424242';
@@ -606,19 +788,19 @@ export class EnemyRenderer {
 
         // 中央裝飾圓環
         ctx.beginPath();
-        ctx.arc(x, y, radius * 0.25, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * 0.3, 0, Math.PI * 2);
         ctx.strokeStyle = '#f39c12';
         ctx.lineWidth = 2;
         ctx.stroke();
         ctx.beginPath();
-        ctx.arc(x, y, radius * 0.15, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * 0.18, 0, Math.PI * 2);
         ctx.fillStyle = '#263238';
         ctx.fill();
 
         // 左炮管
-        this.drawBarrel(ctx, x - radius * 0.5, y, barrelLen, barrelH, t, -1);
+        this.drawBarrel(ctx, x - radius * 0.6, y, barrelLen, barrelH, t, -1);
         // 右炮管
-        this.drawBarrel(ctx, x + radius * 0.5, y, barrelLen, barrelH, t, 1);
+        this.drawBarrel(ctx, x + radius * 0.6, y, barrelLen, barrelH, t, 1);
     }
 
     /**
@@ -703,13 +885,57 @@ export class EnemyRenderer {
             this.drawEliteBody(ctx, core);
             return;
         }
+
+        const { x, y, radius } = core;
+        const r = parseInt(this.color.slice(1, 3), 16);
+        const g = parseInt(this.color.slice(3, 5), 16);
+        const b = parseInt(this.color.slice(5, 7), 16);
+
+        // 外層微光暈
+        const auraGrad = ctx.createRadialGradient(x, y, radius * 0.7, x, y, radius * 1.2);
+        auraGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.12)`);
+        auraGrad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
         ctx.beginPath();
-        ctx.arc(core.x, core.y, core.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
+        ctx.arc(x, y, radius * 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = auraGrad;
         ctx.fill();
-        ctx.strokeStyle = this.strokeColor;
+
+        // 主體漸層
+        const bodyGrad = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, radius * 0.1, x, y, radius);
+        bodyGrad.addColorStop(0, this.color);
+        bodyGrad.addColorStop(0.6, this.strokeColor);
+        bodyGrad.addColorStop(1, this.darkenColor(this.strokeColor, 0.6));
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+
+        // 外框
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = this.darkenColor(this.strokeColor, 0.5);
         ctx.lineWidth = 2;
         ctx.stroke();
+
+        // 外框高光
+        ctx.beginPath();
+        ctx.arc(x, y, radius, -Math.PI * 0.8, -Math.PI * 0.2);
+        ctx.strokeStyle = `rgba(${Math.min(255, r + 60)}, ${Math.min(255, g + 60)}, ${Math.min(255, b + 60)}, 0.35)`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    /**
+     * 將顏色加深
+     * @param {string} hex - 色碼
+     * @param {number} factor - 加深比例 (0-1)
+     * @returns {string} 加深後色碼
+     */
+    darkenColor(hex, factor) {
+        const r = Math.floor(parseInt(hex.slice(1, 3), 16) * factor);
+        const g = Math.floor(parseInt(hex.slice(3, 5), 16) * factor);
+        const b = Math.floor(parseInt(hex.slice(5, 7), 16) * factor);
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
 
     /**
