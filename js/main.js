@@ -132,3 +132,20 @@ armorColorBtns.forEach(btn => {
         game.setArmorColor(color);
     });
 });
+
+// 跳過技能倒數設定
+const STORAGE_KEY_SKIP_COUNTDOWN = 'survivor_js_skip_countdown';
+const skipCountdownCheckbox = document.getElementById('skip-countdown-setting');
+
+// 載入儲存的設定
+const savedSkipCountdown = localStorage.getItem(STORAGE_KEY_SKIP_COUNTDOWN) === 'true';
+if (skipCountdownCheckbox) {
+    skipCountdownCheckbox.checked = savedSkipCountdown;
+    game.setSkipCountdown(savedSkipCountdown);
+
+    skipCountdownCheckbox.addEventListener('change', () => {
+        const checked = skipCountdownCheckbox.checked;
+        localStorage.setItem(STORAGE_KEY_SKIP_COUNTDOWN, checked);
+        game.setSkipCountdown(checked);
+    });
+}
