@@ -643,6 +643,13 @@ this.autoFire();
                         }
                     }
 
+                    // 吸血型回血
+                    if (enemy.type.isLeech && enemy.type.healOnHit) {
+                        enemy.hp = Math.min(enemy.maxHp, enemy.hp + enemy.type.healOnHit);
+                        this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius - 15, enemy.type.healOnHit, '#ff4444'));
+                        this.limitDamageNumbers();
+                    }
+
                     if (result.isDead) {
                         this.gameOver();
                         return;
@@ -719,7 +726,16 @@ this.autoFire();
                     }
                     
                     if (actualDamage > 0) {
+                        // 裝甲型減傷
+                        if (enemy.type.isArmored && enemy.type.damageReduction) {
+                            actualDamage = Math.max(1, Math.floor(actualDamage * (1 - enemy.type.damageReduction)));
+                        }
                         enemy.hp -= actualDamage;
+
+                        // 狂暴型受擊加速
+                        if (enemy.type.isRaging && enemy.type.speedIncreasePerHit) {
+                            enemy.speed += enemy.type.speedIncreasePerHit;
+                        }
                     }
                     
                     if (projectile.isCrit) {

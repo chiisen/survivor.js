@@ -19,7 +19,10 @@ let EnemyTypes = {
     EXPLOSIVE: { name: 'explosive', radius: 16, speed: 55, maxHp: 2, damage: 15, expValue: 20, color: '#d35400', strokeColor: '#bf4a1a', eyeColor: '#f39c12', mouthStyle: 'explosive', canShoot: false, shootInterval: 0, explosive: true, explosionRadius: 60, explosionDamage: 20 },
     STEALTH: { name: 'stealth', radius: 13, speed: 80, maxHp: 1, damage: 15, expValue: 18, color: '#5d6d7e', strokeColor: '#4a5a6a', eyeColor: '#3498db', mouthStyle: 'stealth', canShoot: false, shootInterval: 0, isStealth: true, baseAlpha: 0.3 },
     FLYER: { name: 'flyer', radius: 14, speed: 55, maxHp: 2, damage: 12, expValue: 18, color: '#8e44ad', strokeColor: '#6c3483', eyeColor: '#f1c40f', mouthStyle: 'neutral', canShoot: true, shootInterval: 2.5, isFlyer: true },
-    SUMMONER: { name: 'summoner', radius: 20, speed: 25, maxHp: 5, damage: 8, expValue: 40, color: '#c0392b', strokeColor: '#922b21', eyeColor: '#f39c12', mouthStyle: 'wide', canShoot: false, shootInterval: 0, isSummoner: true, summonInterval: 5 }
+    SUMMONER: { name: 'summoner', radius: 20, speed: 25, maxHp: 5, damage: 8, expValue: 40, color: '#c0392b', strokeColor: '#922b21', eyeColor: '#f39c12', mouthStyle: 'wide', canShoot: false, shootInterval: 0, isSummoner: true, summonInterval: 5 },
+    LEECH: { name: 'leech', radius: 16, speed: 45, maxHp: 3, damage: 12, expValue: 20, color: '#8b0000', strokeColor: '#5a0000', eyeColor: '#ff4444', mouthStyle: 'wide', canShoot: false, shootInterval: 0, isLeech: true, healOnHit: 5 },
+    ARMOR: { name: 'armor', radius: 24, speed: 30, maxHp: 10, damage: 18, expValue: 35, color: '#546e7a', strokeColor: '#37474f', eyeColor: '#e74c3c', mouthStyle: 'wide', canShoot: false, shootInterval: 0, isArmored: true, damageReduction: 0.5 },
+    RAGE: { name: 'rage', radius: 15, speed: 50, maxHp: 3, damage: 15, expValue: 25, color: '#e74c3c', strokeColor: '#c0392b', eyeColor: '#fff', mouthStyle: 'angry', canShoot: false, shootInterval: 0, isRaging: true, speedIncreasePerHit: 10 }
 };
 
 // 從 JSON 載入怪物設定
@@ -173,7 +176,10 @@ export class Enemy {
                 { type: EnemyTypes.EXPLOSIVE, weight: gameTime > 45 ? 10 : 0 },
                 { type: EnemyTypes.STEALTH, weight: gameTime > 75 ? 8 : 0 },
                 { type: EnemyTypes.FLYER, weight: gameTime > 50 ? 10 : 0 },
-                { type: EnemyTypes.SUMMONER, weight: gameTime > 120 ? 8 : 0 }
+                { type: EnemyTypes.SUMMONER, weight: gameTime > 120 ? 8 : 0 },
+                { type: EnemyTypes.LEECH, weight: gameTime > 60 ? 10 : 0 },
+                { type: EnemyTypes.ARMOR, weight: gameTime > 80 ? 8 : 0 },
+                { type: EnemyTypes.RAGE, weight: gameTime > 40 ? 12 : 0 }
             ];
             
             const totalWeight = typeWeights.reduce((sum, t) => sum + t.weight, 0);

@@ -166,6 +166,54 @@
       "shootInterval": 0,
       "isSummoner": true,
       "summonInterval": 5
+    },
+    "LEECH": {
+      "name": "吸血",
+      "radius": 16,
+      "speed": 45,
+      "maxHp": 3,
+      "damage": 12,
+      "expValue": 20,
+      "color": "#8b0000",
+      "strokeColor": "#5a0000",
+      "eyeColor": "#ff4444",
+      "mouthStyle": "wide",
+      "canShoot": false,
+      "shootInterval": 0,
+      "isLeech": true,
+      "healOnHit": 5
+    },
+    "ARMOR": {
+      "name": "裝甲",
+      "radius": 24,
+      "speed": 30,
+      "maxHp": 10,
+      "damage": 18,
+      "expValue": 35,
+      "color": "#546e7a",
+      "strokeColor": "#37474f",
+      "eyeColor": "#e74c3c",
+      "mouthStyle": "wide",
+      "canShoot": false,
+      "shootInterval": 0,
+      "isArmored": true,
+      "damageReduction": 0.5
+    },
+    "RAGE": {
+      "name": "狂暴",
+      "radius": 15,
+      "speed": 50,
+      "maxHp": 3,
+      "damage": 15,
+      "expValue": 25,
+      "color": "#e74c3c",
+      "strokeColor": "#c0392b",
+      "eyeColor": "#fff",
+      "mouthStyle": "angry",
+      "canShoot": false,
+      "shootInterval": 0,
+      "isRaging": true,
+      "speedIncreasePerHit": 10
     }
   }
 }

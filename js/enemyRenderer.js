@@ -306,6 +306,18 @@ export class EnemyRenderer {
         if (id === 'summoner' || id === '召喚') {
             this.drawSummonerDecoration(ctx, core);
         }
+
+        if (id === 'leech' || id === '吸血') {
+            this.drawLeechDecoration(ctx, core);
+        }
+
+        if (id === 'armor' || id === '裝甲') {
+            this.drawArmorDecoration(ctx, core);
+        }
+
+        if (id === 'rage' || id === '狂暴') {
+            this.drawRageDecoration(ctx, core);
+        }
     }
     
     /**
@@ -1056,6 +1068,169 @@ export class EnemyRenderer {
             ctx.fillStyle = '#37474f';
             ctx.fill();
         }
+    }
+
+    /**
+     * 繪製吸血敵人裝飾（吸血爪 + 血滴）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
+    drawLeechDecoration(ctx, core) {
+        const { x, y, radius } = core;
+        const t = Date.now() / 1000;
+
+        // 吸血爪（左右各 2 顆）
+        [-1, 1].forEach(dir => {
+            for (let i = 0; i < 2; i++) {
+                const clawX = x + dir * (radius * 0.5 + i * radius * 0.3);
+                const clawY = y + radius * 0.6;
+                const clawLen = radius * 0.4 + Math.sin(t * 6 + i) * 2;
+
+                ctx.beginPath();
+                ctx.moveTo(clawX, clawY);
+                ctx.lineTo(clawX + dir * 3, clawY + clawLen);
+                ctx.lineTo(clawX - dir * 3, clawY + clawLen);
+                ctx.closePath();
+                ctx.fillStyle = '#8b0000';
+                ctx.fill();
+                ctx.strokeStyle = '#5a0000';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        });
+
+        // 血滴（從嘴部滴落）
+        for (let i = 0; i < 3; i++) {
+            const dropT = (t * 2 + i * 0.7) % 2;
+            if (dropT < 1) {
+                const dropX = x + (i - 1) * radius * 0.3;
+                const dropY = y + radius * 0.8 + dropT * radius * 0.5;
+                const dropAlpha = (1 - dropT) * 0.6;
+                const dropSize = 2 + dropT * 1.5;
+
+                ctx.beginPath();
+                ctx.arc(dropX, dropY, dropSize, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(139, 0, 0, ${dropAlpha})`;
+                ctx.fill();
+            }
+        }
+
+        // 吸血光環
+        const healPulse = Math.sin(t * 4) * 0.2 + 0.3;
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 8, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(139, 0, 0, ${healPulse})`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 6]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    /**
+     * 繪製裝甲敵人裝飾（裝甲板 + 鉚釘）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
+    drawArmorDecoration(ctx, core) {
+        const { x, y, radius } = core;
+
+        // 裝甲外環
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 5, 0, Math.PI * 2);
+        ctx.strokeStyle = '#78909c';
+        ctx.lineWidth = 5;
+        ctx.stroke();
+
+        // 鉚釘（10 顆均勻分佈）
+        for (let i = 0; i < 10; i++) {
+            const angle = (Math.PI * 2 / 10) * i;
+            const rx = x + Math.cos(angle) * (radius + 5);
+            const ry = y + Math.sin(angle) * (radius + 5);
+            ctx.beginPath();
+            ctx.arc(rx, ry, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#b0bec5';
+            ctx.fill();
+            ctx.strokeStyle = '#78909c';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+
+        // 胸口裝甲板
+        ctx.beginPath();
+        ctx.moveTo(x - radius * 0.6, y + radius * 0.2);
+        ctx.lineTo(x + radius * 0.6, y + radius * 0.2);
+        ctx.lineTo(x + radius * 0.4, y + radius * 0.7);
+        ctx.lineTo(x - radius * 0.4, y + radius * 0.7);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(120, 144, 156, 0.3)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(120, 144, 156, 0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 肩甲
+        [-1, 1].forEach(dir => {
+            ctx.beginPath();
+            ctx.arc(x + dir * radius * 0.7, y - radius * 0.2, radius * 0.3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(120, 144, 156, 0.25)';
+            ctx.fill();
+            ctx.strokeStyle = '#78909c';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        });
+    }
+
+    /**
+     * 繪製狂暴敵人裝飾（怒氣環 + 速度線）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
+    drawRageDecoration(ctx, core) {
+        const { x, y, radius } = core;
+        const t = Date.now() / 1000;
+
+        // 怒氣脈動環
+        const ragePulse = Math.sin(t * 6) * 0.3 + 0.7;
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 6, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(231, 76, 60, ${ragePulse})`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // 外層怒氣光暈
+        const rageGrad = ctx.createRadialGradient(x, y, radius, x, y, radius * 1.4);
+        rageGrad.addColorStop(0, `rgba(231, 76, 60, ${0.2 * ragePulse})`);
+        rageGrad.addColorStop(1, 'rgba(231, 76, 60, 0)');
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 1.4, 0, Math.PI * 2);
+        ctx.fillStyle = rageGrad;
+        ctx.fill();
+
+        // 旋轉怒氣粒子
+        for (let i = 0; i < 4; i++) {
+            const angle = (Math.PI * 2 / 4) * i + t * 4;
+            const dist = radius * 0.8;
+            const px = x + Math.cos(angle) * dist;
+            const py = y + Math.sin(angle) * dist;
+
+            ctx.beginPath();
+            ctx.arc(px, py, 3, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 100, 50, ${0.6 + Math.sin(t * 8 + i) * 0.3})`;
+            ctx.fill();
+        }
+
+        // 頂部怒氣標記（火焰形狀）
+        ctx.beginPath();
+        ctx.moveTo(x, y - radius * 1.3);
+        ctx.lineTo(x - radius * 0.2, y - radius * 1.0);
+        ctx.lineTo(x, y - radius * 1.15);
+        ctx.lineTo(x + radius * 0.2, y - radius * 1.0);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(231, 76, 60, ${0.5 + Math.sin(t * 5) * 0.3})`;
+        ctx.fill();
     }
 
     /**
