@@ -106,6 +106,7 @@
             enemyTypes = Object.entries(config.enemies).map(([key, info]) => ({
                 key,
                 name: info.name,
+                key: key.toLowerCase(),
                 radius: info.radius,
                 hp: info.maxHp,
                 dmg: info.damage,

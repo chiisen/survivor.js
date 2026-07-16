@@ -36,6 +36,14 @@ export class EnemyRenderer {
     }
 
     /**
+     * 取得敵人類型識別碼（優先 key，其次 name）
+     * @returns {string} 類型識別碼
+     */
+    getTypeId() {
+        return this.type.key || this.type.name;
+    }
+
+    /**
      * 設定 Boss 隨機造型主題
      * @param {object} theme - BOSS 主題物件
      * @returns {void}
@@ -174,23 +182,23 @@ export class EnemyRenderer {
             this.drawEliteDecorations(ctx, core);
         }
         
-        if (this.type.name === 'splitter') {
+        if (this.getTypeId() === 'splitter') {
             this.drawSplitterDecoration(ctx, core);
         }
-        
-        if (this.type.name === 'explosive') {
+
+        if (this.getTypeId() === 'explosive') {
             this.drawExplosiveDecoration(ctx, core);
         }
-        
-        if (this.type.name === 'tank') {
+
+        if (this.getTypeId() === 'tank') {
             this.drawTankDecoration(ctx, core);
         }
-        
-        if (this.type.name === 'fast') {
+
+        if (this.getTypeId() === 'fast') {
             this.drawFastDecoration(ctx, core);
         }
-        
-        if (this.type.name === 'ranged') {
+
+        if (this.getTypeId() === 'ranged') {
             this.drawRangedDecoration(ctx, core);
         }
     }
