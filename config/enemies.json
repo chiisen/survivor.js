@@ -135,6 +135,37 @@
       "shootInterval": 0,
       "isStealth": true,
       "baseAlpha": 0.3
+    },
+    "FLYER": {
+      "name": "飛行",
+      "radius": 14,
+      "speed": 55,
+      "maxHp": 2,
+      "damage": 12,
+      "expValue": 18,
+      "color": "#8e44ad",
+      "strokeColor": "#6c3483",
+      "eyeColor": "#f1c40f",
+      "mouthStyle": "neutral",
+      "canShoot": true,
+      "shootInterval": 2.5,
+      "isFlyer": true
+    },
+    "SUMMONER": {
+      "name": "召喚",
+      "radius": 20,
+      "speed": 25,
+      "maxHp": 5,
+      "damage": 8,
+      "expValue": 40,
+      "color": "#c0392b",
+      "strokeColor": "#922b21",
+      "eyeColor": "#f39c12",
+      "mouthStyle": "wide",
+      "canShoot": false,
+      "shootInterval": 0,
+      "isSummoner": true,
+      "summonInterval": 5
     }
   }
 }

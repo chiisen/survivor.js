@@ -237,6 +237,14 @@ export class EnemyRenderer {
         if (id === 'ranged' || id === '遠程') {
             this.drawRangedDecoration(ctx, core);
         }
+
+        if (id === 'flyer' || id === '飛行') {
+            this.drawFlyerDecoration(ctx, core);
+        }
+
+        if (id === 'summoner' || id === '召喚') {
+            this.drawSummonerDecoration(ctx, core);
+        }
     }
     
     /**
@@ -988,7 +996,123 @@ export class EnemyRenderer {
             ctx.fill();
         }
     }
-    
+
+    /**
+     * 繪製飛行敵人裝飾（翅膀 + 氣流）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
+    drawFlyerDecoration(ctx, core) {
+        const { x, y, radius } = core;
+        const t = Date.now() / 1000;
+
+        // 翅膀（左右各一片，上下拍動）
+        const wingFlap = Math.sin(t * 8) * 0.4;
+        [-1, 1].forEach(dir => {
+            const wingX = x + dir * radius * 0.9;
+            const wingY = y + wingFlap * radius * 0.3;
+
+            ctx.beginPath();
+            ctx.moveTo(x + dir * radius * 0.3, y);
+            ctx.quadraticCurveTo(
+                wingX, wingY - radius * 0.8,
+                wingX + dir * radius * 0.6, wingY - radius * 0.2
+            );
+            ctx.quadraticCurveTo(
+                wingX + dir * radius * 0.3, wingY + radius * 0.2,
+                x + dir * radius * 0.3, y
+            );
+            const wingGrad = ctx.createLinearGradient(x, y, wingX, wingY - radius * 0.5);
+            wingGrad.addColorStop(0, '#8e44ad');
+            wingGrad.addColorStop(0.5, '#9b59b6');
+            wingGrad.addColorStop(1, 'rgba(155, 89, 182, 0.3)');
+            ctx.fillStyle = wingGrad;
+            ctx.fill();
+            ctx.strokeStyle = '#6c3483';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        });
+
+        // 頂部光環
+        const haloGrad = ctx.createRadialGradient(x, y - radius * 0.8, 0, x, y - radius * 0.8, radius * 0.4);
+        haloGrad.addColorStop(0, `rgba(241, 196, 15, ${0.3 + Math.sin(t * 4) * 0.15})`);
+        haloGrad.addColorStop(1, 'rgba(241, 196, 15, 0)');
+        ctx.beginPath();
+        ctx.arc(x, y - radius * 0.8, radius * 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = haloGrad;
+        ctx.fill();
+    }
+
+    /**
+     * 繪製召喚敵人裝飾（魔法陣 + 召喚粒子）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
+    drawSummonerDecoration(ctx, core) {
+        const { x, y, radius } = core;
+        const t = Date.now() / 1000;
+
+        // 旋轉魔法陣
+        ctx.save();
+        ctx.translate(x, y + radius * 0.5);
+        ctx.rotate(t * 0.8);
+
+        // 外圈
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * 0.8, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(243, 156, 18, ${0.3 + Math.sin(t * 3) * 0.15})`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 8]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 內圈
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * 0.5, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(231, 76, 60, ${0.25 + Math.sin(t * 4) * 0.1})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 符文（6 個符文點）
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI * 2 / 6) * i;
+            const rx = Math.cos(angle) * radius * 0.65;
+            const ry = Math.sin(angle) * radius * 0.65;
+            ctx.beginPath();
+            ctx.arc(rx, ry, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(243, 156, 18, ${0.5 + Math.sin(t * 5 + i) * 0.3})`;
+            ctx.fill();
+        }
+
+        ctx.restore();
+
+        // 召喚粒子（從魔法陣向上升起）
+        for (let i = 0; i < 4; i++) {
+            const particleT = (t * 1.5 + i * 0.5) % 2;
+            if (particleT < 1.5) {
+                const px = x + Math.sin(t * 2 + i * 1.5) * radius * 0.4;
+                const py = y + radius * 0.5 - particleT * radius * 1.2;
+                const pAlpha = (1 - particleT / 1.5) * 0.5;
+                const pSize = 2 + (1 - particleT / 1.5) * 2;
+                ctx.beginPath();
+                ctx.arc(px, py, pSize, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(243, 156, 18, ${pAlpha})`;
+                ctx.fill();
+            }
+        }
+
+        // 頂部召喚標記（倒三角）
+        ctx.beginPath();
+        ctx.moveTo(x - radius * 0.25, y - radius * 1.1);
+        ctx.lineTo(x + radius * 0.25, y - radius * 1.1);
+        ctx.lineTo(x, y - radius * 0.85);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(231, 76, 60, ${0.4 + Math.sin(t * 3) * 0.2})`;
+        ctx.fill();
+    }
+
     /**
      * 繪製敵人身體
      * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文

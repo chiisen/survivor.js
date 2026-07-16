@@ -458,8 +458,15 @@ this.logger.phase('phase2', { fireCooldown: this.player.fireCooldown });
         }
         
         for (const enemy of this.enemies) {
+            const wasRage = enemy.rageMode;
             const shootData = enemy.update(dt, this.player.x, this.player.y, this.player.attackRange);
-            
+
+            // BOSS 進入狂暴時觸發畫面震撼
+            if (enemy.type.isBoss && !wasRage && enemy.rageMode) {
+                this.screenShake.x = (Math.random() - 0.5) * 20;
+                this.screenShake.y = (Math.random() - 0.5) * 20;
+            }
+
             if (shootData) {
                 if (shootData.type === 'spawn_minion') {
                     const spawnCount = enemy.phase >= 3 ? 3 : 2;
