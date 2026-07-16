@@ -281,9 +281,9 @@ export class PlayerRenderer {
      * @param {object} colors - 盔甲顏色
      */
     drawLegs(ctx, x, y, bw, bh, colors) {
-        const legLen = bh * 0.5;
+        const legLen = bh * 0.3;
         const legW = bw * 0.35;
-        const footW = bw * 0.45;
+        const footW = bw * 0.4;
         const legTopY = y + bh * 0.85;
         const legBotY = y + bh * 0.85 + legLen;
 
