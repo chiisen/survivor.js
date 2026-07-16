@@ -617,25 +617,25 @@ export class EnemyRenderer {
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // 箭桿（搭在弦上）
+        // 箭桿（搭在弦上，指向右方）
         const arrowLen = radius * 1.8;
-        const arrowTipX = bowX - arrowLen * 0.5;
+        const arrowTipX = bowX + arrowLen * 0.3;
         const arrowTipY = bowY;
-        const arrowTailX = bowX - arrowLen * 0.5 + arrowLen;
+        const arrowTailX = bowX + arrowLen * 0.3 - arrowLen;
         const arrowTailY = bowY;
 
         ctx.beginPath();
-        ctx.moveTo(arrowTipX, arrowTipY);
-        ctx.lineTo(arrowTailX, arrowTailY);
+        ctx.moveTo(arrowTailX, arrowTailY);
+        ctx.lineTo(arrowTipX, arrowTipY);
         ctx.strokeStyle = '#795548';
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // 箭頭（三角形）
+        // 箭頭（三角形，指向右）
         ctx.beginPath();
-        ctx.moveTo(arrowTipX - 6, arrowTipY);
-        ctx.lineTo(arrowTipX + 2, arrowTipY - 4);
-        ctx.lineTo(arrowTipX + 2, arrowTipY + 4);
+        ctx.moveTo(arrowTipX + 6, arrowTipY);
+        ctx.lineTo(arrowTipX - 2, arrowTipY - 4);
+        ctx.lineTo(arrowTipX - 2, arrowTipY + 4);
         ctx.closePath();
         ctx.fillStyle = '#90a4ae';
         ctx.fill();
@@ -643,12 +643,12 @@ export class EnemyRenderer {
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // 箭羽（末端三片）
+        // 箭羽（末端三片，指向左）
         const featherX = arrowTailX;
         for (let i = -1; i <= 1; i++) {
             ctx.beginPath();
             ctx.moveTo(featherX, arrowTailY);
-            ctx.lineTo(featherX + 8, arrowTailY + i * 5);
+            ctx.lineTo(featherX - 8, arrowTailY + i * 5);
             ctx.strokeStyle = i === 0 ? '#e74c3c' : '#ecf0f1';
             ctx.lineWidth = 1.5;
             ctx.stroke();
