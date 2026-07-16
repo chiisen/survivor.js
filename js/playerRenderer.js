@@ -213,6 +213,10 @@ export class PlayerRenderer {
     drawBody(ctx, core) {
         const bw = core.radius * 1.0;
         const bh = core.radius * 1.3;
+        const colors = this.getColors();
+
+        // 雙腳（身體下方）
+        this.drawLegs(ctx, core.x, core.y + 8, bw, bh, colors);
 
         // 身體陰影
         ctx.beginPath();
@@ -223,7 +227,6 @@ export class PlayerRenderer {
         // 身體本體
         ctx.beginPath();
         ctx.ellipse(core.x, core.y + 8, bw, bh, 0, 0, Math.PI * 2);
-        const colors = this.getColors();
         const bodyGrad = ctx.createLinearGradient(core.x - bw, core.y, core.x + bw, core.y);
         bodyGrad.addColorStop(0, colors.dark);
         bodyGrad.addColorStop(0.3, colors.main);
@@ -266,6 +269,56 @@ export class PlayerRenderer {
         ctx.arc(core.x, core.y + bh * 0.6 + 2, 3, 0, Math.PI * 2);
         ctx.fillStyle = '#f39c12';
         ctx.fill();
+    }
+
+    /**
+     * 繪製主角雙腳（顏色跟隨盔甲）
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {number} x - 身體中心 X
+     * @param {number} y - 身體中心 Y
+     * @param {number} bw - 身體半寬
+     * @param {number} bh - 身體半高
+     * @param {object} colors - 盔甲顏色
+     */
+    drawLegs(ctx, x, y, bw, bh, colors) {
+        const legLen = bh * 0.5;
+        const legW = bw * 0.35;
+        const footW = bw * 0.45;
+        const legTopY = y + bh * 0.85;
+        const legBotY = y + bh * 0.85 + legLen;
+
+        [-1, 1].forEach(dir => {
+            const legX = x + dir * bw * 0.45;
+
+            // 腿部
+            ctx.beginPath();
+            ctx.moveTo(legX - legW * 0.5, legTopY);
+            ctx.lineTo(legX + legW * 0.5, legTopY);
+            ctx.lineTo(legX + legW * 0.4, legBotY);
+            ctx.lineTo(legX - legW * 0.4, legBotY);
+            ctx.closePath();
+            const legGrad = ctx.createLinearGradient(legX - legW, legTopY, legX + legW, legTopY);
+            legGrad.addColorStop(0, colors.dark);
+            legGrad.addColorStop(0.5, colors.main);
+            legGrad.addColorStop(1, colors.dark);
+            ctx.fillStyle = legGrad;
+            ctx.fill();
+            ctx.strokeStyle = '#37474f';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // 腳掌（鞋子）
+            ctx.beginPath();
+            ctx.ellipse(legX, legBotY + 2, footW * 0.5, legW * 0.45, 0, 0, Math.PI * 2);
+            const footGrad = ctx.createRadialGradient(legX - 2, legBotY, 0, legX, legBotY + 2, footW * 0.5);
+            footGrad.addColorStop(0, colors.light);
+            footGrad.addColorStop(1, colors.dark);
+            ctx.fillStyle = footGrad;
+            ctx.fill();
+            ctx.strokeStyle = '#37474f';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        });
     }
 
     /**
