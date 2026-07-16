@@ -137,15 +137,76 @@ export class EnemyRenderer {
      */
     draw(ctx, core, behaviors, phaseManager = null) {
         ctx.save();
-        
+
         this.drawStealthEffect(ctx, core);
         this.drawTypeSpecificDecorations(ctx, core, behaviors, phaseManager);
         this.drawBody(ctx, core);
         this.drawEyes(ctx, core);
         this.drawMouth(ctx, core);
         this.drawHealthBar(ctx, core);
-        
+        this.drawStatusEffects(ctx, core);
+
         ctx.restore();
+    }
+
+    /**
+     * 繪製狀態效果（灼燒/冰凍）
+     * @param {CanvasRenderingContext2D} ctx - Canvas 渲染上下文
+     * @param {object} core - 敵人核心屬性
+     * @returns {void}
+     */
+    drawStatusEffects(ctx, core) {
+        const { x, y, radius } = core;
+        const t = Date.now() / 1000;
+
+        // 灼燒效果
+        if (core.isBurning) {
+            const burnPulse = Math.sin(t * 10) * 0.3 + 0.7;
+            for (let i = 0; i < 5; i++) {
+                const angle = (Math.PI * 2 / 5) * i + t * 3;
+                const fx = x + Math.cos(angle) * (radius * 0.6 + Math.sin(t * 8 + i) * 3);
+                const fy = y + Math.sin(angle) * (radius * 0.6 + Math.sin(t * 8 + i) * 3) - radius * 0.3;
+                const flameSize = 3 + Math.sin(t * 12 + i * 2) * 2;
+
+                const flameGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, flameSize * 2);
+                flameGrad.addColorStop(0, `rgba(255, 200, 50, ${0.8 * burnPulse})`);
+                flameGrad.addColorStop(0.4, `rgba(255, 100, 0, ${0.5 * burnPulse})`);
+                flameGrad.addColorStop(1, 'rgba(200, 30, 0, 0)');
+                ctx.beginPath();
+                ctx.arc(fx, fy, flameSize * 2, 0, Math.PI * 2);
+                ctx.fillStyle = flameGrad;
+                ctx.fill();
+            }
+        }
+
+        // 冰凍效果
+        if (core.isFrozen) {
+            // 冰霜光暈
+            const frostGrad = ctx.createRadialGradient(x, y, radius * 0.5, x, y, radius * 1.3);
+            frostGrad.addColorStop(0, 'rgba(100, 200, 255, 0.3)');
+            frostGrad.addColorStop(1, 'rgba(100, 200, 255, 0)');
+            ctx.beginPath();
+            ctx.arc(x, y, radius * 1.3, 0, Math.PI * 2);
+            ctx.fillStyle = frostGrad;
+            ctx.fill();
+
+            // 冰晶碎片
+            for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI * 2 / 6) * i + t * 0.5;
+                const dist = radius * 0.7;
+                const ix = x + Math.cos(angle) * dist;
+                const iy = y + Math.sin(angle) * dist;
+
+                ctx.beginPath();
+                ctx.moveTo(ix, iy - 4);
+                ctx.lineTo(ix + 3, iy);
+                ctx.lineTo(ix, iy + 4);
+                ctx.lineTo(ix - 3, iy);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(200, 230, 255, ${0.5 + Math.sin(t * 3 + i) * 0.2})`;
+                ctx.fill();
+            }
+        }
     }
     
     /**

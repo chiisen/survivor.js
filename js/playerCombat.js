@@ -25,6 +25,12 @@ export class PlayerCombat {
         this.fireRateBuffTime = 0;
         this.fireRateBuffDuration = 5;
         
+        this.skillDamageBonus = 0;
+        this.penetrate = 0;
+        this.burnDamage = 0;
+        this.freezeChance = 0;
+        this.thorns = 0;
+
         this.upgradeStats = {
             fireRate: 0,
             damage: 0,
@@ -160,6 +166,24 @@ export class PlayerCombat {
                 break;
             case 'expBonus':
                 this.expBonus += upgrade.value;
+                break;
+            case 'skillDamage':
+                this.skillDamageBonus += upgrade.value;
+                break;
+            case 'skillCooldownReduce':
+                this.skillCooldownDuration = Math.max(5, this.skillCooldownDuration - upgrade.value);
+                break;
+            case 'penetrate':
+                this.penetrate += upgrade.value;
+                break;
+            case 'burnDamage':
+                this.burnDamage += upgrade.value;
+                break;
+            case 'freezeChance':
+                this.freezeChance += upgrade.value;
+                break;
+            case 'thorns':
+                this.thorns += upgrade.value;
                 break;
         }
     }

@@ -98,6 +98,48 @@
       "description": "受到傷害 -5",
       "value": 5,
       "icon": "🧱"
+    },
+    {
+      "type": "skillDamage",
+      "name": "技能強化",
+      "description": "主動技能傷害 +30%",
+      "value": 0.3,
+      "icon": "⚔️"
+    },
+    {
+      "type": "skillCooldownReduce",
+      "name": "冷卻縮減",
+      "description": "主動技能冷卻 -3 秒",
+      "value": 3,
+      "icon": "⏳"
+    },
+    {
+      "type": "penetrate",
+      "name": "穿透射擊",
+      "description": "子彈可穿透 +1 個敵人",
+      "value": 1,
+      "icon": "🏹"
+    },
+    {
+      "type": "burnDamage",
+      "name": "灼燒之觸",
+      "description": "攻擊附帶 3 秒灼燒（每秒造成 2 傷害）",
+      "value": 2,
+      "icon": "🔥"
+    },
+    {
+      "type": "freezeChance",
+      "name": "冰凍之觸",
+      "description": "15% 機率冰凍敵人 1.5 秒",
+      "value": 0.15,
+      "icon": "❄️"
+    },
+    {
+      "type": "thorns",
+      "name": "荊棘護甲",
+      "description": "受擊時反彈 20% 傷害",
+      "value": 0.2,
+      "icon": "🌵"
     }
   ]
 }

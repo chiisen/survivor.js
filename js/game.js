@@ -541,7 +541,31 @@ this.autoFire();
         }
         
         this.chainKillDisplay.update(dt);
-        
+
+        // 處理敵人狀態效果（灼燒/冰凍）
+        for (const enemy of this.enemies) {
+            // 灼燒DOT
+            if (enemy.isBurning) {
+                enemy.burnTime -= dt;
+                enemy.hp -= enemy.burnDps * dt;
+                if (enemy.burnTime <= 0) {
+                    enemy.isBurning = false;
+                }
+                if (enemy.hp <= 0) {
+                    this.handleEnemyDeath(enemy, null);
+                }
+            }
+
+            // 冰凍解凍
+            if (enemy.isFrozen) {
+                enemy.freezeTime -= dt;
+                if (enemy.freezeTime <= 0) {
+                    enemy.isFrozen = false;
+                    enemy.speed = enemy.originalSpeed || enemy.speed;
+                }
+            }
+        }
+
         for (const item of this.magnetItems) {
             item.update(dt);
         }
@@ -607,7 +631,18 @@ this.autoFire();
                     this.audio.playDamage();
                     this.ui.updateHp(this.player.hp, this.player.maxHp);
                     this.ui.updateShield(this.player.shield, this.player.maxShield);
-                    
+
+                    // 荊棘反傷
+                    if (this.player.thorns > 0) {
+                        const thornsDmg = Math.max(1, Math.floor(enemy.damage * this.player.thorns));
+                        enemy.hp -= thornsDmg;
+                        this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, thornsDmg, '#1abc9c'));
+                        this.limitDamageNumbers();
+                        if (enemy.hp <= 0) {
+                            this.handleEnemyDeath(enemy, null);
+                        }
+                    }
+
                     if (result.isDead) {
                         this.gameOver();
                         return;
@@ -694,7 +729,32 @@ this.autoFire();
                     this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage, damageColor));
                     this.limitDamageNumbers();
                     this.audio.playHit();
-                    this.projectilePool.release(projectile);
+
+                    // 灼燒效果
+                    if (this.player.burnDamage > 0 && !enemy.isBurning) {
+                        enemy.isBurning = true;
+                        enemy.burnTime = 3;
+                        enemy.burnDps = this.player.burnDamage;
+                    }
+
+                    // 冰凍效果
+                    if (this.player.freezeChance > 0 && !enemy.isFrozen && Math.random() < this.player.freezeChance) {
+                        enemy.isFrozen = true;
+                        enemy.freezeTime = 1.5;
+                        enemy.originalSpeed = enemy.speed;
+                        enemy.speed = 0;
+                    }
+
+                    // 穿透邏輯
+                    if (this.player.penetrate > 0 && projectile.penetrateCount === undefined) {
+                        projectile.penetrateCount = 0;
+                    }
+                    if (this.player.penetrate > 0 && projectile.penetrateCount < this.player.penetrate) {
+                        projectile.penetrateCount++;
+                        projectile.active = true;
+                    } else {
+                        this.projectilePool.release(projectile);
+                    }
                     
                     if (enemy.hp <= 0) {
                         this.handleEnemyDeath(enemy, projectile);
