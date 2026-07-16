@@ -585,80 +585,114 @@ export class EnemyRenderer {
      */
     drawRangedDecoration(ctx, core) {
         const { x, y, radius } = core;
-        const bowX = x + radius * 0.9;
-        const bowY = y;
-        const bowH = radius * 1.2;
+        const t = Date.now() / 1000;
+        const gunX = x + radius * 0.3;
+        const gunY = y - radius * 0.1;
+        const barrelLen = radius * 1.6;
+        const barrelH = radius * 0.35;
 
-        // 弓臂（弧形）
+        // 握把（手柄）
         ctx.beginPath();
-        ctx.arc(bowX, bowY, bowH, -Math.PI * 0.4, Math.PI * 0.4);
-        ctx.strokeStyle = '#5d4037';
-        ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
-        ctx.stroke();
-
-        // 弓臂內側（較淺色）
-        ctx.beginPath();
-        ctx.arc(bowX, bowY, bowH - 2, -Math.PI * 0.35, Math.PI * 0.35);
-        ctx.strokeStyle = '#8d6e63';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // 弓弦（上下兩段）
-        const stringTop = bowY - bowH * Math.cos(Math.PI * 0.4);
-        const stringBot = bowY + bowH * Math.cos(Math.PI * 0.4);
-        const stringX = bowX + bowH * Math.sin(Math.PI * 0.4);
-
-        ctx.beginPath();
-        ctx.moveTo(stringX, stringTop);
-        ctx.lineTo(bowX - bowH * 0.1, bowY);
-        ctx.lineTo(stringX, stringBot);
-        ctx.strokeStyle = '#bcaaa4';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // 箭桿（搭在弦上，指向右方）
-        const arrowLen = radius * 1.8;
-        const arrowTipX = bowX + arrowLen * 0.3;
-        const arrowTipY = bowY;
-        const arrowTailX = bowX + arrowLen * 0.3 - arrowLen;
-        const arrowTailY = bowY;
-
-        ctx.beginPath();
-        ctx.moveTo(arrowTailX, arrowTailY);
-        ctx.lineTo(arrowTipX, arrowTipY);
-        ctx.strokeStyle = '#795548';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // 箭頭（三角形，指向右）
-        ctx.beginPath();
-        ctx.moveTo(arrowTipX + 6, arrowTipY);
-        ctx.lineTo(arrowTipX - 2, arrowTipY - 4);
-        ctx.lineTo(arrowTipX - 2, arrowTipY + 4);
+        ctx.moveTo(gunX - 2, gunY + barrelH * 0.5);
+        ctx.lineTo(gunX - 6, gunY + barrelH * 0.5 + radius * 0.5);
+        ctx.lineTo(gunX - 2, gunY + barrelH * 0.5 + radius * 0.5);
+        ctx.lineTo(gunX + 2, gunY + barrelH * 0.5);
         ctx.closePath();
-        ctx.fillStyle = '#90a4ae';
+        ctx.fillStyle = '#424242';
         ctx.fill();
-        ctx.strokeStyle = '#546e7a';
+        ctx.strokeStyle = '#212121';
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // 箭羽（末端三片，指向左）
-        const featherX = arrowTailX;
-        for (let i = -1; i <= 1; i++) {
+        // 槍托
+        ctx.beginPath();
+        ctx.moveTo(gunX - barrelLen * 0.2, gunY - barrelH * 0.4);
+        ctx.lineTo(gunX - barrelLen * 0.5, gunY - barrelH * 0.6);
+        ctx.lineTo(gunX - barrelLen * 0.5, gunY + barrelH * 0.6);
+        ctx.lineTo(gunX - barrelLen * 0.2, gunY + barrelH * 0.4);
+        ctx.closePath();
+        ctx.fillStyle = '#616161';
+        ctx.fill();
+        ctx.strokeStyle = '#424242';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 炮管（主體）
+        const barrelGrad = ctx.createLinearGradient(gunX, gunY - barrelH, gunX, gunY + barrelH);
+        barrelGrad.addColorStop(0, '#757575');
+        barrelGrad.addColorStop(0.3, '#9e9e9e');
+        barrelGrad.addColorStop(0.5, '#bdbdbd');
+        barrelGrad.addColorStop(0.7, '#9e9e9e');
+        barrelGrad.addColorStop(1, '#616161');
+        ctx.beginPath();
+        ctx.rect(gunX, gunY - barrelH * 0.5, barrelLen, barrelH);
+        ctx.fillStyle = barrelGrad;
+        ctx.fill();
+        ctx.strokeStyle = '#424242';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 炮口（前端加粗）
+        ctx.beginPath();
+        ctx.rect(gunX + barrelLen - 4, gunY - barrelH * 0.7, 8, barrelH * 1.4);
+        ctx.fillStyle = '#546e7a';
+        ctx.fill();
+        ctx.strokeStyle = '#37474f';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 炮口內部（深色）
+        ctx.beginPath();
+        ctx.arc(gunX + barrelLen + 4, gunY, barrelH * 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fill();
+
+        // 散熱孔（炮管上方 3 個）
+        for (let i = 0; i < 3; i++) {
+            const hx = gunX + barrelLen * 0.3 + i * barrelLen * 0.2;
             ctx.beginPath();
-            ctx.moveTo(featherX, arrowTailY);
-            ctx.lineTo(featherX - 8, arrowTailY + i * 5);
-            ctx.strokeStyle = i === 0 ? '#e74c3c' : '#ecf0f1';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
+            ctx.rect(hx, gunY - barrelH * 0.5 - 2, 4, 3);
+            ctx.fillStyle = '#37474f';
+            ctx.fill();
         }
 
-        // 弓身裝飾寶石
+        // 瞄準鏡
         ctx.beginPath();
-        ctx.arc(bowX + bowH * 0.3, bowY, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#f1c40f';
+        ctx.rect(gunX + barrelLen * 0.3, gunY - barrelH * 0.5 - 8, 10, 6);
+        ctx.fillStyle = '#455a64';
         ctx.fill();
+        ctx.strokeStyle = '#263238';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 瞄準鏡鏡片
+        ctx.beginPath();
+        ctx.arc(gunX + barrelLen * 0.3 + 5, gunY - barrelH * 0.5 - 5, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#29b6f6';
+        ctx.fill();
+        ctx.strokeStyle = '#0288d1';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        // 炮口火焰（微弱脈動）
+        const firePulse = Math.sin(t * 8) * 0.3 + 0.7;
+        const fireGrad = ctx.createRadialGradient(gunX + barrelLen + 8, gunY, 0, gunX + barrelLen + 8, gunY, 6);
+        fireGrad.addColorStop(0, `rgba(255, 200, 50, ${0.6 * firePulse})`);
+        fireGrad.addColorStop(0.5, `rgba(255, 100, 0, ${0.3 * firePulse})`);
+        fireGrad.addColorStop(1, 'rgba(255, 50, 0, 0)');
+        ctx.beginPath();
+        ctx.arc(gunX + barrelLen + 8, gunY, 6, 0, Math.PI * 2);
+        ctx.fillStyle = fireGrad;
+        ctx.fill();
+
+        // 彈匣
+        ctx.beginPath();
+        ctx.rect(gunX + barrelLen * 0.4, gunY + barrelH * 0.5, 8, 10);
+        ctx.fillStyle = '#795548';
+        ctx.fill();
+        ctx.strokeStyle = '#4e342e';
+        ctx.lineWidth = 1;
+        ctx.stroke();
     }
     
     /**
