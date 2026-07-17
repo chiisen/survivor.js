@@ -117,6 +117,14 @@ body {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
 
+#gold-display {
+    color: #ffd700;
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    margin-left: 15px;
+}
+
 #timer {
     position: absolute;
     top: 20px;

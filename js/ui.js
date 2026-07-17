@@ -11,6 +11,7 @@ export class UI {
         this.expFill = document.getElementById('exp-fill');
         this.expText = document.getElementById('exp-text');
         this.levelDisplay = document.getElementById('level-display');
+        this.goldDisplay = document.getElementById('gold-display');
         this.timerDisplay = document.getElementById('timer');
         this.upgradeModal = document.getElementById('upgrade-modal');
         this.upgradeOptions = document.getElementById('upgrade-options');
@@ -161,6 +162,10 @@ export class UI {
             this.levelDisplay.textContent = `Lv. ${level}`;
             this.levelDisplay.style.color = '';
         }
+    }
+
+    updateGold(gold) {
+        this.goldDisplay.textContent = `💰 ${gold}`;
     }
 
     /**

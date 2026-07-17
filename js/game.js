@@ -114,6 +114,7 @@ export class Game {
         this.expToLevel = 100;
         this.kills = 0;
         this.maxPlayerLevel = 50;
+        this.gold = 0;
 
         this.expGrowthRate = 1.5;
         
@@ -846,6 +847,10 @@ this.autoFire();
     
     handleEnemyDeath(enemy, projectile) {
         this.audio.playKill();
+
+        // 掉落金幣
+        const goldAmount = enemy.type.isBoss ? 50 : enemy.type.isElite ? 15 : 5;
+        this.gold += goldAmount;
 
         // 記錄怪物圖鑑
         this.recordEnemyCodex(enemy.type.name);
@@ -1949,6 +1954,7 @@ this.autoFire();
 
         this.drawAchievementNotifications();
         this.drawTutorial();
+        this.ui.updateGold(this.gold);
 
         this.ctx.restore();
     }
