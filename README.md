@@ -8,6 +8,12 @@
 
 ![P3](images/P3.png)
 
+![P4](images/P4.png)
+
+![P5](images/P5.png)
+
+![P6](images/P6.png)
+
 ## 遊戲特色
 
 - 純 JavaScript + HTML5 Canvas 實現
