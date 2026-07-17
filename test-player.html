@@ -252,6 +252,8 @@
             attackAnimationTime: 0, attackDuration: 0.15, attackAngle: 0
         };
 
+        let previewAttackTime = 0;
+
         function drawPreview(preview) {
             const cvs = document.getElementById(preview.id);
             if (!cvs) return;
@@ -262,7 +264,11 @@
                 facingAngle: preview.angle, flashTime: 0, magnetTimer: 0,
                 baseAttackRange: 0, attackRange: 0
             };
-            renderer.draw(pCtx, pCore, { attackAnimationTime: 0, attackDuration: 0.15, attackAngle: 0 });
+            renderer.draw(pCtx, pCore, {
+                attackAnimationTime: previewAttackTime,
+                attackDuration: 0.15,
+                attackAngle: preview.angle
+            });
             pCtx.font = '12px sans-serif';
             pCtx.fillStyle = '#7f8c8d';
             pCtx.textAlign = 'center';
@@ -295,7 +301,12 @@
             core.facingAngle = DIR_TO_ANGLE.get(key) ?? defaultAngle;
 
             if (combat.attackAnimationTime > 0) combat.attackAnimationTime -= 1 / 60;
-            if (keys[' ']) combat.attackAnimationTime = combat.attackDuration;
+            if (previewAttackTime > 0) previewAttackTime -= 1 / 60;
+            if (keys[' ']) {
+                combat.attackAnimationTime = combat.attackDuration;
+                previewAttackTime = combat.attackDuration;
+                previews.forEach(drawPreview);
+            }
 
             ctx.clearRect(0, 0, 300, 300);
 
