@@ -301,7 +301,14 @@
             core.facingAngle = DIR_TO_ANGLE.get(key) ?? defaultAngle;
 
             if (combat.attackAnimationTime > 0) combat.attackAnimationTime -= 1 / 60;
-            if (previewAttackTime > 0) previewAttackTime -= 1 / 60;
+            else combat.attackAnimationTime = 0;
+
+            if (previewAttackTime > 0) {
+                previewAttackTime -= 1 / 60;
+                if (previewAttackTime <= 0) previewAttackTime = 0;
+                previews.forEach(drawPreview);
+            }
+
             if (keys[' ']) {
                 combat.attackAnimationTime = combat.attackDuration;
                 previewAttackTime = combat.attackDuration;
