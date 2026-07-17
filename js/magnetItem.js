@@ -31,18 +31,66 @@ export class MagnetItem {
      */
     draw(ctx) {
         ctx.save();
-        // 繪製紅色發光背景
-        const glowScale = 1 + Math.sin(this.pulseTime) * 0.15;
+
+        const pulse = Math.sin(this.pulseTime);
+        const glowScale = 1 + pulse * 0.15;
+        const t = this.pulseTime;
+
+        // 外層脈動光暈
+        const auraGrad = ctx.createRadialGradient(this.x, this.y, this.radius * 0.5, this.x, this.y, this.radius * 2.5);
+        auraGrad.addColorStop(0, `rgba(231, 76, 60, ${0.35 + pulse * 0.1})`);
+        auraGrad.addColorStop(0.5, `rgba(231, 76, 60, ${0.15 + pulse * 0.05})`);
+        auraGrad.addColorStop(1, 'rgba(231, 76, 60, 0)');
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius * glowScale * 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(231, 76, 60, 0.25)';
+        ctx.arc(this.x, this.y, this.radius * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = auraGrad;
         ctx.fill();
 
-        // 繪製 U 型磁鐵符號
-        ctx.font = '14px Arial';
+        // 旋轉磁力線
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(t * 0.5);
+        for (let i = 0; i < 4; i++) {
+            const angle = (Math.PI * 2 / 4) * i;
+            const lineLen = this.radius * 1.8;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(angle) * this.radius * 0.6, Math.sin(angle) * this.radius * 0.6);
+            ctx.lineTo(Math.cos(angle) * lineLen, Math.sin(angle) * lineLen);
+            ctx.strokeStyle = `rgba(255, 100, 50, ${0.3 + Math.sin(t * 3 + i) * 0.15})`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // 主體漸層圓
+        const bodyGrad = ctx.createRadialGradient(this.x - 2, this.y - 2, 0, this.x, this.y, this.radius);
+        bodyGrad.addColorStop(0, '#ff6b6b');
+        bodyGrad.addColorStop(0.5, '#e74c3c');
+        bodyGrad.addColorStop(1, '#c0392b');
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * glowScale, 0, Math.PI * 2);
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+
+        // 外框
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * glowScale, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 高光
+        ctx.beginPath();
+        ctx.arc(this.x - 2, this.y - 2, this.radius * 0.35, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fill();
+
+        // 磁鐵圖標
+        ctx.font = `${this.radius * 1.5}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('🧲', this.x, this.y);
+
         ctx.restore();
     }
 

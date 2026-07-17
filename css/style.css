@@ -500,59 +500,69 @@ body {
     margin-bottom: 15px;
 }
 
-#difficulty-options {
+#stage-options, #difficulty-options {
     display: flex;
-    gap: 15px;
+    gap: 12px;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
-.difficulty-btn {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+.stage-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(135deg, #1a252f, #2c3e50);
     color: white;
-    border: 2px solid #5dade2;
-    padding: 17px 42px;
-    font-size: 22px;
+    border: 2px solid #34495e;
+    padding: 15px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 130px;
+}
+
+.stage-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3); }
+.stage-btn.selected { border-color: #f1c40f; box-shadow: 0 0 15px rgba(241, 196, 15, 0.4); transform: scale(1.05); }
+.stage-btn.locked { opacity: 0.4; cursor: not-allowed; }
+.stage-btn.locked:hover { transform: none; box-shadow: none; }
+.stage-icon { font-size: 28px; }
+.stage-name { font-size: 13px; font-weight: bold; }
+.stage-desc { font-size: 10px; color: #95a5a6; }
+
+.difficulty-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+    color: white;
+    border: 2px solid #5d6d7e;
+    padding: 12px 24px;
+    font-size: 16px;
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-weight: bold;
+    min-width: 100px;
 }
 
-.difficulty-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 20px rgba(52, 152, 219, 0.5);
-}
+.difficulty-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4); }
+.difficulty-btn.selected { transform: scale(1.08); box-shadow: 0 0 15px rgba(255, 255, 255, 0.4); border-width: 3px; }
+.difficulty-btn.locked { opacity: 0.35; cursor: not-allowed; }
+.difficulty-btn.locked:hover { transform: none; box-shadow: none; }
+.diff-name { font-weight: bold; font-size: 15px; }
+.diff-desc { font-size: 10px; color: #95a5a6; }
 
-.difficulty-btn.selected {
-    transform: scale(1.1);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-    border-width: 3px;
-}
-
-.difficulty-btn[data-difficulty="normal"].selected {
-    background: linear-gradient(135deg, #2980b9, #1a5276);
-    border-color: #5dade2;
-}
-
-.difficulty-btn[data-difficulty="hard"] {
-    background: linear-gradient(135deg, #e67e22, #d35400);
-    border-color: #e67e22;
-}
-
-.difficulty-btn[data-difficulty="hard"].selected {
-    background: linear-gradient(135deg, #d35400, #a04000);
-    border-color: #f39c12;
-}
-
-.difficulty-btn[data-difficulty="hell"] {
-    background: linear-gradient(135deg, #c0392b, #922b21);
-    border-color: #e74c3c;
-}
-
-.difficulty-btn[data-difficulty="hell"].selected {
-    background: linear-gradient(135deg, #922b21, #641e16);
-    border-color: #c0392b;
-}
+.difficulty-btn[data-difficulty="easy"] { border-color: #2ecc71; }
+.difficulty-btn[data-difficulty="easy"].selected { background: linear-gradient(135deg, #27ae60, #1e8449); border-color: #2ecc71; }
+.difficulty-btn[data-difficulty="normal"] { border-color: #3498db; }
+.difficulty-btn[data-difficulty="normal"].selected { background: linear-gradient(135deg, #2980b9, #1a5276); border-color: #5dade2; }
+.difficulty-btn[data-difficulty="hard"] { border-color: #e67e22; }
+.difficulty-btn[data-difficulty="hard"].selected { background: linear-gradient(135deg, #d35400, #a04000); border-color: #f39c12; }
+.difficulty-btn[data-difficulty="hell"] { border-color: #e74c3c; }
+.difficulty-btn[data-difficulty="hell"].selected { background: linear-gradient(135deg, #922b21, #641e16); border-color: #c0392b; }
+.difficulty-btn[data-difficulty="nightmare"] { border-color: #8e44ad; }
+.difficulty-btn[data-difficulty="nightmare"].selected { background: linear-gradient(135deg, #6c3483, #4a235a); border-color: #9b59b6; }
 
 #instructions {
     background: rgba(0, 0, 0, 0.3);

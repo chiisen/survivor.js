@@ -11,12 +11,56 @@
     <div id="start-screen">
         <div id="start-content">
             <h1 id="game-title">⚔️ 盔甲戰士倖存者 ⚔️</h1>
+
+            <div id="stage-select">
+                <h3>選擇關卡</h3>
+                <div id="stage-options">
+                    <button class="stage-btn selected" data-stage="forest" data-desc="草地與樹木，適合新手">
+                        <span class="stage-icon">🌲</span>
+                        <span class="stage-name">翡翠森林</span>
+                        <span class="stage-desc">草地與樹木，適合新手</span>
+                    </button>
+                    <button class="stage-btn" data-stage="desert" data-desc="沙漠與廢墟，敵人更強">
+                        <span class="stage-icon">🏜️</span>
+                        <span class="stage-name">炙熱沙漠</span>
+                        <span class="stage-desc">沙漠與廢墟，敵人更強</span>
+                    </button>
+                    <button class="stage-btn locked" data-stage="ice" data-desc="冰原與寒風，極限挑戰">
+                        <span class="stage-icon">❄️</span>
+                        <span class="stage-name">冰封雪原</span>
+                        <span class="stage-desc">冰原與寒風，極限挑戰</span>
+                    </button>
+                    <button class="stage-btn locked" data-stage="volcano" data-desc="火山與岩漿，終極試煉">
+                        <span class="stage-icon">🌋</span>
+                        <span class="stage-name">熔岩火山</span>
+                        <span class="stage-desc">火山與岩漿，終極試煉</span>
+                    </button>
+                </div>
+            </div>
+
             <div id="difficulty-select">
                 <h3>選擇難度</h3>
                 <div id="difficulty-options">
-                    <button class="difficulty-btn selected" data-difficulty="normal">普通</button>
-                    <button class="difficulty-btn" data-difficulty="hard">困難</button>
-                    <button class="difficulty-btn" data-difficulty="hell">地獄</button>
+                    <button class="difficulty-btn selected" data-difficulty="easy">
+                        <span class="diff-name">簡單</span>
+                        <span class="diff-desc">入門友好</span>
+                    </button>
+                    <button class="difficulty-btn" data-difficulty="normal">
+                        <span class="diff-name">普通</span>
+                        <span class="diff-desc">標準體驗</span>
+                    </button>
+                    <button class="difficulty-btn" data-difficulty="hard">
+                        <span class="diff-name">困難</span>
+                        <span class="diff-desc">挑戰極限</span>
+                    </button>
+                    <button class="difficulty-btn" data-difficulty="hell">
+                        <span class="diff-name">地獄</span>
+                        <span class="diff-desc">不可能任務</span>
+                    </button>
+                    <button class="difficulty-btn locked" data-difficulty="nightmare">
+                        <span class="diff-name">噩夢</span>
+                        <span class="diff-desc">💀 解鎖條件：地獄通關</span>
+                    </button>
                 </div>
             </div>
             <div id="instructions">

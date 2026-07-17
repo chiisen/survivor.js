@@ -118,6 +118,14 @@ export class Game {
         
         this.difficulty = 'normal';
         this.difficultySettings = {
+            easy: {
+                enemySpawnMultiplier: 0.7,
+                enemyHpMultiplier: 0.7,
+                enemyDamageMultiplier: 0.7,
+                playerHpMultiplier: 1.3,
+                bossHpMultiplier: 0.8,
+                name: '簡單'
+            },
             normal: {
                 enemySpawnMultiplier: 1,
                 enemyHpMultiplier: 1,
@@ -141,7 +149,23 @@ export class Game {
                 playerHpMultiplier: 0.8,
                 bossHpMultiplier: 4,
                 name: '地獄'
+            },
+            nightmare: {
+                enemySpawnMultiplier: 2.5,
+                enemyHpMultiplier: 5,
+                enemyDamageMultiplier: 2,
+                playerHpMultiplier: 0.6,
+                bossHpMultiplier: 6,
+                name: '噩夢'
             }
+        };
+
+        this.currentStage = 'forest';
+        this.stageSettings = {
+            forest: { bgColor: '#1a3a1a', name: '翡翠森林', enemyTypes: ['normal', 'fast', 'splitter'], bossHpBonus: 1 },
+            desert: { bgColor: '#3a2a1a', name: '炙熱沙漠', enemyTypes: ['normal', 'tank', 'explosive'], bossHpBonus: 1.3 },
+            ice: { bgColor: '#1a2a3a', name: '冰封雪原', enemyTypes: ['fast', 'ranged', 'flyer'], bossHpBonus: 1.6 },
+            volcano: { bgColor: '#3a1a0a', name: '熔岩火山', enemyTypes: ['tank', 'explosive', 'rage'], bossHpBonus: 2 }
         };
         
         this.setupInput();
@@ -274,17 +298,13 @@ export class Game {
         const display = document.getElementById('difficulty-display');
         if (display) {
             display.textContent = settings.name;
-            if (difficulty === 'hard') {
-                display.style.color = '#e67e22';
-                display.style.borderColor = 'rgba(230, 126, 22, 0.5)';
-            } else if (difficulty === 'hell') {
-                display.style.color = '#c0392b';
-                display.style.borderColor = 'rgba(192, 57, 43, 0.5)';
-            } else {
-                display.style.color = '#f39c12';
-                display.style.borderColor = 'rgba(243, 156, 18, 0.5)';
-            }
+            const colors = { easy: '#2ecc71', normal: '#f39c12', hard: '#e67e22', hell: '#c0392b', nightmare: '#9b59b6' };
+            display.style.color = colors[difficulty] || '#f39c12';
         }
+    }
+
+    setStage(stage) {
+        this.currentStage = stage;
     }
 
     setupRestart() {
@@ -326,7 +346,16 @@ start() {
         if (!this.difficulty) {
             this.difficulty = 'normal';
         }
+        if (!this.currentStage) {
+            this.currentStage = 'forest';
+        }
         const difficultySettings = this.difficultySettings[this.difficulty];
+        const stageSettings = this.stageSettings[this.currentStage];
+
+        // 設定畫布背景色
+        if (stageSettings) {
+            this.canvas.style.background = stageSettings.bgColor;
+        }
         
         this.level = 1;
         this.exp = 0;

@@ -23,6 +23,9 @@ const settingsBtn = document.getElementById('settings-btn');
 const settingsBackBtn = document.getElementById('settings-back-btn');
 const backToMenuBtn = document.getElementById('back-to-menu-btn');
 const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+const stageBtns = document.querySelectorAll('.stage-btn');
+let selectedDifficulty = 'normal';
+let selectedStage = 'forest';
 
 const masterVolumeSlider = document.getElementById('master-volume');
 const sfxVolumeSlider = document.getElementById('sfx-volume');
@@ -61,9 +64,19 @@ function updateContinueButton() {
 
 difficultyBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+        if (btn.classList.contains('locked')) return;
         difficultyBtns.forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         selectedDifficulty = btn.dataset.difficulty;
+    });
+});
+
+stageBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (btn.classList.contains('locked')) return;
+        stageBtns.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedStage = btn.dataset.stage;
     });
 });
 
@@ -72,6 +85,7 @@ startBtn.addEventListener('click', () => {
     startScreen.classList.add('hidden');
     gameContainer.classList.remove('hidden');
     game.setDifficulty(selectedDifficulty);
+    game.setStage(selectedStage);
     applyVolumeSettings();
     game.start();
 });
