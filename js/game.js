@@ -574,7 +574,10 @@ this.autoFire();
         this.chainKillDisplay.update(dt);
 
         // 處理敵人狀態效果（灼燒/冰凍）
-        for (const enemy of this.enemies) {
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.enemies[i];
+            if (!enemy || enemy.hp <= 0) continue;
+
             // 灼燒DOT
             if (enemy.isBurning) {
                 enemy.burnTime -= dt;
