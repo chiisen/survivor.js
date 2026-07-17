@@ -392,6 +392,8 @@ start() {
         this.isRunning = true;
         this.isPaused = false;
         this.pauseScreen.classList.add('hidden');
+        this.tutorialTimer = 0;
+        this.tutorialStep = 0;
         this.ui.hideGameOver();
         this.ui.clearBuffNotifications();
         this.audioStarted = false;
@@ -823,13 +825,16 @@ this.autoFire();
     
     handleEnemyDeath(enemy, projectile) {
         this.audio.playKill();
-        
+
+        // 記錄怪物圖鑑
+        this.recordEnemyCodex(enemy.type.name);
+
         if (this.player.lifesteal > 0) {
             this.player.heal(this.player.lifesteal);
             this.ui.updateHp(this.player.hp, this.player.maxHp);
             this.ui.updateShield(this.player.shield, this.player.maxShield);
         }
-        
+
         if (enemy.type.isBoss) {
             this.bossesKilled++;
             this.bossDeathPool.get(enemy.x, enemy.y);
@@ -1864,6 +1869,7 @@ this.autoFire();
         this.visibilityMask.draw(this.ctx, this.canvas.width, this.canvas.height, this.player.x, this.player.y);
 
         this.drawAchievementNotifications();
+        this.drawTutorial();
 
         this.ctx.restore();
     }
@@ -1987,6 +1993,68 @@ this.autoFire();
 
             this.ctx.restore();
         }
+    }
+
+    drawTutorial() {
+        if (this.tutorialTimer > 8 || this.gameTime > 10) return;
+
+        this.tutorialTimer += 1 / 60;
+        const t = this.tutorialTimer;
+
+        const tips = [
+            { time: 0, text: 'WASD 或方向鍵移動', icon: '🎮' },
+            { time: 2, text: '自動攻擊範圍內最近的敵人', icon: '⚔️' },
+            { time: 4, text: '擊殺敵人獲取經驗值升級', icon: '⭐' },
+            { time: 6, text: '按 Q 使用主動技能', icon: '🔥' }
+        ];
+
+        let currentTip = null;
+        for (let i = tips.length - 1; i >= 0; i--) {
+            if (t >= tips[i].time) {
+                currentTip = tips[i];
+                break;
+            }
+        }
+
+        if (!currentTip) return;
+
+        const tipAge = t - currentTip.time;
+        const alpha = tipAge < 0.3 ? tipAge / 0.3 : tipAge > 1.5 ? Math.max(0, 1 - (tipAge - 1.5) / 0.5) : 1;
+
+        this.ctx.save();
+        this.ctx.globalAlpha = alpha;
+        this.ctx.textAlign = 'center';
+
+        const x = this.canvas.width / 2;
+        const y = this.canvas.height - 100;
+
+        // 背景框
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        this.ctx.beginPath();
+        this.ctx.roundRect(x - 180, y - 22, 360, 44, 10);
+        this.ctx.fill();
+
+        // 圖標
+        this.ctx.font = '22px sans-serif';
+        this.ctx.fillText(currentTip.icon, x - 150, y + 5);
+
+        // 文字
+        this.ctx.font = '15px "Segoe UI", sans-serif';
+        this.ctx.fillStyle = '#ecf0f1';
+        this.ctx.fillText(currentTip.text, x + 10, y + 5);
+
+        this.ctx.restore();
+    }
+
+    recordEnemyCodex(enemyName) {
+        try {
+            const codex = JSON.parse(localStorage.getItem('survivor_enemy_codex') || '{}');
+            if (!codex[enemyName]) {
+                codex[enemyName] = { kills: 0, firstKill: Date.now() };
+            }
+            codex[enemyName].kills++;
+            localStorage.setItem('survivor_enemy_codex', JSON.stringify(codex));
+        } catch (e) {}
     }
 
     drawBossHealthBar() {

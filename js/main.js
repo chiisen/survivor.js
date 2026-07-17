@@ -30,11 +30,31 @@ const masterVolumeSlider = document.getElementById('master-volume');
 const sfxVolumeSlider = document.getElementById('sfx-volume');
 const bgmVolumeSlider = document.getElementById('bgm-volume');
 
+function loadSettings() {
+    try {
+        const settings = JSON.parse(localStorage.getItem('survivor_settings') || '{}');
+        if (settings.masterVolume !== undefined) masterVolumeSlider.value = settings.masterVolume;
+        if (settings.sfxVolume !== undefined) sfxVolumeSlider.value = settings.sfxVolume;
+        if (settings.bgmVolume !== undefined) bgmVolumeSlider.value = settings.bgmVolume;
+    } catch (e) {}
+}
+
+function saveSettings() {
+    try {
+        localStorage.setItem('survivor_settings', JSON.stringify({
+            masterVolume: masterVolumeSlider.value,
+            sfxVolume: sfxVolumeSlider.value,
+            bgmVolume: bgmVolumeSlider.value
+        }));
+    } catch (e) {}
+}
+
 function updateVolumeDisplays() {
     document.querySelectorAll('.volume-value').forEach((span, index) => {
         const sliders = [masterVolumeSlider, sfxVolumeSlider, bgmVolumeSlider];
         span.textContent = sliders[index].value + '%';
     });
+    saveSettings();
 }
 
 function applyVolumeSettings() {
@@ -45,6 +65,7 @@ function applyVolumeSettings() {
     game.audio.setMasterVolume(masterVolume);
     game.audio.setSfxVolume(sfxVolume);
     game.audio.setBgmVolume(bgmVolume);
+    saveSettings();
 }
 
 function updateContinueButton() {
@@ -162,3 +183,6 @@ if (skipCountdownCheckbox) {
         game.setSkipCountdown(checked);
     });
 }
+
+loadSettings();
+updateVolumeDisplays();

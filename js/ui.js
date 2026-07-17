@@ -299,11 +299,14 @@ export class UI {
         this.finalStats.innerHTML = `
             <div style="margin-bottom: 20px;">
                 <h3 style="color: #f39c12; margin-bottom: 10px;">本次成績</h3>
-                等級: ${gameStats.level}${newRecords.find(r => r.type === 'level')?.isNew ? ' 🏆' : ''}<br>
-                擊殺數: ${gameStats.kills}<br>
-                Boss擊殺: ${gameStats.bossesKilled}<br>
-                最高波次: ${gameStats.wave}${newRecords.find(r => r.type === 'wave')?.isNew ? ' 🏆' : ''}<br>
-                存活時間: ${this.formatTime(gameStats.time)}${newRecords.find(r => r.type === 'time')?.isNew ? ' 🏆' : ''}
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: left;">
+                    <div>等級: <b>${gameStats.level}</b>${newRecords.find(r => r.type === 'level')?.isNew ? ' 🏆' : ''}</div>
+                    <div>波次: <b>${gameStats.wave}</b>${newRecords.find(r => r.type === 'wave')?.isNew ? ' 🏆' : ''}</div>
+                    <div>擊殺: <b>${gameStats.kills}</b></div>
+                    <div>Boss: <b>${gameStats.bossesKilled}</b></div>
+                    <div>時間: <b>${this.formatTime(gameStats.time)}</b>${newRecords.find(r => r.type === 'time')?.isNew ? ' 🏆' : ''}</div>
+                    <div>難度: <b>${gameStats.difficulty || 'normal'}</b></div>
+                </div>
             </div>
             ${achievementHtml}
             <div style="border-top: 1px solid #5d6d7e; padding-top: 15px; margin-top: 15px;">
