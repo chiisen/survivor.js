@@ -113,7 +113,8 @@ export class Game {
         this.exp = 0;
         this.expToLevel = 100;
         this.kills = 0;
-        
+        this.maxPlayerLevel = 50;
+
         this.expGrowthRate = 1.5;
         
         this.difficulty = 'normal';
@@ -1288,6 +1289,19 @@ this.autoFire();
     checkLevelUp() {
         while (this.exp >= this.expToLevel) {
             this.exp -= this.expToLevel;
+
+            if (this.level >= this.maxPlayerLevel) {
+                // 滿級後：經驗轉換為額外獎勵
+                this.player.damage += 2;
+                this.player.maxHp += 30;
+                this.player.heal(30);
+                this.audio.playLevelUp();
+                this.ui.showBuffNotification('滿級！傷害 +2、HP +30', 3);
+                this.ui.updateHp(this.player.hp, this.player.maxHp);
+                this.updateSkillStats();
+                continue;
+            }
+
             this.level++;
             this.expToLevel = Math.floor(this.expToLevel * this.expGrowthRate);
 
@@ -1295,16 +1309,16 @@ this.autoFire();
             this.player.damage += 1;
             this.player.maxHp += 20;
             this.player.hp = this.player.maxHp;
-            
+
             this.audio.playLevelUp();
-            this.ui.updateLevel(this.level);
+            this.ui.updateLevel(this.level, this.maxPlayerLevel);
             this.ui.updateExp(this.exp, this.expToLevel);
             this.ui.updateHp(this.player.hp, this.player.maxHp);
-            this.updateSkillStats(); // 即時更新左側 UI 顯示獎勵
-            
+            this.updateSkillStats();
+
             this.showUpgradeModal();
         }
-        
+
         this.ui.updateExp(this.exp, this.expToLevel);
     }
 

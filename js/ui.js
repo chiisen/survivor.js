@@ -153,8 +153,14 @@ export class UI {
      * 更新玩家等級顯示
      * @param {number} level - 當前等級
      */
-    updateLevel(level) {
-        this.levelDisplay.textContent = `Lv. ${level}`;
+    updateLevel(level, maxLevel = 50) {
+        if (level >= maxLevel) {
+            this.levelDisplay.textContent = `Lv. MAX`;
+            this.levelDisplay.style.color = '#f1c40f';
+        } else {
+            this.levelDisplay.textContent = `Lv. ${level}`;
+            this.levelDisplay.style.color = '';
+        }
     }
 
     /**
