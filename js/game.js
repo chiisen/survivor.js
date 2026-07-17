@@ -1786,6 +1786,7 @@ this.autoFire();
         }
         
         for (const proj of this.enemyProjectiles) {
+            if (!isFinite(proj.x) || !isFinite(proj.y) || !isFinite(proj.radius)) continue;
             this.ctx.save();
             
             if (proj.trail && proj.trail.length > 0) {
