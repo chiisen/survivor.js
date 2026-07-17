@@ -125,7 +125,9 @@ export class Game {
                 enemyDamageMultiplier: 0.7,
                 playerHpMultiplier: 1.3,
                 bossHpMultiplier: 0.8,
-                name: '簡單'
+                name: '簡單',
+                victoryTime: 900,
+                victoryBosses: 0
             },
             normal: {
                 enemySpawnMultiplier: 1,
@@ -133,7 +135,9 @@ export class Game {
                 enemyDamageMultiplier: 1,
                 playerHpMultiplier: 1,
                 bossHpMultiplier: 1,
-                name: '普通'
+                name: '普通',
+                victoryTime: 1200,
+                victoryBosses: 0
             },
             hard: {
                 enemySpawnMultiplier: 1.5,
@@ -141,7 +145,9 @@ export class Game {
                 enemyDamageMultiplier: 1.3,
                 playerHpMultiplier: 0.8,
                 bossHpMultiplier: 2,
-                name: '困難'
+                name: '困難',
+                victoryTime: 1500,
+                victoryBosses: 3
             },
             hell: {
                 enemySpawnMultiplier: 2,
@@ -149,7 +155,9 @@ export class Game {
                 enemyDamageMultiplier: 1.5,
                 playerHpMultiplier: 0.8,
                 bossHpMultiplier: 4,
-                name: '地獄'
+                name: '地獄',
+                victoryTime: 1800,
+                victoryBosses: 5
             },
             nightmare: {
                 enemySpawnMultiplier: 2.5,
@@ -157,7 +165,9 @@ export class Game {
                 enemyDamageMultiplier: 2,
                 playerHpMultiplier: 0.6,
                 bossHpMultiplier: 6,
-                name: '噩夢'
+                name: '噩夢',
+                victoryTime: 2100,
+                victoryBosses: 8
             }
         };
 
@@ -436,6 +446,13 @@ start() {
 
 update(dt) {
         this.gameTime += dt;
+
+        // 勝利條件檢查
+        if (this.checkVictory()) {
+            this.victory();
+            return;
+        }
+
         this.logger.reset();
         
         // ==================== Phase 1: 清理與準備 ====================
@@ -1516,6 +1533,51 @@ this.autoFire();
         const leaderboard = this.storageManager.getLeaderboard();
         
         this.ui.showGameOver(gameStats, updatedHistoricalStats, newRecords, newAchievements, leaderboard);
+    }
+
+    checkVictory() {
+        const settings = this.difficultySettings[this.difficulty];
+        if (!settings) return false;
+
+        const timeReached = this.gameTime >= settings.victoryTime;
+        const bossesReached = this.bossesKilled >= settings.victoryBosses;
+
+        return timeReached && bossesReached;
+    }
+
+    victory() {
+        this.isRunning = false;
+        this.audio.stopBGM();
+        this.storageManager.clearSave();
+
+        const gameStats = {
+            level: this.level,
+            kills: this.kills,
+            time: this.gameTime,
+            wave: this.waveManager.currentWave,
+            bossesKilled: this.bossesKilled,
+            difficulty: this.difficulty,
+            victory: true
+        };
+
+        this.achievementManager.saveHellSurviveTime(this.gameTime, this.difficulty);
+
+        const historicalStats = this.storageManager.getFormattedStats();
+        const statsForAchievements = {
+            totalKills: historicalStats.totalKills + this.kills,
+            longestTime: Math.max(historicalStats.longestTimeSec || 0, this.gameTime),
+            bossesKilled: historicalStats.bossesKilled + this.bossesKilled,
+            highestWave: Math.max(historicalStats.highestWave, this.waveManager.currentWave),
+            highestLevel: Math.max(historicalStats.highestLevel, this.level),
+            totalGames: historicalStats.totalGames + 1
+        };
+
+        const newAchievements = this.achievementManager.check(statsForAchievements, this.difficulty);
+        const newRecords = this.storageManager.update(gameStats);
+        const updatedHistoricalStats = this.storageManager.getFormattedStats();
+        const leaderboard = this.storageManager.getLeaderboard();
+
+        this.ui.showVictory(gameStats, updatedHistoricalStats, newRecords, newAchievements, leaderboard);
     }
 
     /**
