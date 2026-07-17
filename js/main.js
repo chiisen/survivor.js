@@ -24,7 +24,6 @@ const settingsBackBtn = document.getElementById('settings-back-btn');
 const backToMenuBtn = document.getElementById('back-to-menu-btn');
 const difficultyBtns = document.querySelectorAll('.difficulty-btn');
 const stageBtns = document.querySelectorAll('.stage-btn');
-let selectedDifficulty = 'normal';
 let selectedStage = 'forest';
 
 const masterVolumeSlider = document.getElementById('master-volume');
