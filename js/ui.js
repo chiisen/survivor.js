@@ -394,6 +394,64 @@ export class UI {
         this.gameOverScreen.classList.add('hidden');
     }
 
+    showVictory(gameStats, historicalStats, newRecords, newAchievements = [], leaderboard = []) {
+        this.gameOverScreen.classList.remove('hidden');
+
+        const achievementHtml = newAchievements.length > 0 ? `
+            <div style="border-top: 1px solid #f1c40f; padding-top: 15px; margin-top: 15px;">
+                <h3 style="color: #f1c40f; margin-bottom: 10px;">🏆 新成就解鎖！</h3>
+                ${newAchievements.map(a => `
+                    <div style="color: #2ecc71; margin-bottom: 5px;">
+                        ${a.icon} ${a.name} - ${a.description}
+                    </div>
+                `).join('')}
+            </div>
+        ` : '';
+
+        this.finalStats.innerHTML = `
+            <div style="margin-bottom: 20px; text-align: center;">
+                <h2 style="color: #f1c40f; font-size: 32px; margin-bottom: 10px;">🎉 破關成功！</h2>
+                <p style="color: #2ecc71; font-size: 18px;">恭喜你完成了 ${gameStats.difficulty || 'normal'} 難度！</p>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #f39c12; margin-bottom: 10px;">本次成績</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: left;">
+                    <div>等級: <b>${gameStats.level}</b>${newRecords.find(r => r.type === 'level')?.isNew ? ' 🏆' : ''}</div>
+                    <div>波次: <b>${gameStats.wave}</b>${newRecords.find(r => r.type === 'wave')?.isNew ? ' 🏆' : ''}</div>
+                    <div>擊殺: <b>${gameStats.kills}</b></div>
+                    <div>Boss: <b>${gameStats.bossesKilled}</b></div>
+                    <div>時間: <b>${this.formatTime(gameStats.time)}</b>${newRecords.find(r => r.type === 'time')?.isNew ? ' 🏆' : ''}</div>
+                    <div>難度: <b>${gameStats.difficulty || 'normal'}</b></div>
+                </div>
+            </div>
+            ${achievementHtml}
+            <div style="border-top: 1px solid #5d6d7e; padding-top: 15px; margin-top: 15px;">
+                <button id="show-history-btn" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; padding: 15px 30px; font-size: 24px; border-radius: 8px; cursor: pointer; width: 100%; margin-bottom: 10px;">查看歷史紀錄</button>
+                <div id="history-content" style="display: none; color: #ecf0f1;">
+                    最高等級: ${historicalStats.highestLevel}<br>
+                    最長時間: ${historicalStats.longestTime}<br>
+                    總擊殺數: ${historicalStats.totalKills}<br>
+                    最高波次: ${historicalStats.highestWave}<br>
+                    Boss擊殺: ${historicalStats.bossesKilled}<br>
+                    總遊戲次: ${historicalStats.totalGames}
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="restart-btn" style="background: linear-gradient(135deg, #27ae60, #1e8449); color: white; border: none; padding: 15px 30px; font-size: 24px; border-radius: 8px; cursor: pointer; margin-right: 10px;">再玩一次</button>
+                <button id="back-to-menu-btn" style="background: linear-gradient(135deg, #7f8c8d, #6c7a7d); color: white; border: none; padding: 15px 30px; font-size: 24px; border-radius: 8px; cursor: pointer;">返回主選單</button>
+            </div>
+        `;
+
+        // 歷史紀錄展開/收合
+        const historyBtn = document.getElementById('show-history-btn');
+        const historyContent = document.getElementById('history-content');
+        if (historyBtn && historyContent) {
+            historyBtn.addEventListener('click', () => {
+                historyContent.style.display = historyContent.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+    }
+
     /**
      * 將秒數格式化為「X分X秒」的文字
      * @param {number} seconds - 秒數
