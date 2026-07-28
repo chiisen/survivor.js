@@ -2,6 +2,7 @@
 const STORAGE_KEY = 'survivor_js_stats';
 const LEADERBOARD_KEY = 'survivor_js_leaderboard';
 const SAVE_KEY = 'survivor_js_save';
+const CODEX_KEY = 'survivor_enemy_codex';
 const SAVE_VERSION = 1;
 const MAX_LEADERBOARD_ENTRIES = 10;
 
@@ -292,5 +293,20 @@ export class StorageManager {
             console.warn('Failed to get save info:', e);
         }
         return null;
+    }
+
+    /**
+     * 記錄敵人擊殺至怪物圖鑑
+     * @param {string} enemyName - 敵人名稱
+     */
+    recordEnemyCodex(enemyName) {
+        try {
+            const codex = JSON.parse(localStorage.getItem(CODEX_KEY) || '{}');
+            if (!codex[enemyName]) {
+                codex[enemyName] = { kills: 0, firstKill: Date.now() };
+            }
+            codex[enemyName].kills++;
+            localStorage.setItem(CODEX_KEY, JSON.stringify(codex));
+        } catch (e) {}
     }
 }

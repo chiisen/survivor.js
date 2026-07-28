@@ -11,6 +11,7 @@ export class SpatialGrid {
     constructor(cellSize) {
         this.cellSize = cellSize;
         this.grid = new Map();
+        this._nearbyResult = [];
     }
 
     /**
@@ -22,15 +23,15 @@ export class SpatialGrid {
     }
 
     /**
-     * 根據座標計算所在 cell 的字串鍵值
+     * 根據座標計算所在 cell 的數值鍵值 (比字串快)
      * @param {number} x - 世界座標 X
      * @param {number} y - 世界座標 Y
-     * @returns {string} cell 鍵值(格式為 "cellX,cellY")
+     * @returns {number} cell 鍵值
      */
     getKey(x, y) {
         const cellX = Math.floor(x / this.cellSize);
         const cellY = Math.floor(y / this.cellSize);
-        return `${cellX},${cellY}`;
+        return (cellX << 16) ^ cellY;
     }
 
     /**
@@ -40,10 +41,12 @@ export class SpatialGrid {
      */
     insert(entity) {
         const key = this.getKey(entity.x, entity.y);
-        if (!this.grid.has(key)) {
-            this.grid.set(key, []);
+        let cell = this.grid.get(key);
+        if (!cell) {
+            cell = [];
+            this.grid.set(key, cell);
         }
-        this.grid.get(key).push(entity);
+        cell.push(entity);
     }
 
     /**
@@ -69,21 +72,24 @@ export class SpatialGrid {
      * @returns {Array<Object>} 半徑涵蓋範圍內所有 cell 的實體陣列
      */
     getNearby(x, y, radius) {
-        const nearby = [];
+        this._nearbyResult.length = 0;
         const cellRadius = Math.ceil(radius / this.cellSize);
         const centerCellX = Math.floor(x / this.cellSize);
         const centerCellY = Math.floor(y / this.cellSize);
 
         for (let dx = -cellRadius; dx <= cellRadius; dx++) {
             for (let dy = -cellRadius; dy <= cellRadius; dy++) {
-                const key = `${centerCellX + dx},${centerCellY + dy}`;
-                if (this.grid.has(key)) {
-                    nearby.push(...this.grid.get(key));
+                const key = ((centerCellX + dx) << 16) ^ (centerCellY + dy);
+                const cell = this.grid.get(key);
+                if (cell) {
+                    for (let i = 0; i < cell.length; i++) {
+                        this._nearbyResult.push(cell[i]);
+                    }
                 }
             }
         }
 
-        return nearby;
+        return this._nearbyResult;
     }
 
     /**

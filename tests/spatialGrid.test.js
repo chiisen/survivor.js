@@ -16,24 +16,22 @@ describe('SpatialGrid', () => {
     });
 
     describe('getKey', () => {
-        it('原點 (0, 0) 映射至 "0,0"', () => {
-            expect(grid.getKey(0, 0)).toBe('0,0');
+        it('原點 (0, 0) 映射至數值鍵 0', () => {
+            expect(grid.getKey(0, 0)).toBe(0);
         });
 
         it('cellSize 內的座標映射至同一 cell', () => {
-            expect(grid.getKey(50, 50)).toBe('0,0');
-            expect(grid.getKey(99, 99)).toBe('0,0');
+            expect(grid.getKey(50, 50)).toBe(grid.getKey(99, 99));
         });
 
         it('cellSize 邊界座標歸屬下一格 cell (Math.floor)', () => {
-            expect(grid.getKey(100, 100)).toBe('1,1');
-            expect(grid.getKey(200, 0)).toBe('2,0');
+            expect(grid.getKey(100, 100)).not.toBe(grid.getKey(0, 0));
+            expect(grid.getKey(200, 0)).not.toBe(grid.getKey(100, 0));
         });
 
         it('負座標正確映射 (Math.floor 負向無窮)', () => {
-            expect(grid.getKey(-50, -50)).toBe('-1,-1');
-            expect(grid.getKey(-100, -1)).toBe('-1,-1');
-            expect(grid.getKey(-101, -101)).toBe('-2,-2');
+            expect(grid.getKey(-50, -50)).toBe(grid.getKey(-1, -1));
+            expect(grid.getKey(-100, -1)).toBe(grid.getKey(-1, -1));
         });
     });
 

@@ -458,6 +458,12 @@ update(dt) {
         
         // ==================== Phase 1: 清理與準備 ====================
         this.logger.phase('phase1', { enemies: this.enemies.length });
+        // 批次移除已死亡敵人 (避免遍歷中 splice 導致 O(n²) 和索引錯亂)
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            if (!this.enemies[i]._alive) {
+                this.enemies.splice(i, 1);
+            }
+        }
         this.enemyGrid.clear();
         for (const enemy of this.enemies) {
             this.enemyGrid.insert(enemy);
@@ -584,9 +590,10 @@ this.autoFire();
         for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
             const damageNumber = this.damageNumbers[i];
             damageNumber.update(dt);
-            
+
             if (damageNumber.isFinished()) {
-                this.damageNumbers.splice(i, 1);
+                this.damageNumbers[i] = this.damageNumbers[this.damageNumbers.length - 1];
+                this.damageNumbers.pop();
             }
         }
         
@@ -625,18 +632,20 @@ this.autoFire();
         
         for (let i = this.expOrbs.length - 1; i >= 0; i--) {
             const orb = this.expOrbs[i];
-            
+
             const forceAttract = (this.waveManager.isBreak && this.expOrbs.length > 0) || this.player.magnetTimer > 0;
             const effectivePickupRange = forceAttract ? 1000 : this.player.pickupRange;
-            
+
             orb.update(dt, this.player.x, this.player.y, effectivePickupRange);
-            
+
             if (orb.isCollected(this.player.x, this.player.y, this.player.radius)) {
                 this.audio.playPickup();
                 const expValue = Math.floor(orb.value * (1 + this.player.expBonus));
                 this.exp += expValue;
-                this.expOrbs.splice(i, 1);
-                
+                // 用最後一個元素替換並 pop,避免 splice 的 O(n) shift
+                this.expOrbs[i] = this.expOrbs[this.expOrbs.length - 1];
+                this.expOrbs.pop();
+
                 this.checkLevelUp();
             }
         }
@@ -646,14 +655,8 @@ this.autoFire();
         this.updateEffects(dt);
         
         this.projectilePool.cleanInactive();
-        
+
         if (Math.floor(this.gameTime) % 30 === 0 && Math.floor(this.gameTime) !== Math.floor(this.gameTime - dt)) {
-            this.projectilePool.autoAdjust();
-        }
-        
-        this.projectilePool.cleanInactive();
-        
-        if (this.gameTime % 30 < dt) {
             this.projectilePool.autoAdjust();
         }
         
@@ -674,7 +677,7 @@ this.autoFire();
         // 敵人與玩家碰撞
         const nearbyEnemies = this.enemyGrid.getNearby(this.player.x, this.player.y, this.player.radius + 50);
         for (const enemy of nearbyEnemies) {
-            if (!this.enemies.includes(enemy)) continue;
+            if (!enemy._alive) continue;
             
             const distSq = distanceSquared(enemy.x, enemy.y, this.player.x, this.player.y);
             const radiusSum = enemy.radius + this.player.radius;
@@ -714,13 +717,14 @@ this.autoFire();
         // 敵人投射物與玩家碰撞
         for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
             const proj = this.enemyProjectiles[i];
-            
+
             if (proj.x < -100 || proj.x > this.canvas.width + 100 ||
                 proj.y < -100 || proj.y > this.canvas.height + 100) {
-                this.enemyProjectiles.splice(i, 1);
+                this.enemyProjectiles[i] = this.enemyProjectiles[this.enemyProjectiles.length - 1];
+                this.enemyProjectiles.pop();
                 continue;
             }
-            
+
             const dist = distance(proj.x, proj.y, this.player.x, this.player.y);
             if (dist < proj.radius + this.player.radius) {
                 const result = this.player.takeDamage(proj.damage);
@@ -729,8 +733,9 @@ this.autoFire();
                     this.ui.updateHp(this.player.hp, this.player.maxHp);
                     this.ui.updateShield(this.player.shield, this.player.maxShield);
                 }
-                this.enemyProjectiles.splice(i, 1);
-                
+                this.enemyProjectiles[i] = this.enemyProjectiles[this.enemyProjectiles.length - 1];
+                this.enemyProjectiles.pop();
+
                 if (result.isDead) {
                     this.gameOver();
                     return;
@@ -752,7 +757,7 @@ this.autoFire();
             const nearbyEnemies = this.enemyGrid.getNearby(projectile.x, projectile.y, projectile.radius + 30);
             
             for (const enemy of nearbyEnemies) {
-                if (!this.enemies.includes(enemy)) continue;
+                if (!enemy._alive) continue;
                 
                 const distSq = distanceSquared(projectile.x, projectile.y, enemy.x, enemy.y);
                 const radiusSum = projectile.radius + enemy.radius;
@@ -837,10 +842,11 @@ this.autoFire();
         for (let i = this.magnetItems.length - 1; i >= 0; i--) {
             const item = this.magnetItems[i];
             if (item.isCollected(this.player.x, this.player.y, this.player.radius)) {
-                this.audio.playPickup(); // 播放拾取音效
-                this.player.magnetTimer += 5; // 增加 5 秒持續時間 (時間累加)
-                this.magnetItems.splice(i, 1); // 自陣列移除
-                this.ui.showBuffNotification(`磁力風暴！持續時間增加 5 秒`, 3); // 提示
+                this.audio.playPickup();
+                this.player.magnetTimer += 5;
+                this.magnetItems[i] = this.magnetItems[this.magnetItems.length - 1];
+                this.magnetItems.pop();
+                this.ui.showBuffNotification(`磁力風暴！持續時間增加 5 秒`, 3);
             }
         }
     }
@@ -853,7 +859,7 @@ this.autoFire();
         this.gold += goldAmount;
 
         // 記錄怪物圖鑑
-        this.recordEnemyCodex(enemy.type.name);
+        this.storageManager.recordEnemyCodex(enemy.type.name);
 
         if (this.player.lifesteal > 0) {
             this.player.heal(this.player.lifesteal);
@@ -866,14 +872,13 @@ this.autoFire();
             this.bossDeathPool.get(enemy.x, enemy.y);
             this.audio.playChainKill();
         }
-        
+
         if (enemy.explosive) {
             this.createExplosiveDeath(enemy);
         }
-        
-        if (!enemy.type.isBoss) {
-            this.explosionPool.get(enemy.x, enemy.y);
-        }
+
+        // 所有敵人死亡都有爆炸效果
+        this.explosionPool.get(enemy.x, enemy.y);
         
         let chainKills = 1;
         const chainKillExpBonus = this.getChainKillExpBonus(chainKills);
@@ -906,18 +911,12 @@ this.autoFire();
                 this.expOrbs.push(new ExperienceOrb(nearbyEnemy.x, nearbyEnemy.y, nearbyExpValue));
                 this.damageNumbers.push(new DamageNumber(nearbyEnemy.x, nearbyEnemy.y - nearbyEnemy.radius, projectile.damage));
                 this.limitDamageNumbers();
-                const idx = this.enemies.indexOf(nearbyEnemy);
-                if (idx !== -1) {
-                    this.enemies.splice(idx, 1);
-                }
+                nearbyEnemy._alive = false;
                 chainKills++;
             }
         }
         
-        const enemyIdx = this.enemies.indexOf(enemy);
-        if (enemyIdx !== -1) {
-            this.enemies.splice(enemyIdx, 1);
-        }
+        enemy._alive = false;
         this.kills += chainKills;
         this.checkAchievementsRealtime();
 
@@ -1225,15 +1224,16 @@ this.autoFire();
             this.explosionPool.get(enemy.x, enemy.y);
             this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, skillDamage, '#f1c40f'));
             this.limitDamageNumbers();
-            
+
             if (enemy.hp <= 0) {
+                enemy._alive = false;
                 const expValue = this.calculateExpValue(enemy.expValue, this.player.expBonus);
                 this.expOrbs.push(new ExperienceOrb(enemy.x, enemy.y, expValue));
             }
         }
-        
-        this.enemies = this.enemies.filter(e => e.hp > 0);
-        const nowKilledCount = killedCount - this.enemies.length;
+
+        const aliveCount = this.enemies.filter(e => e._alive !== false).length;
+        const nowKilledCount = killedCount - aliveCount;
         this.kills += nowKilledCount;
         
         this.ui.showBuffNotification('終極技能！全屏攻擊', 2);
@@ -1257,14 +1257,20 @@ this.autoFire();
 
     autoFire() {
         if (!this.player.canFire() || this.enemies.length === 0) return;
-        
+
+        // 使用空間網格縮小搜尋範圍
+        const candidates = this.enemyGrid.getNearby(
+            this.player.x, this.player.y, this.player.attackRange
+        );
+
         let closestEnemy = null;
         let closestDist = Infinity;
-        
-        for (const enemy of this.enemies) {
-            const dist = distance(this.player.x, this.player.y, enemy.x, enemy.y);
-            if (dist <= this.player.attackRange && dist < closestDist) {
-                closestDist = dist;
+
+        for (const enemy of candidates) {
+            if (!enemy._alive) continue;
+            const distSq = distanceSquared(this.player.x, this.player.y, enemy.x, enemy.y);
+            if (distSq <= this.player.attackRange * this.player.attackRange && distSq < closestDist) {
+                closestDist = distSq;
                 closestEnemy = enemy;
             }
         }
@@ -1427,6 +1433,27 @@ this.autoFire();
         const toggleBtn = document.getElementById('toggle-max-skills');
         let hasMaxed = false;
 
+        // 技能顯示策略 Map：skillType → { getValue, alwaysActive }
+        const formatters = {
+            projectileCount: () => ({ text: this.player.projectileCount, active: this.player.projectileCount > 3 }),
+            critChance: () => ({ text: `${Math.floor(this.player.critChance * 100)}%` }),
+            critDamage: () => ({ text: `${Math.floor(this.player.critDamage * 100)}%` }),
+            shield: (lv, maxed) => ({
+                text: maxed ? `MAX (${this.player.shield}/${this.player.maxShield})` : `Lv.${lv} (${this.player.shield}/${this.player.maxShield})`
+            }),
+            expBonus: () => ({ text: `+${Math.floor(this.player.expBonus * 100)}%` }),
+            lifesteal: () => ({ text: `${this.player.lifesteal}HP` }),
+            armor: () => ({ text: `${this.player.armor}` }),
+            damage: (lv, maxed) => ({
+                text: maxed ? `MAX (${this.player.damage})` : `${this.player.damage}`,
+                alwaysActive: true
+            }),
+            maxHp: (lv, maxed) => {
+                const hp = Math.floor(this.player.maxHp);
+                return { text: maxed ? `MAX (${hp})` : `${hp}`, alwaysActive: true };
+            }
+        };
+
         skillItems.forEach(item => {
             const skillType = item.dataset.skill;
             const valueSpan = item.querySelector('.skill-value');
@@ -1436,66 +1463,16 @@ this.autoFire();
 
             item.classList.remove('active', 'maxed');
 
-            if (skillType === 'projectileCount') {
-                valueSpan.textContent = this.player.projectileCount;
-                if (this.player.projectileCount > 3) {
-                    item.classList.add('active');
-                }
-                if (isMaxed) item.classList.add('maxed');
-            } else if (skillType === 'critChance') {
-                const chance = Math.floor(this.player.critChance * 100);
-                valueSpan.textContent = `${chance}%`;
-                if (level > 0) {
-                    item.classList.add('active');
-                }
-                if (isMaxed) item.classList.add('maxed');
-            } else if (skillType === 'critDamage') {
-                const damage = Math.floor(this.player.critDamage * 100);
-                valueSpan.textContent = `${damage}%`;
-                if (level > 0) {
-                    item.classList.add('active');
-                }
-                if (isMaxed) item.classList.add('maxed');
-            } else if (skillType === 'shield') {
-                valueSpan.textContent = isMaxed ? `MAX (${this.player.shield}/${this.player.maxShield})` : `Lv.${level} (${this.player.shield}/${this.player.maxShield})`;
-                if (level > 0) {
-                    item.classList.add('active');
-                }
-                if (isMaxed) item.classList.add('maxed');
-            } else if (skillType === 'expBonus') {
-                const bonus = Math.floor(this.player.expBonus * 100);
-                valueSpan.textContent = `+${bonus}%`;
-                if (level > 0) {
-                    item.classList.add('active');
-                }
-                if (isMaxed) item.classList.add('maxed');
-            } else if (skillType === 'lifesteal') {
-                valueSpan.textContent = `${this.player.lifesteal}HP`;
-                if (level > 0) {
-                    item.classList.add('active');
-                }
-                if (isMaxed) item.classList.add('maxed');
-            } else if (skillType === 'armor') {
-                valueSpan.textContent = `${this.player.armor}`;
-                if (level > 0) {
-                    item.classList.add('active');
-                }
-                if (isMaxed) item.classList.add('maxed');
-            } else if (skillType === 'damage') {
-                valueSpan.textContent = isMaxed ? `MAX (${this.player.damage})` : `${this.player.damage}`;
-                item.classList.add('active');
-                if (isMaxed) item.classList.add('maxed');
-            } else if (skillType === 'maxHp') {
-                const hp = Math.floor(this.player.maxHp);
-                valueSpan.textContent = isMaxed ? `MAX (${hp})` : `${hp}`;
-                item.classList.add('active');
-                if (isMaxed) item.classList.add('maxed');
+            const fmt = formatters[skillType];
+            if (fmt) {
+                const result = fmt(level, isMaxed);
+                valueSpan.textContent = result.text;
+                if (result.alwaysActive || level > 0) item.classList.add('active');
             } else {
                 valueSpan.textContent = isMaxed ? 'MAX' : `Lv.${level}`;
-                if (level > 0) {
-                    item.classList.add('active');
-                }
+                if (level > 0) item.classList.add('active');
             }
+            if (isMaxed) item.classList.add('maxed');
         });
 
         // 顯示/隱藏 MAX 技能切換按鈕
@@ -1963,9 +1940,8 @@ this.autoFire();
      * 限制傷害數字數量（防止掉幀）
      */
     limitDamageNumbers() {
-        const max = 50;
-        while (this.damageNumbers.length > max) {
-            this.damageNumbers.shift();
+        if (this.damageNumbers.length > 50) {
+            this.damageNumbers.splice(0, this.damageNumbers.length - 50);
         }
     }
 
@@ -2131,17 +2107,6 @@ this.autoFire();
         this.ctx.restore();
     }
 
-    recordEnemyCodex(enemyName) {
-        try {
-            const codex = JSON.parse(localStorage.getItem('survivor_enemy_codex') || '{}');
-            if (!codex[enemyName]) {
-                codex[enemyName] = { kills: 0, firstKill: Date.now() };
-            }
-            codex[enemyName].kills++;
-            localStorage.setItem('survivor_enemy_codex', JSON.stringify(codex));
-        } catch (e) {}
-    }
-
     drawBossHealthBar() {
         const boss = this.enemies.find(e => e.type && e.type.isBoss);
         if (!boss) return;
@@ -2186,24 +2151,29 @@ this.autoFire();
     }
 
     drawGrid() {
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-        this.ctx.lineWidth = 1;
-        
-        const gridSize = 50;
-        
-        for (let x = 0; x < this.canvas.width; x += gridSize) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(x, 0);
-            this.ctx.lineTo(x, this.canvas.height);
-            this.ctx.stroke();
+        // 使用離屏 Canvas 快取網格,避免每幀數百次 draw call
+        if (!this._gridCanvas || this._gridCanvas.width !== this.canvas.width || this._gridCanvas.height !== this.canvas.height) {
+            this._gridCanvas = document.createElement('canvas');
+            this._gridCanvas.width = this.canvas.width;
+            this._gridCanvas.height = this.canvas.height;
+            const gctx = this._gridCanvas.getContext('2d');
+            gctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            gctx.lineWidth = 1;
+            const gridSize = 50;
+            for (let x = 0; x < this.canvas.width; x += gridSize) {
+                gctx.beginPath();
+                gctx.moveTo(x, 0);
+                gctx.lineTo(x, this.canvas.height);
+                gctx.stroke();
+            }
+            for (let y = 0; y < this.canvas.height; y += gridSize) {
+                gctx.beginPath();
+                gctx.moveTo(0, y);
+                gctx.lineTo(this.canvas.width, y);
+                gctx.stroke();
+            }
         }
-        
-        for (let y = 0; y < this.canvas.height; y += gridSize) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(0, y);
-            this.ctx.lineTo(this.canvas.width, y);
-            this.ctx.stroke();
-        }
+        this.ctx.drawImage(this._gridCanvas, 0, 0);
     }
 
 togglePause() {

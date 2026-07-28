@@ -49,6 +49,7 @@ export class Enemy {
         }
 
         this.projectiles = [];
+        this._alive = true;
     }
     
     get x() { return this.core.x; }

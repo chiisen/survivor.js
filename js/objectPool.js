@@ -122,7 +122,11 @@ export class ObjectPool {
      * @returns {number} active 物件數量
      */
     getActiveCount() {
-        return this.active.filter(obj => obj._active).length;
+        let count = 0;
+        for (let i = 0; i < this.active.length; i++) {
+            if (this.active[i]._active) count++;
+        }
+        return count;
     }
 
     /**
@@ -168,11 +172,12 @@ export class ObjectPool {
     }
 
     /**
-     * 取得所有目前實際 active 的物件陣列 (過濾後)
-     * @returns {object[]} active 物件陣列
+     * 取得所有目前實際 active 的物件陣列
+     * 注意：需先呼叫 cleanInactive() 確保 active 陣列乾淨
+     * @returns {object[]} active 物件陣列 (直接回傳內部陣列,無額外分配)
      */
     getActiveObjects() {
-        return this.active.filter(obj => obj._active);
+        return this.active;
     }
 
     /**
