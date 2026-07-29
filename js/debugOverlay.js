@@ -78,7 +78,7 @@ export class DebugOverlay {
         
         ctx.font = '21px monospace';
         ctx.fillStyle = '#2ecc71';
-        ctx.fillText('=== DEBUG OVERLAY (按Ctrl+Shift+D 鍵關閉) ===', x + 10, y + 25);
+        ctx.fillText('=== DEBUG OVERLAY (按Ctrl+Shift+Alt+D 關閉) ===', x + 10, y + 25);
         
         this.drawFPS(ctx, y + 50, x);
         this.drawMemory(ctx, y + 75, x);
