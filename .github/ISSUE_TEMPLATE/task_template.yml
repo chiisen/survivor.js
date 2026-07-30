@@ -1,0 +1,37 @@
+name: 🚀 Feature / Task (功能開發與任務)
+description: 提出新功能提案或專案重構任務
+title: "[Task]: "
+labels: ["enhancement"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        請說明此開發任務的背景與具體執行步驟。
+  - type: textarea
+    id: goal
+    attributes:
+      label: 🚩 任務目標
+      description: 簡述此任務要解決什麼問題，或希望達到什麼目標。
+      placeholder: 例如：為遊戲新增「閃電鏈」天賦，增加玩家後期清理怪物的爽快感。
+    validations:
+      required: true
+  - type: textarea
+    id: checklist
+    attributes:
+      label: 📝 待辦清單 (Checklist)
+      description: 請條列出此任務需要完成的具體步驟。
+      value: |
+        - [ ] 設計天賦數值與效果描述
+        - [ ] 撰寫相關行為程式碼
+        - [ ] 撰寫單元測試以驗證功能
+        - [ ] 進行手動測試確認畫面特效與效能
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: 💡 實作細節與參考資料
+      placeholder: 預期會修改 js/talent.js 與 js/combat.js...
+    validations:
+      required: false
