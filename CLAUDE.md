@@ -20,6 +20,11 @@ npx vitest run tests/utils.test.js
 
 # 執行單一測試案例 (by 名稱片段)
 npx vitest run -t "計算兩點間歐氏距離"
+
+# GitHub 專案管理 (gh CLI)
+gh issue list --state open              # 檢視所有開啟中的 Issues
+gh issue view <Issue ID>                # 檢視特定 Issue 的內容與待辦清單
+gh pr create --title "..." --body "Closes #<ID>"  # 建立 PR 並自動連動關閉 Issue
 ```
 
 Vitest 設定見 `vitest.config.js` (`globals: true`, `environment: 'node'`)。測試檔位於 `tests/`，目前涵蓋 `utils.js`、`talent.js`、`objectPool.js`。

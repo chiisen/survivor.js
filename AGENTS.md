@@ -78,6 +78,11 @@ npm run dev          # 啟動靜態伺服器 (npx serve .)
 npm test             # 執行 Vitest 單元測試 (run 模式)
 npm run test:watch   # Vitest watch 模式
 npx vitest run tests/<file>.test.js   # 執行單一測試檔
+
+# GitHub 專案管理 (gh CLI)
+gh issue list --state open              # 檢視所有開啟中的 Issues
+gh issue view <Issue ID>                # 檢視特定 Issue 的內容與待辦清單
+gh pr create --title "..." --body "Closes #<ID>"  # 建立 PR 並自動連動關閉 Issue
 ```
 
 注意：本專案**沒有** Lint/Format 工具 (無 ESLint/Biome/Prettier)。
