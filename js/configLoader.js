@@ -1,11 +1,22 @@
 // @ts-check
 
+const isNode = typeof window === 'undefined';
+
 /**
- * 載入 JSON 設定檔
+ * 載入 JSON 設定檔（瀏覽器用 fetch，Node.js 用 fs）
  * @param {string} path - JSON 檔案路徑
  * @returns {Promise<object>} 解析後的 JSON 物件
  */
 export async function loadConfig(path) {
+    if (isNode) {
+        const { readFileSync } = await import('node:fs');
+        const { fileURLToPath } = await import('node:url');
+        const { dirname, resolve } = await import('node:path');
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = dirname(__filename);
+        const fullPath = resolve(__dirname, '..', path);
+        return JSON.parse(readFileSync(fullPath, 'utf-8'));
+    }
     const res = await fetch(path);
     return res.json();
 }
