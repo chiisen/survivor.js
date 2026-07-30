@@ -43,6 +43,7 @@
 3. **JSDoc 風格**：參照 `js/utils.js` — 檔頭加 `// @ts-check`，每個公開函式/方法須有 `@param` / `@returns` 型別標註。
 4. **驗證**：完成後必須執行 `npm test` 並確認全綠 (目前 73 個測試)。修 Bug 需附 Regression Test。
 5. **不確定就問**：不要擅自通靈。範圍外發現問題請回報，不要自己改。
+6. **開發與 Issue 管理流程**：一律從 Issue 開始，在本地分支開發（不直接 push main），完成後發起 PR 並在 body 註明 `Closes #<Issue ID>`，合併後同步並清理本地分支。
 
 ## 核心不變量 (踩雷會導致嚴重回歸)
 

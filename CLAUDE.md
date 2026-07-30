@@ -86,6 +86,11 @@ DebugOverlay 會自動顯示 ⚠ 警告 (Grid 空、冷卻未更新、FPS 過低
 
 - **語言**：所有使用者可見的 UI 文字、Commit 訊息、CHANGELOG、回覆內容統一使用**繁體中文** (依全域 CLAUDE.md)。
 - **Git Commit**：`<type>(<scope>): <subject>` 格式，主旨與內容皆繁體中文。變更需同步更新 `CHANGELOG.md` (Keep a Changelog 格式)。提交流程須先詢問使用者核准。
+- **開發與 Issue 管理流程 (GitHub-Flow)**：
+  1. **任務檢索**：開發新功能或修復 Bug 前，優先執行 `gh issue list --state open` 尋找對應的 Issue。
+  2. **分支策略**：一律切換至獨立分支（如 `feature/xxx` 或 `bugfix/xxx`）進行開發，禁止直接推送到 `main`。
+  3. **PR 與 Issue 連動**：完成後發起 Pull Request，並在 PR 說明中加入 `Closes #<Issue ID>`。
+  4. **收尾同步**：當 PR 在 GitHub 上被合併後，切回本地 `main` 分支並執行 `git pull origin main`，最後刪除本地開發分支。
 - **任務狀態**：`.agent_task_state.md` 為跨對話記憶快照 (≤50 行)，啟動時靜默讀取；被詢問時以 3-bullet 閃電報回報 (🚩目標 / ✅進展 / 🚀下一步)。
 
 ## 工作模式：Claude Code (主架構師) + Pi (敏捷工兵)
