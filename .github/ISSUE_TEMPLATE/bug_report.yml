@@ -1,0 +1,43 @@
+name: 🐛 Bug Report (問題回報)
+description: 回報遊戲中的錯誤、崩潰或異常行為
+title: "[Bug]: "
+labels: ["bug"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感謝您提交 Bug 回報！請填寫以下資訊以協助我們快速定位並修復問題。
+  - type: textarea
+    id: description
+    attributes:
+      label: 🐛 問題描述
+      description: 請清楚描述發生了什麼問題。
+      placeholder: 例如：當角色拾取磁鐵道具時，遊戲畫面突然凍結，且主控台報錯...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 👣 重現步驟
+      description: 請列出重現此問題的具體步驟。
+      placeholder: |
+        1. 啟動遊戲並進入第一關
+        2. 讓角色升級並選擇磁鐵天賦
+        3. 移動到磁鐵道具上方觸發拾取
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 🎯 預期行為
+      placeholder: 磁鐵應順利吸取畫面上所有經驗值，且遊戲正常運行不凍結。
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 💻 測試環境
+      placeholder: Chrome 120.0 / Windows 11 / 螢幕解析度 1920x1080
+    validations:
+      required: false
