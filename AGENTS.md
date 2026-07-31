@@ -41,9 +41,9 @@
 1. **語言**：所有註解、文件、回覆內容統一使用**繁體中文**。
 2. **微創異動**：只改任務範圍內的檔案。**禁止**順手重構、調整格式、改名、改其他檔案。
 3. **JSDoc 風格**：參照 `js/utils.js` — 檔頭加 `// @ts-check`，每個公開函式/方法須有 `@param` / `@returns` 型別標註。
-4. **驗證**：完成後必須執行 `npm test` 並確認全綠 (目前 73 個測試)。修 Bug 需附 Regression Test。
+4. **驗證**：完成後必須執行 `npm test` 並確認全綠 (目前 272 個測試)。修 Bug 需附 Regression Test。
 5. **不確定就問**：不要擅自通靈。範圍外發現問題請回報，不要自己改。
-6. **開發與 Issue 管理流程**：一律從 Issue 開始，在本地分支開發（不直接 push main），完成後發起 PR 並在 body 註明 `Closes #<Issue ID>`，合併後同步並清理本地分支。
+6. **開發與 Issue 管理流程**：詳見「開發工作流 (Issue → Branch → PR → Merge)」章節。
 
 ## 核心不變量 (踩雷會導致嚴重回歸)
 
@@ -71,6 +71,87 @@
 - `spatialGrid.js`：碰撞檢測空間分割 (cell size 100)，每幀 Phase 1 重建
 - `objectPool.js`：GC 壓力優化，透過 `_active` 旗標重啟用 (非 `indexOf`)
 
+## 開發工作流 (Issue → Branch → PR → Merge)
+
+**每次任務都必須遵循以下流程，不可跳步驟。**
+
+### Step 1：領取 Issue
+
+```bash
+gh issue list --state open              # 列出所有開啟 Issues
+gh issue view <Issue ID>                # 查看 Issue 內容與待辦清單
+```
+
+### Step 2：建立分支
+
+分支命名規則：`<type>/<簡短描述>`
+
+```bash
+git checkout -b feature/wave-manager-tests    # 新功能
+git checkout -b bugfix/config-loader-nodejs   # Bug 修復
+git checkout -b test/player-core-coverage     # 測試
+git checkout -b docs/jsdoc-phase5             # 文件
+```
+
+### Step 3：開發與驗證
+
+```bash
+# 開發完成後，執行全量測試
+npm test
+
+# 必須全綠才能提交，測試數不低於上次基線
+```
+
+### Step 4：提交並推送
+
+```bash
+git add <檔案>
+git commit -m "<type>(<scope>): <subject>"
+
+# type: feat / fix / test / docs / refactor / ci
+# scope: 影響的模組 (可省略)
+# subject: 繁體中文，簡述變更目的
+
+git push -u origin <branch-name>
+```
+
+### Step 5：建立 Pull Request
+
+```bash
+gh pr create --title "<type>: <標題>" --body "$(cat <<'EOF'
+## Summary
+- 變更摘要 (1-3 bullet)
+
+## Checklist
+- [x] 已完成項目
+- [ ] 待辦項目
+
+Closes #<Issue ID>
+EOF
+)"
+```
+
+### Step 6：確認 CI 通過
+
+```bash
+gh pr checks <PR 編號>                  # 查看 CI 狀態
+# 若失敗，查看錯誤日誌並修正
+gh run view <run-id> --job <job-id> --log-failed
+# 修正後追加 commit 並推送，CI 會自動重跑
+```
+
+### Step 7：合併並清理
+
+```bash
+# 在 GitHub 上合併 PR 後：
+git checkout main
+git pull origin main
+git branch -d <branch-name>             # 刪除本地分支
+
+# 關閉對應 Issue（若未自動關閉）
+gh issue close <Issue ID> --comment "已透過 PR #<PR 編號> 完成。"
+```
+
 ## 常用指令
 
 ```bash
@@ -83,6 +164,7 @@ npx vitest run tests/<file>.test.js   # 執行單一測試檔
 gh issue list --state open              # 檢視所有開啟中的 Issues
 gh issue view <Issue ID>                # 檢視特定 Issue 的內容與待辦清單
 gh pr create --title "..." --body "Closes #<ID>"  # 建立 PR 並自動連動關閉 Issue
+gh pr checks <PR 編號>                  # 查看 PR 的 CI 狀態
 ```
 
 注意：本專案**沒有** Lint/Format 工具 (無 ESLint/Biome/Prettier)。

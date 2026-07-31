@@ -25,6 +25,88 @@ npx vitest run -t "計算兩點間歐氏距離"
 gh issue list --state open              # 檢視所有開啟中的 Issues
 gh issue view <Issue ID>                # 檢視特定 Issue 的內容與待辦清單
 gh pr create --title "..." --body "Closes #<ID>"  # 建立 PR 並自動連動關閉 Issue
+gh pr checks <PR 編號>                  # 查看 PR 的 CI 狀態
+```
+
+## 開發工作流 (Issue → Branch → PR → Merge)
+
+**每次任務都必須遵循以下流程，不可跳步驟。**
+
+### Step 1：領取 Issue
+
+```bash
+gh issue list --state open              # 列出所有開啟 Issues
+gh issue view <Issue ID>                # 查看 Issue 內容與待辦清單
+```
+
+### Step 2：建立分支
+
+分支命名規則：`<type>/<簡短描述>`
+
+```bash
+git checkout -b feature/wave-manager-tests    # 新功能
+git checkout -b bugfix/config-loader-nodejs   # Bug 修復
+git checkout -b test/player-core-coverage     # 測試
+git checkout -b docs/jsdoc-phase5             # 文件
+```
+
+### Step 3：開發與驗證
+
+```bash
+# 開發完成後，執行全量測試
+npm test
+
+# 必須全綠才能提交，測試數不低於上次基線
+```
+
+### Step 4：提交並推送
+
+```bash
+git add <檔案>
+git commit -m "<type>(<scope>): <subject>"
+
+# type: feat / fix / test / docs / refactor / ci
+# scope: 影響的模組 (可省略)
+# subject: 繁體中文，簡述變更目的
+
+git push -u origin <branch-name>
+```
+
+### Step 5：建立 Pull Request
+
+```bash
+gh pr create --title "<type>: <標題>" --body "$(cat <<'EOF'
+## Summary
+- 變更摘要 (1-3 bullet)
+
+## Checklist
+- [x] 已完成項目
+- [ ] 待辦項目
+
+Closes #<Issue ID>
+EOF
+)"
+```
+
+### Step 6：確認 CI 通過
+
+```bash
+gh pr checks <PR 編號>                  # 查看 CI 狀態
+# 若失敗，查看錯誤日誌並修正
+gh run view <run-id> --job <job-id> --log-failed
+# 修正後追加 commit 並推送，CI 會自動重跑
+```
+
+### Step 7：合併並清理
+
+```bash
+# 在 GitHub 上合併 PR 後：
+git checkout main
+git pull origin main
+git branch -d <branch-name>             # 刪除本地分支
+
+# 關閉對應 Issue（若未自動關閉）
+gh issue close <Issue ID> --comment "已透過 PR #<PR 編號> 完成。"
 ```
 
 Vitest 設定見 `vitest.config.js` (`globals: true`, `environment: 'node'`)。測試檔位於 `tests/`，目前涵蓋 `utils.js`、`talent.js`、`objectPool.js`。
@@ -91,11 +173,7 @@ DebugOverlay 會自動顯示 ⚠ 警告 (Grid 空、冷卻未更新、FPS 過低
 
 - **語言**：所有使用者可見的 UI 文字、Commit 訊息、CHANGELOG、回覆內容統一使用**繁體中文** (依全域 CLAUDE.md)。
 - **Git Commit**：`<type>(<scope>): <subject>` 格式，主旨與內容皆繁體中文。變更需同步更新 `CHANGELOG.md` (Keep a Changelog 格式)。提交流程須先詢問使用者核准。
-- **開發與 Issue 管理流程 (GitHub-Flow)**：
-  1. **任務檢索**：開發新功能或修復 Bug 前，優先執行 `gh issue list --state open` 尋找對應的 Issue。
-  2. **分支策略**：一律切換至獨立分支（如 `feature/xxx` 或 `bugfix/xxx`）進行開發，禁止直接推送到 `main`。
-  3. **PR 與 Issue 連動**：完成後發起 Pull Request，並在 PR 說明中加入 `Closes #<Issue ID>`。
-  4. **收尾同步**：當 PR 在 GitHub 上被合併後，切回本地 `main` 分支並執行 `git pull origin main`，最後刪除本地開發分支。
+- **開發與 Issue 管理流程**：詳見「開發工作流 (Issue → Branch → PR → Merge)」章節。
 - **任務狀態**：`.agent_task_state.md` 為跨對話記憶快照 (≤50 行)，啟動時靜默讀取；被詢問時以 3-bullet 閃電報回報 (🚩目標 / ✅進展 / 🚀下一步)。
 
 ## 工作模式：Claude Code (主架構師) + Pi (敏捷工兵)
