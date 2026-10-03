@@ -25,6 +25,7 @@ import { GameValidator } from './gameValidator.js';
 import { VisibilityMask } from './visibilityMask.js';
 import { MagnetItem } from './magnetItem.js';
 import { createFloorCache, drawFloor } from './floorDraw.js';
+import { removeDeadEnemies, rebuildEnemyGrid } from './enemyList.js';
 
 export class Game {
     constructor(canvas) {
@@ -460,16 +461,9 @@ update(dt) {
         
         // ==================== Phase 1: 清理與準備 ====================
         this.logger.phase('phase1', { enemies: this.enemies.length });
-        // 批次移除已死亡敵人 (避免遍歷中 splice 導致 O(n²) 和索引錯亂)
-        for (let i = this.enemies.length - 1; i >= 0; i--) {
-            if (!this.enemies[i]._alive) {
-                this.enemies.splice(i, 1);
-            }
-        }
-        this.enemyGrid.clear();
-        for (const enemy of this.enemies) {
-            this.enemyGrid.insert(enemy);
-        }
+        // 就地壓縮存活敵人，避免逐個 splice
+        removeDeadEnemies(this.enemies);
+        rebuildEnemyGrid(this.enemyGrid, this.enemies);
         
         // ==================== Phase 2: 狀態更新 ====================
 this.logger.phase('phase2', { fireCooldown: this.player.fireCooldown });
