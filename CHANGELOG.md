@@ -13,6 +13,7 @@
 - **戰鬥物件池**：敵人投射物與傷害數字改由物件池取得與歸還；投射物繪製不再每顆建立漸層，傷害數字上限維持 50。
 - **玩家穩定繪製**：待機時的眼睛不再設定 `shadowBlur`；揮擊劍尖光暈仍保留。
 - **更新迴圈**：一般敵人數與擊殺數改為線性計數；金幣只在數值改變時寫入 DOM；階段驗證只在偵錯開關開啟時執行。
+- **視野遮罩**：靜態暗層與角落暈影畫進離屏快取；玩家移動時只更新可見洞的位置。
 
 ### 新增
 - **Claude Code + Pi 雙 harness 工作模式**：於 `CLAUDE.md` 新增「工作模式」區段，定義 Claude Code 擔任監督者 (任務分派 / 驗證 / commit)、Pi (pi.dev) 透過 `pi -p -ns --approve` 派發執行的分工流程，並記錄本機 Pi 環境特性 (minimax-m3 內建 thinking block、`~/.pi/agent` 已裝 superpowers 套件需以 `-ns` 停用)。同時建立根目錄 `AGENTS.md` (Pi 預設讀取檔，與既有 `.agents/AGENTS.md` 給 Codex/Cursor 區隔)，摘錄專案規範、Update Loop 不變量、組合模式等 Pi 必須知道的最小子集。
