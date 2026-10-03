@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { GameValidator } from '../js/gameValidator.js';
+import { GameValidator, runPhaseCheck } from '../js/gameValidator.js';
 
 describe('GameValidator', () => {
     let game;
@@ -191,6 +191,23 @@ describe('GameValidator', () => {
             validator.enable();
             validator.disable();
             expect(validator.enabled).toBe(false);
+        });
+
+        it('toggle 關閉時不跑階段檢查，開啟後才跑', () => {
+            const phase = vi.spyOn(validator, 'validatePhase2');
+            expect(validator.enabled).toBe(false);
+            expect(runPhaseCheck(validator, 'validatePhase2')).toBe(0);
+            expect(phase).not.toHaveBeenCalled();
+
+            validator.toggle();
+            expect(validator.enabled).toBe(true);
+            expect(runPhaseCheck(validator, 'validatePhase2')).toBe(1);
+            expect(phase).toHaveBeenCalledTimes(1);
+
+            validator.toggle();
+            expect(validator.enabled).toBe(false);
+            expect(runPhaseCheck(validator, 'validatePhase2')).toBe(0);
+            expect(phase).toHaveBeenCalledTimes(1);
         });
     });
 });

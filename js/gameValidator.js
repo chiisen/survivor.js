@@ -130,4 +130,16 @@ export class GameValidator {
         this.enabled = false;
         console.log('❌ GameValidator 已禁用');
     }
+
+    /**
+     * 切換驗證器。Ctrl+Shift+V 使用這個入口。
+     * @returns {void}
+     */
+    toggle() {
+        if (this.enabled) {
+            this.disable();
+        } else {
+            this.enable();
+        }
+    }
 }
