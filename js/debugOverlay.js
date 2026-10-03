@@ -150,8 +150,8 @@ export class DebugOverlay {
         const projectiles = this.game.projectilePool.getActiveObjects().filter(p => p.active).length;
         const enemies = this.game.enemies.length;
         const expOrbs = this.game.expOrbs.length;
-        const enemyProjectiles = this.game.enemyProjectiles.length;
-        const damageNumbers = this.game.damageNumbers.length;
+        const enemyProjectiles = this.game.enemyProjectilePool.getActiveCount();
+        const damageNumbers = this.game.damageNumberPool.getActiveCount();
         
         ctx.fillStyle = '#3498db';
         ctx.fillText(`Entities: P:${projectiles} E:${enemies} Exp:${expOrbs} EP:${enemyProjectiles} DN:${damageNumbers}`, x + 10, y);
@@ -299,7 +299,7 @@ export class DebugOverlay {
             this.warnings.push('⚠ 敵人過多');
         }
         
-        if (this.game.enemyProjectiles.length > 20) {
+        if (this.game.enemyProjectilePool.getActiveCount() > 20) {
             this.warnings.push('⚠ EP過多');
         }
     }

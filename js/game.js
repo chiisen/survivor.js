@@ -4,6 +4,8 @@ import { Projectile } from './projectile.js';
 import { ExperienceOrb } from './experience.js';
 import { Explosion } from './explosion.js';
 import { DamageNumber } from './damageNumber.js';
+import { createEnemyProjectilePool } from './enemyProjectile.js';
+import { createDamageNumberPool, spawnDamageNumber, capActive } from './damageNumbers.js';
 import { ChainKillDisplay } from './chainKillDisplay.js';
 import { SpatialGrid } from './spatialGrid.js';
 import { ObjectPool } from './objectPool.js';
@@ -47,10 +49,8 @@ export class Game {
             20,
             50
         );
-        this.enemyProjectiles = [];
         this.expOrbs = [];
         this.magnetItems = [];
-        this.damageNumbers = [];
         this.chainKillDisplay = new ChainKillDisplay();
         this.ui = new UI();
         this.audio = new AudioManager();
@@ -87,6 +87,8 @@ export class Game {
             10,
             30
         );
+        this.enemyProjectilePool = createEnemyProjectilePool();
+        this.damageNumberPool = createDamageNumberPool();
         this.achievementManager = new AchievementManager();
         this.screenShake = { x: 0, y: 0 };
         this.achievementNotifications = [];
@@ -397,10 +399,10 @@ start() {
         this.shieldBreakPool.releaseAll();
         this.bossDeathPool.releaseAll();
         this.splitEffectPool.releaseAll();
-        this.enemyProjectiles = [];
+        this.enemyProjectilePool.releaseAll();
+        this.damageNumberPool.releaseAll();
         this.expOrbs = [];
         this.magnetItems = [];
-        this.damageNumbers = [];
         this.chainKillDisplay.clear();
         this.waveManager.reset();
         this.bossesKilled = 0;
@@ -526,10 +528,10 @@ this.logger.phase('phase2', { fireCooldown: this.player.fireCooldown });
                     this.spawnMinionEnemies(shootData.x, shootData.y, spawnCount, spawnElite);
                 } else if (shootData.type === 'multi_projectile') {
                     for (const proj of shootData.projectiles) {
-                        this.enemyProjectiles.push(proj);
+                        this.enemyProjectilePool.get(proj);
                     }
                 } else {
-                    this.enemyProjectiles.push(shootData);
+                    this.enemyProjectilePool.get(shootData);
                 }
             }
         }
@@ -542,8 +544,10 @@ this.logger.phase('phase2', { fireCooldown: this.player.fireCooldown });
             projectile.update(dt);
         }
         
-        for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
-            const proj = this.enemyProjectiles[i];
+        const enemyProjectiles = this.enemyProjectilePool.getActiveObjects();
+        for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
+            const proj = enemyProjectiles[i];
+            if (!proj._active) continue;
             
             if (proj.trail) {
                 proj.trail.unshift({ x: proj.x, y: proj.y });
@@ -555,6 +559,7 @@ this.logger.phase('phase2', { fireCooldown: this.player.fireCooldown });
             proj.x += proj.vx * dt;
             proj.y += proj.vy * dt;
         }
+        this.enemyProjectilePool.cleanInactive();
         
         // ==================== Phase 3: 系統更新 ====================
         this.logger.phase('phase3', { canFire: this.player.canFire() });
@@ -583,15 +588,17 @@ this.autoFire();
             }
         }
         
-        for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
-            const damageNumber = this.damageNumbers[i];
+        const damageNumbers = this.damageNumberPool.getActiveObjects();
+        for (let i = damageNumbers.length - 1; i >= 0; i--) {
+            const damageNumber = damageNumbers[i];
+            if (!damageNumber._active) continue;
             damageNumber.update(dt);
 
             if (damageNumber.isFinished()) {
-                this.damageNumbers[i] = this.damageNumbers[this.damageNumbers.length - 1];
-                this.damageNumbers.pop();
+                this.damageNumberPool.release(damageNumber);
             }
         }
+        this.damageNumberPool.cleanInactive();
         
         this.chainKillDisplay.update(dt);
 
@@ -688,7 +695,7 @@ this.autoFire();
                     if (this.player.thorns > 0) {
                         const thornsDmg = Math.max(1, Math.floor(enemy.damage * this.player.thorns));
                         enemy.hp -= thornsDmg;
-                        this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, thornsDmg, '#1abc9c'));
+                        this.spawnDamageNumber(enemy.x, enemy.y - enemy.radius, thornsDmg, '#1abc9c');
                         this.limitDamageNumbers();
                         if (enemy.hp <= 0) {
                             this.handleEnemyDeath(enemy, null);
@@ -698,7 +705,7 @@ this.autoFire();
                     // 吸血型回血
                     if (enemy.type.isLeech && enemy.type.healOnHit) {
                         enemy.hp = Math.min(enemy.maxHp, enemy.hp + enemy.type.healOnHit);
-                        this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius - 15, enemy.type.healOnHit, '#ff4444'));
+                        this.spawnDamageNumber(enemy.x, enemy.y - enemy.radius - 15, enemy.type.healOnHit, '#ff4444');
                         this.limitDamageNumbers();
                     }
 
@@ -711,13 +718,14 @@ this.autoFire();
         }
         
         // 敵人投射物與玩家碰撞
-        for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
-            const proj = this.enemyProjectiles[i];
+        const enemyShots = this.enemyProjectilePool.getActiveObjects();
+        for (let i = enemyShots.length - 1; i >= 0; i--) {
+            const proj = enemyShots[i];
+            if (!proj._active) continue;
 
             if (proj.x < -100 || proj.x > this.canvas.width + 100 ||
                 proj.y < -100 || proj.y > this.canvas.height + 100) {
-                this.enemyProjectiles[i] = this.enemyProjectiles[this.enemyProjectiles.length - 1];
-                this.enemyProjectiles.pop();
+                this.enemyProjectilePool.release(proj);
                 continue;
             }
 
@@ -729,8 +737,7 @@ this.autoFire();
                     this.ui.updateHp(this.player.hp, this.player.maxHp);
                     this.ui.updateShield(this.player.shield, this.player.maxShield);
                 }
-                this.enemyProjectiles[i] = this.enemyProjectiles[this.enemyProjectiles.length - 1];
-                this.enemyProjectiles.pop();
+                this.enemyProjectilePool.release(proj);
 
                 if (result.isDead) {
                     this.gameOver();
@@ -738,6 +745,7 @@ this.autoFire();
                 }
             }
         }
+        this.enemyProjectilePool.cleanInactive();
         
         // 玩家投射物與敵人碰撞
         const projectiles = this.projectilePool.getActiveObjects();
@@ -796,7 +804,7 @@ this.autoFire();
                         damageColor = '#e74c3c';
                     }
                     
-                    this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage, damageColor));
+                    this.spawnDamageNumber(enemy.x, enemy.y - enemy.radius, projectile.damage, damageColor);
                     this.limitDamageNumbers();
                     this.audio.playHit();
 
@@ -905,7 +913,7 @@ this.autoFire();
                 const nearbyExpBonus = this.getChainKillExpBonus(chainKills + 1);
                 const nearbyExpValue = this.calculateExpValue(nearbyEnemy.expValue, nearbyExpBonus);
                 this.expOrbs.push(new ExperienceOrb(nearbyEnemy.x, nearbyEnemy.y, nearbyExpValue));
-                this.damageNumbers.push(new DamageNumber(nearbyEnemy.x, nearbyEnemy.y - nearbyEnemy.radius, projectile.damage));
+                this.spawnDamageNumber(nearbyEnemy.x, nearbyEnemy.y - nearbyEnemy.radius, projectile.damage);
                 this.limitDamageNumbers();
                 nearbyEnemy._alive = false;
                 chainKills++;
@@ -1074,7 +1082,7 @@ this.autoFire();
         }
 
         this.explosionPool.get(enemy.x, enemy.y);
-        this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, 0, '#1abc9c'));
+        this.spawnDamageNumber(enemy.x, enemy.y - enemy.radius, 0, '#1abc9c');
         this.limitDamageNumbers();
     }
 
@@ -1100,12 +1108,12 @@ this.autoFire();
             this.explosionPool.get(expX, expY);
         }
         
-        this.damageNumbers.push(new DamageNumber(
+        this.spawnDamageNumber(
             enemy.x,
             enemy.y - enemy.radius - 20,
             enemy.explosionDamage,
             '#f39c12'
-        ));
+        );
         this.limitDamageNumbers();
     }
 
@@ -1218,7 +1226,7 @@ this.autoFire();
         for (const enemy of this.enemies) {
             enemy.hp -= skillDamage;
             this.explosionPool.get(enemy.x, enemy.y);
-            this.damageNumbers.push(new DamageNumber(enemy.x, enemy.y - enemy.radius, skillDamage, '#f1c40f'));
+            this.spawnDamageNumber(enemy.x, enemy.y - enemy.radius, skillDamage, '#f1c40f');
             this.limitDamageNumbers();
 
             if (enemy.hp <= 0) {
@@ -1758,10 +1766,10 @@ this.autoFire();
         this.shieldBreakPool.releaseAll();
         this.bossDeathPool.releaseAll();
         this.splitEffectPool.releaseAll();
-        this.enemyProjectiles = [];
+        this.enemyProjectilePool.releaseAll();
+        this.damageNumberPool.releaseAll();
         this.expOrbs = [];
         this.magnetItems = [];
-        this.damageNumbers = [];
         this.chainKillDisplay.clear();
 
         this.isRunning = true;
@@ -1858,8 +1866,8 @@ this.autoFire();
             }
         }
         
-        for (const damageNumber of this.damageNumbers) {
-            damageNumber.draw(this.ctx);
+        for (const damageNumber of this.damageNumberPool.getActiveObjects()) {
+            if (damageNumber._active) damageNumber.draw(this.ctx);
         }
         
         for (const projectile of this.projectilePool.getActiveObjects()) {
@@ -1868,40 +1876,8 @@ this.autoFire();
             }
         }
         
-        for (const proj of this.enemyProjectiles) {
-            if (!isFinite(proj.x) || !isFinite(proj.y) || !isFinite(proj.radius)) continue;
-            this.ctx.save();
-            
-            if (proj.trail && proj.trail.length > 0) {
-                for (let i = 0; i < proj.trail.length; i++) {
-                    const alpha = (1 - i / proj.trail.length) * 0.3;
-                    const radius = proj.radius * (1 - i / proj.trail.length * 0.5);
-                    this.ctx.beginPath();
-                    this.ctx.arc(proj.trail[i].x, proj.trail[i].y, radius, 0, Math.PI * 2);
-                    this.ctx.fillStyle = `rgba(155, 89, 182, ${alpha})`;
-                    this.ctx.fill();
-                }
-            }
-            
-            this.ctx.beginPath();
-            this.ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
-            this.ctx.fillStyle = proj.color;
-            this.ctx.fill();
-            this.ctx.strokeStyle = '#8e44ad';
-            this.ctx.lineWidth = 2;
-            this.ctx.stroke();
-            
-            const gradient = this.ctx.createRadialGradient(
-                proj.x - 1, proj.y - 1, 0,
-                proj.x, proj.y, proj.radius
-            );
-            gradient.addColorStop(0, '#fff');
-            gradient.addColorStop(0.3, proj.color);
-            gradient.addColorStop(1, '#6c3483');
-            this.ctx.fillStyle = gradient;
-            this.ctx.fill();
-            
-            this.ctx.restore();
+        for (const proj of this.enemyProjectilePool.getActiveObjects()) {
+            if (proj._active) proj.draw(this.ctx);
         }
         
         this.player.draw(this.ctx);
@@ -1927,10 +1903,19 @@ this.autoFire();
     /**
      * 限制傷害數字數量（防止掉幀）
      */
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number} value
+     * @param {string|null} [color]
+     * @returns {DamageNumber}
+     */
+    spawnDamageNumber(x, y, value, color = null) {
+        return spawnDamageNumber(this.damageNumberPool, x, y, value, color);
+    }
+
     limitDamageNumbers() {
-        if (this.damageNumbers.length > 50) {
-            this.damageNumbers.splice(0, this.damageNumbers.length - 50);
-        }
+        capActive(this.damageNumberPool, 50);
     }
 
     /**

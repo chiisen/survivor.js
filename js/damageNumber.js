@@ -12,6 +12,30 @@ export class DamageNumber {
         this.x = x;
         this.y = y;
         this.value = value;
+        this.startTime = 0;
+        this.duration = 0.8;
+        this.time = this.duration;
+        this.alpha = 1;
+        this.scale = 1;
+        this.vy = -60;
+        this.baseY = y;
+        this.color = '#fff';
+        this.fontSize = 16;
+        this.init(x, y, value, color);
+    }
+
+    /**
+     * 重置傷害數字，供物件池重複使用
+     * @param {number} x
+     * @param {number} y
+     * @param {number} value
+     * @param {string|null} [color]
+     * @returns {void}
+     */
+    init(x, y, value, color = null) {
+        this.x = x;
+        this.y = y;
+        this.value = value;
         this.startTime = performance.now();
         this.duration = 0.8;
         this.time = this.duration;
