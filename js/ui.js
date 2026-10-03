@@ -165,6 +165,8 @@ export class UI {
     }
 
     updateGold(gold) {
+        if (this._shownGold === gold) return;
+        this._shownGold = gold;
         this.goldDisplay.textContent = `💰 ${gold}`;
     }
 

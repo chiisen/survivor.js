@@ -22,6 +22,20 @@ export function removeDeadEnemies(enemies) {
  * @param {object[]} enemies
  * @returns {void}
  */
+/**
+ * 計數符合條件的元素，不配置 filter 陣列。
+ * @param {Array<any>} list
+ * @param {(item: any) => boolean} predicate
+ * @returns {number}
+ */
+export function countIf(list, predicate) {
+    let count = 0;
+    for (let i = 0; i < list.length; i++) {
+        if (predicate(list[i])) count++;
+    }
+    return count;
+}
+
 export function rebuildEnemyGrid(grid, enemies) {
     grid.clear();
     for (let i = 0; i < enemies.length; i++) {

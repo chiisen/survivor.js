@@ -27,7 +27,8 @@ import { GameValidator } from './gameValidator.js';
 import { VisibilityMask } from './visibilityMask.js';
 import { MagnetItem } from './magnetItem.js';
 import { createFloorCache, drawFloor } from './floorDraw.js';
-import { removeDeadEnemies, rebuildEnemyGrid } from './enemyList.js';
+import { removeDeadEnemies, rebuildEnemyGrid, countIf } from './enemyList.js';
+import { runPhaseCheck } from './gameValidator.js';
 
 export class Game {
     constructor(canvas) {
@@ -472,11 +473,11 @@ this.logger.phase('phase2', { fireCooldown: this.player.fireCooldown });
         
         this.player.update(dt, this.keys, this.canvas.width, this.canvas.height);
         
-        this.gameValidator.validatePhase2();
+        runPhaseCheck(this.gameValidator, 'validatePhase2');
         
         // 2.2 敵人狀態（生成後立即插入 Grid）
         this.decorationManager.update(dt, this.gameTime);
-        const normalEnemyCount = this.enemies.filter(e => !e.type.isBoss).length;
+        const normalEnemyCount = countIf(this.enemies, (enemy) => !enemy.type.isBoss);
         this.waveManager.update(dt, this.gameTime, normalEnemyCount);
         
         if (this.waveManager.isBreak && this.player.maxShield > 0) {
@@ -569,7 +570,7 @@ this.autoFire();
         
         this.checkCollisions(dt);
         
-        this.gameValidator.validatePhase3();
+        runPhaseCheck(this.gameValidator, 'validatePhase3');
         
         // ==================== Phase 4: UI 更新 ====================
         this.logger.phase('phase4', { kills: this.kills, exp: this.exp });
@@ -1221,7 +1222,7 @@ this.autoFire();
         this.audio.playChainKill();
         
         const skillDamage = this.player.damage * 10;
-        const killedCount = this.enemies.filter(e => e.hp > 0).length;
+        const killedCount = countIf(this.enemies, (enemy) => enemy.hp > 0);
         
         for (const enemy of this.enemies) {
             enemy.hp -= skillDamage;
@@ -1236,7 +1237,7 @@ this.autoFire();
             }
         }
 
-        const aliveCount = this.enemies.filter(e => e._alive !== false).length;
+        const aliveCount = countIf(this.enemies, (enemy) => enemy._alive !== false);
         const nowKilledCount = killedCount - aliveCount;
         this.kills += nowKilledCount;
         

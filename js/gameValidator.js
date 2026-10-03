@@ -3,6 +3,18 @@
 /**
  * 遊戲驗證器 — 在執行期檢查 Update Loop 四階段是否正確執行
  */
+/**
+ * 僅在驗證器啟用時執行指定階段檢查。
+ * @param {{ enabled: boolean }} validator
+ * @param {'validatePhase1'|'validatePhase2'|'validatePhase3'} phase
+ * @returns {number} 有呼叫回傳 1，否則 0
+ */
+export function runPhaseCheck(validator, phase) {
+    if (!validator.enabled) return 0;
+    validator[phase]();
+    return 1;
+}
+
 export class GameValidator {
     /**
      * @param {object} game - 遊戲主物件(含 enemyGrid, enemies, player, projectilePool)
