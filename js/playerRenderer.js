@@ -178,16 +178,12 @@ export class PlayerRenderer {
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // 眼睛 — 發光紅眼
-        ctx.save();
-        ctx.shadowColor = '#e74c3c';
-        ctx.shadowBlur = 8;
+        // 眼睛 — 實心紅眼（穩定路徑不使用 shadowBlur）
         ctx.beginPath();
         ctx.arc(core.x - r * 0.28, core.y - 4, 2.5, 0, Math.PI * 2);
         ctx.arc(core.x + r * 0.28, core.y - 4, 2.5, 0, Math.PI * 2);
         ctx.fillStyle = '#ff5252';
         ctx.fill();
-        ctx.restore();
 
         // 面罩通氣孔
         for (let i = -1; i <= 1; i++) {

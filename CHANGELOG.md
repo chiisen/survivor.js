@@ -11,6 +11,7 @@
 - **地板快取貼圖**：已載入的地磚先畫進離屏圖層，每幀只貼一次；未載入時的放射漸層也只在快取重建時建立。
 - **死亡敵人線性壓縮**：Phase 1 以寫入指標移除死亡敵人，不再逐個 `splice`，空間網格只插入存活者。
 - **戰鬥物件池**：敵人投射物與傷害數字改由物件池取得與歸還；投射物繪製不再每顆建立漸層，傷害數字上限維持 50。
+- **玩家穩定繪製**：待機時的眼睛不再設定 `shadowBlur`；揮擊劍尖光暈仍保留。
 
 ### 新增
 - **Claude Code + Pi 雙 harness 工作模式**：於 `CLAUDE.md` 新增「工作模式」區段，定義 Claude Code 擔任監督者 (任務分派 / 驗證 / commit)、Pi (pi.dev) 透過 `pi -p -ns --approve` 派發執行的分工流程，並記錄本機 Pi 環境特性 (minimax-m3 內建 thinking block、`~/.pi/agent` 已裝 superpowers 套件需以 `-ns` 停用)。同時建立根目錄 `AGENTS.md` (Pi 預設讀取檔，與既有 `.agents/AGENTS.md` 給 Codex/Cursor 區隔)，摘錄專案規範、Update Loop 不變量、組合模式等 Pi 必須知道的最小子集。
