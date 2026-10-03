@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### 優化
+- **地板快取貼圖**：已載入的地磚先畫進離屏圖層，每幀只貼一次；未載入時的放射漸層也只在快取重建時建立。
+
 ### 新增
 - **Claude Code + Pi 雙 harness 工作模式**：於 `CLAUDE.md` 新增「工作模式」區段，定義 Claude Code 擔任監督者 (任務分派 / 驗證 / commit)、Pi (pi.dev) 透過 `pi -p -ns --approve` 派發執行的分工流程，並記錄本機 Pi 環境特性 (minimax-m3 內建 thinking block、`~/.pi/agent` 已裝 superpowers 套件需以 `-ns` 停用)。同時建立根目錄 `AGENTS.md` (Pi 預設讀取檔，與既有 `.agents/AGENTS.md` 給 Codex/Cursor 區隔)，摘錄專案規範、Update Loop 不變量、組合模式等 Pi 必須知道的最小子集。
 - **Phase 2 JSDoc 型別標註 (spatialGrid.js)**：由 Pi 執行，為 `js/spatialGrid.js` 補上 `// @ts-check` 與 class 層級 + 8 個方法 (`constructor` / `clear` / `getKey` / `insert` / `remove` / `getNearby` / `getCellCount` / `getTotalEntities`) 的 JSDoc 型別標註，風格參照 Phase 1 的 `js/utils.js`；其中 `getNearby` 特別標註「以 cell 為單位掃描，可能包含半徑外實體」的非直觀行為，避免日後誤用。

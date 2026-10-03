@@ -24,6 +24,7 @@ import { DebugOverlay } from './debugOverlay.js';
 import { GameValidator } from './gameValidator.js';
 import { VisibilityMask } from './visibilityMask.js';
 import { MagnetItem } from './magnetItem.js';
+import { createFloorCache, drawFloor } from './floorDraw.js';
 
 export class Game {
     constructor(canvas) {
@@ -92,6 +93,7 @@ export class Game {
         this.floorImage = new Image();
         this.floorImage.src = 'images/floor_tileset.png';
         this.floorImageLoaded = false;
+        this.floorCache = createFloorCache();
         this.floorImage.onload = () => {
             this.floorImageLoaded = true;
         };
@@ -1796,28 +1798,20 @@ this.autoFire();
         
         this.ctx.clearRect(-10, -10, this.canvas.width + 20, this.canvas.height + 20);
         
-        if (this.floorImageLoaded) {
-            const tileSize = 64;
-            const cols = Math.ceil(this.canvas.width / tileSize) + 1;
-            const rows = Math.ceil(this.canvas.height / tileSize) + 1;
-            
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    const x = col * tileSize - 10;
-                    const y = row * tileSize - 10;
-                    this.ctx.drawImage(this.floorImage, x, y, tileSize, tileSize);
-                }
+        drawFloor(
+            this.ctx,
+            this.floorCache,
+            this.canvas.width,
+            this.canvas.height,
+            this.floorImage,
+            this.floorImageLoaded,
+            (w, h) => {
+                const layer = document.createElement('canvas');
+                layer.width = w;
+                layer.height = h;
+                return layer;
             }
-        } else {
-            const gradient = this.ctx.createRadialGradient(
-                this.canvas.width / 2, this.canvas.height / 2, 0,
-                this.canvas.width / 2, this.canvas.height / 2, this.canvas.width / 2
-            );
-            gradient.addColorStop(0, '#1a1a2e');
-            gradient.addColorStop(1, '#16213e');
-            this.ctx.fillStyle = gradient;
-            this.ctx.fillRect(-10, -10, this.canvas.width + 20, this.canvas.height + 20);
-        }
+        );
         
         this.decorationManager.draw(this.ctx);
         
